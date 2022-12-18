@@ -1,0 +1,42 @@
+<html>
+
+<font color='red'>data-include</font>
+<hr />
+
+<font color='blue'>ノーマルなinclude</font><br />
+<!-- data-include='test1.html' -->
+<hr />
+
+<font color='blue'>別フォルダのファイルをinclude</font><br />
+<!-- data-include='test/test.html' -->
+<hr />
+
+<font color='blue'>複数回の別フォルダのファイルをinclude</font><br />
+<!-- data-include='test/test2.html' -->
+<hr />
+
+<font color='blue'>絶対パスでファイルをinclude</font><br />
+<!-- data-include="{$_(BLOCS_ROOT_DIR)}/test/test.html" -->
+<hr />
+
+<font color='blue'>絶対パスで複数回のファイルをinclude</font><br />
+<!-- data-include="{$_(BLOCS_ROOT_DIR)}/test/test3.html" -->
+<hr />
+
+<font color='blue'>./を使ってinclude</font><br />
+<!-- data-include="test/test4.html" -->
+<hr />
+
+<font color='blue'>部分include</font><br />
+<!-- data-include='test5.html' -->
+<!-- data-include='test' -->
+<hr />
+
+<font color='blue'>部分include</font><br />
+<!-- data-part='yahoo' -->
+<a href='http://www.yahoo.co.jp/'>Yahoo!</a>
+<!-- data-endpart -->
+<!-- data-include='yahoo' -->
+<hr />
+
+</html>

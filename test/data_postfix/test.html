@@ -1,0 +1,35 @@
+<html>
+
+<font color='red'>data-postfix</font>
+<hr />
+
+<?php $name = 'tanaka'; ?>
+<font color='blue'>値表示</font><br />
+<div data-val=$name data-postfix='円'>suzuki</div>
+<!-- data-val=$name data-postfix='円' -->
+<div data-val="{$name} さん" data-postfix='円'>suzuki</div>
+<!-- data-val="{$name} さん" data-postfix='円' -->
+<hr />
+
+<?php $zero = 0; ?>
+<font color='blue'>0を表示</font><br />
+<div data-val=$zero data-postfix='円'>suzuki</div>
+<!-- data-val=$zero data-postfix='円' -->
+<div data-val="{$zero}" data-postfix='円'>suzuki</div>
+<!-- data-val="{$zero}" data-postfix='円' -->
+<hr />
+
+<?php $blank = ''; ?>
+<font color='blue'>空白を表示</font><br />
+<div data-val=$blank data-postfix='円'>suzuki</div>
+<!-- data-val=$blank data-postfix='円' -->
+<div data-val="{$blank}" data-postfix='円'>suzuki</div>
+<!-- data-val="{$blank}" data-postfix='円' -->
+<hr />
+
+<font color='blue'>未定義値を表示</font><br />
+<div data-val=$unset data-postfix='円'>suzuki</div>
+<!-- data-val=$unset data-postfix='円' -->
+<hr />
+
+</html>

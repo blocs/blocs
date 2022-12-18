@@ -1,0 +1,43 @@
+<html>
+
+<font color='red'>data-prefix</font>
+<hr />
+
+<?php $name = 'tanaka'; ?>
+<font color='blue'>値表示</font><br />
+<div data-val=$name data-prefix='¥'>suzuki</div>
+<!-- data-val=$name data-prefix='¥' -->
+<div data-val="{$name} さん" data-prefix='¥'>suzuki</div>
+<!-- data-val="{$name} さん" data-prefix='¥' -->
+
+<!-- data-val=$name data-prefix='¥' data-query=$murakami -->
+<!-- data-val=$murakami -->
+
+<!-- data-val='theme' data-query=$theme -->
+<!-- data-attribute='class' data-val=$theme -->
+<div>テストです。</div>
+
+<hr />
+
+<?php $zero = 0; ?>
+<font color='blue'>0を表示</font><br />
+<div data-val=$zero data-prefix='¥'>suzuki</div>
+<!-- data-val=$zero data-prefix='¥' -->
+<div data-val="{$zero}" data-prefix='¥'>suzuki</div>
+<!-- data-val="{$zero}" data-prefix='¥' -->
+<hr />
+
+<?php $blank = ''; ?>
+<font color='blue'>空白を表示</font><br />
+<div data-val=$blank data-prefix='¥'>suzuki</div>
+<!-- data-val=$blank data-prefix='¥' -->
+<div data-val="{$blank}" data-prefix='¥'>suzuki</div>
+<!-- data-val="{$blank}" data-prefix='¥' -->
+<hr />
+
+<font color='blue'>未定義値を表示</font><br />
+<div data-val=$unset data-prefix='¥'>suzuki</div>
+<!-- data-val=$unset data-prefix='¥' -->
+<hr />
+
+</html>

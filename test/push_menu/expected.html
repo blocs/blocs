@@ -1,0 +1,69 @@
+<html>
+
+<form action='./' method='post'>
+
+<font color='red'>push_menu</font>
+<hr />
+
+<select id="type" name="type">
+<option value="company">法人のお客様</option>
+<option value="private">個人のお客様</option>
+<option value="other">その他</option>
+
+
+
+    
+
+    
+
+    
+    <option value="sales">sales</option>
+
+
+
+    
+
+    
+
+    
+    <option value="service">サービス</option>
+
+
+
+
+</select>
+<hr />
+
+<label><input type='hidden' name='size' value='' /><input type="checkbox" name="size[]" value="s" /> S</label>
+<label><input type="checkbox" name="size[]" value="m" /> M</label>
+<label><input type="checkbox" name="size[]" value="l" /> L</label>
+<label>
+
+<input type="checkbox" name="size[]" value="xl" /> XL
+</label><label>
+
+<input type="checkbox" name="size[]" value="xxl" /> XXL
+</label>
+<hr />
+
+<input type='hidden' name='sex' value='' /><input id="sex_m" type="radio" name="sex" value="m" checked /> <label for="sex_m">男</label>
+<label><input type="radio" name="sex" value="f" /> 女</label>
+<hr />
+
+<label>
+
+<input type='hidden' name='sex2' value='' /><input type="radio" name='sex2' value="sales" /> sales
+</label><label>
+
+<input type="radio" name='sex2' value="service" /> サービス
+</label><label>
+
+<input type="radio" name='sex2' value="part" /> 品番
+</label>
+<hr />
+
+<input type='submit' />
+
+</form>
+
+</html>{"company":"\u6cd5\u4eba\u306e\u304a\u5ba2\u69d8","private":"\u500b\u4eba\u306e\u304a\u5ba2\u69d8","other":"\u305d\u306e\u4ed6","sales":"sales","service":"\u30b5\u30fc\u30d3\u30b9"}<br />{"sales":"sales","service":"\u30b5\u30fc\u30d3\u30b9","part":"\u54c1\u756a"}<br />{"s":"S","m":"M","l":"L","xl":"XL","xxl":"XXL"}<br />

@@ -1,0 +1,154 @@
+<html>
+
+<font color='red'>data-repeat</font>
+<hr />
+
+<font color='blue'>未定義リスト表示</font><br />
+<ul>
+	<li data-repeat=$list>
+		<div data-val=$name>田中太郎</div>
+		<div data-val=$age>99</div>
+	</li>
+</ul>
+<hr />
+
+<font color='blue'>テーブル表示</font><br />
+<table data-exist=$list>
+	<tbody>
+	<tr data-repeat=$list>
+		<td data-val=$name>田中太郎</td>
+		<td data-val=$age>99</td>
+	</tr>
+	</tbody>
+</table>
+<hr />
+
+<?php
+	$list = [
+		[
+			'name' => '鈴木一郎',
+			'age' => 32,
+			'display' => true
+		],
+		[
+			'name' => '高橋二郎',
+			'age' => 21,
+			'display' => true
+		],
+		[
+			'name' => '橋本三郎',
+			'age' => 23,
+		],
+	];
+?>
+<font color='blue'>リスト表示</font><br />
+<ul>
+	<li data-repeat=$list>
+		<span data-val=$name>田中太郎</span>
+		<span data-val=$age>99</span>
+	</li>
+</ul>
+<hr />
+
+<font color='blue'>テーブル表示</font><br />
+<table data-exist=$list>
+	<tbody>
+	<tr data-repeat=$list>
+		<td data-val=$name>田中太郎</td>
+		<td data-val=$age>99</td>
+	</tr>
+	</tbody>
+</table>
+<hr />
+
+<font color='blue'>コメントでテーブル表示</font><br />
+<table data-exist=$list>
+	<tbody>
+<!-- data-repeat=$list -->
+	<tr>
+		<td data-val=$name>田中太郎</td>
+		<td data-val=$age>99</td>
+	</tr>
+<!-- data-endrepeat -->
+	</tbody>
+</table>
+<hr />
+
+<font color='blue'>条件付きテーブル表示</font><br />
+<table data-exist=$list>
+	<tbody>
+	<tr data-repeat=$list data-exist=$display>
+		<td data-val=$name>田中太郎</td>
+		<td data-val=$age>99</td>
+	</tr>
+	</tbody>
+</table>
+<hr />
+
+<font color='blue'>コメントで条件付きテーブル表示</font><br />
+<table data-exist=$list>
+	<tbody>
+<!-- data-repeat=$list -->
+	<tr data-exist=$display>
+		<td data-val=$name>田中太郎</td>
+		<td data-val=$age>99</td>
+	</tr>
+<!-- data-endrepeat -->
+	</tbody>
+</table>
+<hr />
+
+<font color='blue'>コメントで条件付きテーブル表示</font><br />
+<table data-exist=$list>
+	<tbody>
+<!-- data-repeat=$list -->
+	<tr>
+		<td>
+			<!-- data-attribute='color' data-val='red' data-unless="$repeatIndex % 2" -->
+			<font data-val=$name>田中太郎</font>
+		</td>
+		<td>
+			<!-- data-attribute='color' data-val='red' data-unless="$repeatIndex % 2" -->
+			<font data-val=$age>99</font>
+		</td>
+	</tr>
+<!-- data-endrepeat -->
+	</tbody>
+</table>
+<hr />
+
+<?php
+	$list = [
+		[
+			'name' => '鈴木一郎',
+			'age' => 32,
+			'display' => true,
+			'child' => [
+				['name' => '一郎'],
+				['name' => '二郎'],
+				['name' => '三郎'],
+			]
+		],
+		[
+			'name' => '高橋二郎',
+			'age' => 21,
+		],
+	];
+?>
+<font color='blue'>複数テーブル表示</font><br />
+<table data-exist=$list>
+	<tbody>
+	<tr data-repeat=$list>
+		<td data-val=$name>田中太郎</td>
+		<td data-val=$age>99</td>
+		<td>
+<!-- data-repeat=$child -->
+<!-- data-val=', ' data-exist=$repeatIndex --><!-- data-val=$name -->
+<!-- data-endrepeat -->
+		</td>
+	</tr>
+	</tbody>
+</table>
+<hr />
+
+</html>

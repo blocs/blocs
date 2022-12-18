@@ -1,0 +1,49 @@
+<html>
+
+<font color='red'>data-if</font>
+<hr />
+
+<?php
+	$exist = true;
+	$name = 'tanaka';
+?>
+<font color='blue'>条件表示</font><br />
+<div data-if="$exist && isset($zero)" data-val=$name>suzuki</div>
+<!-- data-if='$exist' data-val=$name -->
+<div data-if=$exist data-val="{$name} さん">suzuki</div>
+<!-- data-if=$exist data-val="{$name} さん" -->
+<hr />
+
+<?php $zero = 0; ?>
+<font color='blue'>0表示</font><br />
+<div data-if="$exist && isset($zero)" data-val=$name>suzuki</div>
+<!-- data-if=$zero data-val=$name -->
+<div data-if=$zero data-val="{$name} さん">suzuki</div>
+<!-- data-if=$zero data-val="{$name} さん" -->
+<hr />
+
+<?php $blank = ''; ?>
+<?php $zero = 0; ?>
+<font color='blue'>空白表示</font><br />
+<div data-if=$blank data-val=$name>suzuki</div>
+<!-- data-if=$blank data-val=$name -->
+<div data-if=$blank data-val="{$name} さん">suzuki</div>
+<!-- data-if=$blank data-val="{$name} さん" -->
+<hr />
+
+<font color='blue'>条件表示</font><br />
+<div data-if='isset($none)' data-val=$name>suzuki</div>
+<!-- data-if='isset($none)' data-val=$name -->
+<div data-if='isset($none)' data-val="{$name} さん">suzuki</div>
+<!-- data-if='isset($none)' data-val="{$name} さん" -->
+<hr />
+
+<font color='blue'>コメント条件表示</font><br />
+<!-- data-if="$exist" -->
+suzuki
+<!-- data-endif -->
+<!-- data-if='isset($none)' -->
+tanaka
+<!-- data-endif -->
+
+</html>

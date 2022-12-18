@@ -1,0 +1,17 @@
+<html>
+
+<font color='red'>data-exist</font>
+<hr />
+
+<?php
+	$exist = true;
+	$name = 'tanaka';
+?>
+<font color='blue'>条件表示</font><br />
+<div data-exist=$0exist data-val=$name>suzuki</div>
+<!-- data-exist=$exist data-val=$name -->
+<div data-exist=$exist data-val="{$name} さん">suzuki</div>
+<!-- data-exist=$exist data-val="{$name} さん" -->
+<hr />
+
+</html>
