@@ -1,0 +1,17 @@
+<html>
+
+<font color='red'>data-none</font>
+<hr />
+
+<?php
+	$exist = true;
+	$name = 'tanaka';
+?>
+<font color='blue'>条件表示</font><br />
+<div data-none=$0exist data-val=$name>suzuki</div>
+<!-- data-none=$exist data-val=$name -->
+<div data-none=$exist data-val="{$name} さん">suzuki</div>
+<!-- data-none=$exist data-val="{$name} さん" -->
+<hr />
+
+</html>

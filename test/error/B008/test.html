@@ -1,0 +1,16 @@
+<html>
+
+<font color='red'>data-convert</font>
+<hr />
+
+<?php $price = 30000; ?>
+<font color='blue'>number</font><br />
+<div data-val=$price data-prefix='¥'>suzuki</div>
+<!-- data-val=$price data-prefix='¥' -->
+<div data-val=$price data-prefix='¥' data-convert='numberx'>suzuki</div>
+<!-- data-val=$price data-prefix='¥' data-convert='number' -->
+<div data-val="{$price}" data-convert='number'>suzuki</div>
+<!-- data-val="{$price}" data-convert='number' -->
+<hr />
+
+</html>

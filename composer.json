@@ -1,0 +1,32 @@
+{
+    "name": "blocs\/blocs",
+    "type": "library",
+    "description": "The PHP Template engine for Laravel",
+    "keywords": [
+        "PHP",
+        "Template engine",
+        "Laravel"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "LINEAR JAPAN Co.,Ltd.",
+            "email": "admin@linear-jp.biz",
+            "role": "Lead Developer"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Blocs\\ServiceProvider"
+            ]
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Blocs\\": "src\/",
+            "Blocs\\Compiler\\": "compiler\/",
+            "Blocs\\Data\\": "data\/"
+        }
+    }
+}

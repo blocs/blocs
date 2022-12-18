@@ -1,0 +1,49 @@
+<html>
+
+<font color='red'>data-exist</font>
+<hr />
+
+<?php
+	$exist = true;
+	$name = 'tanaka';
+?>
+<font color='blue'>条件表示</font><br />
+<div data-exist=$exist data-val=$name>suzuki</div>
+<!-- data-exist=$exist data-val=$name -->
+<div data-exist=$exist data-val="{$name} さん">suzuki</div>
+<!-- data-exist=$exist data-val="{$name} さん" -->
+<hr />
+
+<?php $zero = 0; ?>
+<font color='blue'>0表示</font><br />
+<div data-exist=$zero data-val=$name>suzuki</div>
+<!-- data-exist=$zero data-val=$name -->
+<div data-exist=$zero data-val="{$name} さん">suzuki</div>
+<!-- data-exist=$zero data-val="{$name} さん" -->
+<hr />
+
+<?php $blank = ''; ?>
+<?php $zero = 0; ?>
+<font color='blue'>空白表示</font><br />
+<div data-exist=$blank data-val=$name>suzuki</div>
+<!-- data-exist=$blank data-val=$name -->
+<div data-exist=$blank data-val="{$name} さん">suzuki</div>
+<!-- data-exist=$blank data-val="{$name} さん" -->
+<hr />
+
+<font color='blue'>条件表示</font><br />
+<div data-exist=$none data-val=$name>suzuki</div>
+<!-- data-exist=$none data-val=$name -->
+<div data-exist=$none data-val="{$name} さん">suzuki</div>
+<!-- data-exist=$none data-val="{$name} さん" -->
+<hr />
+
+<font color='blue'>コメント条件表示</font><br />
+<!-- data-exist=$exist -->
+suzuki
+<!-- data-endexist -->
+<!-- data-exist=$none -->
+tanaka
+<!-- data-endexist -->
+
+</html>

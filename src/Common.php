@@ -1,0 +1,191 @@
+<?php
+
+namespace Blocs;
+
+class Common
+{
+    private static $path;
+    private static $config;
+
+    // テンプレートのフルパスを取得
+    public static function getPath($name)
+    {
+        if (!function_exists('config')) {
+            return realpath($name);
+        }
+
+        $viewPaths = config('view.paths');
+        foreach ($viewPaths as $path) {
+            $realPath = realpath($path.'/'.str_replace('.', '/', $name).'.blocs.html');
+            if ($realPath && is_file($realPath)) {
+                return $realPath;
+            }
+
+            $realPath = realpath($path.'/'.str_replace('.', '/', $name));
+            if ($realPath && is_dir($realPath)) {
+                return $realPath;
+            }
+        }
+
+        return '';
+    }
+
+    // data-valの標準コンバーター
+    // rawを指定すると適用されない
+    public static function convertDefault($str, $key = null)
+    {
+        if (!empty(self::$config['menu'][$key])) {
+            // 選択項目をラベルで置き換え
+            is_array($str) || $str = explode("\t", $str);
+
+            $menuLabel = [];
+            foreach (self::$config['menu'][$key] as $buff) {
+                $menuLabel[$buff['value']] = $buff['label'];
+            }
+
+            if (empty($key) || empty(self::$config['menu'][$key])) {
+                return '';
+            }
+
+            $query = '';
+            foreach ($str as $buff) {
+                if (!isset($menuLabel[$buff])) {
+                    continue;
+                }
+
+                strlen($query) && $query .= BLOCS_OPTION_SEPARATOR;
+                $query .= $menuLabel[$buff];
+            }
+
+            $str = $query;
+        }
+
+        // 文字列のエスケープ
+        $str = htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
+        $str = nl2br($str);
+
+        return $str;
+    }
+
+    // selectなどのフォーム部品にchecked、selectedをつける
+    public static function addChecked($str, $value, $checked, $checkFlg)
+    {
+        if (is_array($str)) {
+            count($str) || $str = null;
+        } else {
+            strlen($str) || $str = null;
+        }
+
+        if (!isset($str)) {
+            // 未入力
+            if ($checked) {
+                echo ' '.$checkFlg;
+
+                return;
+            }
+            $str = '';
+        }
+
+        is_array($str) || $str = explode("\t", $str);
+
+        // 選択項目にcheckedを付与
+        if (in_array($value, $str)) {
+            echo ' '.$checkFlg;
+        }
+    }
+
+    // 設定ファイルを読み込み
+    public static function readConfig($path = null)
+    {
+        if (isset($path)) {
+            self::$path = $path;
+        } else {
+            if (empty(self::$path)) {
+                return [];
+            }
+            $path = self::$path;
+        }
+
+        $configPath = self::getConfigPath($path);
+        if (!is_file($configPath)) {
+            // 設定ファイルが見つからない
+            return [];
+        }
+
+        self::$config = json_decode(file_get_contents($configPath), true);
+
+        // 動的メニューの取り込み
+        $appendOption = \Blocs\Option::append();
+        foreach ($appendOption as $menuName => $menu) {
+            isset(self::$config['menu'][$menuName]) || self::$config['menu'][$menuName] = [];
+            self::$config['menu'][$menuName] = array_merge(self::$config['menu'][$menuName], $menu);
+        }
+
+        return self::$config;
+    }
+
+    // 設定ファイルを書き込み
+    public static function writeConfig($path, $blocsConfig)
+    {
+        $configPath = self::getConfigPath($path);
+        if (is_file($configPath)) {
+            $config = json_decode(file_get_contents($configPath), true);
+        } else {
+            // 設定ファイルが見つからない
+            $config = [];
+        }
+
+        // 設定ファイルを更新
+        isset($config['menu']) || $config['menu'] = [];
+        if (!empty($blocsConfig->menu)) {
+            $config['menu'] = array_merge($config['menu'], $blocsConfig->menu);
+        }
+
+        // ファイルアップロードのバリデーション
+        $validateUpload = [];
+        foreach ($blocsConfig->upload as $formName) {
+            unset($validateUpload[$formName]);
+
+            if (isset($blocsConfig->validate[$formName])) {
+                $validateUpload[$formName]['validate'] = $blocsConfig->validate[$formName];
+                unset($blocsConfig->validate[$formName]);
+            }
+            if (isset($blocsConfig->message[$formName])) {
+                $validateUpload[$formName]['message'] = $blocsConfig->message[$formName];
+                unset($blocsConfig->message[$formName]);
+            }
+        }
+        isset($config['upload']) || $config['upload'] = [];
+        $config['upload'] = array_merge($config['upload'], $validateUpload);
+
+        $config = self::updateConfig($config, 'include', $path, $blocsConfig->include);
+        $config = self::updateConfig($config, 'timestamp', $path, time());
+        $config = self::updateConfig($config, 'validate', $path, $blocsConfig->validate);
+        $config = self::updateConfig($config, 'message', $path, $blocsConfig->message);
+        $config = self::updateConfig($config, 'filter', $path, $blocsConfig->filter);
+
+        // 設定ファイルはディレクトリごとに作成
+        $configJson = json_encode($config, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        file_put_contents($configPath, $configJson) && chmod($configPath, 0666);
+
+        // 設定ファイルを読み込み
+        self::readConfig($path);
+    }
+
+    private static function getConfigPath($path)
+    {
+        return BLOCS_CACHE_DIR.'/'.md5(dirname($path)).'.json';
+    }
+
+    private static function updateConfig($config, $configName, $path, $blocsConfig)
+    {
+        isset($config[$configName]) || $config[$configName] = [];
+        if (empty($blocsConfig)) {
+            unset($config[$configName][$path]);
+        } else {
+            $config[$configName][$path] = $blocsConfig;
+        }
+
+        return $config;
+    }
+}

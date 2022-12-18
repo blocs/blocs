@@ -1,0 +1,46 @@
+<html>
+
+<font color='red'>data-val</font>
+<hr />
+
+<?php $name = 'tanaka'; ?>
+<font color='blue'>値表示</font><br />
+<div data-val=$name>suzuki</div>
+<!-- data-val=$name -->
+<div data-val="{$name} さん">suzuki</div>
+<!-- data-val="{$name} さん" -->
+<hr />
+
+<?php $zero = 0; ?>
+<font color='blue'>0を表示</font><br />
+<div data-val=$zero>suzuki</div>
+<!-- data-val=$zero -->
+<div data-val="{$zero}">suzuki</div>
+<!-- data-val="{$zero}" -->
+<hr />
+
+<?php $blank = ''; ?>
+<font color='blue'>空白を表示</font><br />
+<div data-val=$blank>suzuki</div>
+<!-- data-val=$blank -->
+<div data-val="{$blank}">suzuki</div>
+<!-- data-val="{$blank}" -->
+<hr />
+
+<font color='blue'>未定義値を表示</font><br />
+<div data-val=$unset>suzuki</div>
+<!-- data-val=$unset -->
+<hr />
+
+<?php echo date(DATE_ATOM, 1405251669); ?>
+
+<?php
+	$person = (object)[
+		"name" => "tanaka",
+		"age" => 26,
+	];
+?>
+<div data-val=$person->name>suzuki</div>
+<!-- data-val=$person->age -->
+
+</html>

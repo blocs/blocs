@@ -1,0 +1,78 @@
+<html>
+
+<font color='red'>data-attribute</font>
+<hr />
+
+<?php
+	$url = 'http://www.yahoo.co.jp/';
+	$title = 'Yahoo!';
+?>
+<font color='blue'>値の代入</font><br />
+<div data-attribute='href' data-val=$url><a>suzuki</a></div>
+<!-- data-attribute="href" data-val=$url -->
+<a>Google</a>
+<hr />
+
+<font color='blue'>値の代入</font><br />
+<!-- data-attribute="href" data-val=$url -->
+<a data-exist=$url data-val=$title></a><!-- data-none=$url data-val=$title -->
+<hr />
+
+<?php unset($url); ?>
+<font color='blue'>未定義値の代入</font><br />
+<!-- data-attribute="href" data-val=$url -->
+<a data-exist=$url data-val=$title></a><!-- data-none=$url data-val=$title -->
+<hr />
+
+<?php $class = 'yada test'; ?>
+<font color='blue'>クラス名の代入</font><br />
+<!-- data-attribute="class" data-val='error' -->
+<!-- data-attribute="class" data-val=$class data-prefix=' ' -->
+<div class='error'>suzuki</div>
+<hr />
+
+<font color='blue'>クラス名の代入</font><br />
+<!-- data-attribute="class" data-val=$class data-prefix=' ' -->
+<!-- data-attribute="class" data-val=$class data-prefix=' ' -->
+<div>suzuki</div>
+<hr />
+
+<?php $zero = 0; ?>
+<font color='blue'>0をクラス名に代入</font><br />
+<!-- data-attribute="class" data-val=$zero -->
+<div>suzuki</div>
+<!-- data-attribute="class" data-val="{$zero}" -->
+<div>suzuki</div>
+<hr />
+
+<?php $blank = ''; ?>
+<font color='blue'>空白のクラス名の代入</font><br />
+<!-- data-attribute="class" data-val=$blank -->
+<div>suzuki</div>
+<!-- data-attribute="class" data-val="{$blank}" -->
+<div>suzuki</div>
+<hr />
+
+<font color='blue'>未定義をクラス名に代入</font><br />
+<!-- data-attribute="class" data-val=$undefined -->
+<div>suzuki</div>
+<hr />
+
+<?php
+	$class1 = 'yada';
+	$class2 = 'test';
+?>
+<font color='blue'>複数のクラス名の代入</font><br />
+<!-- data-attribute="class" data-val=$class1 data-postfix=' ' -->
+<!-- data-attribute='class' data-val=$class2 -->
+<div class='error '>suzuki</div>
+<hr />
+
+<?php unset($class2); ?>
+<font color='blue'>複数のクラス名と未定義値の代入</font><br />
+<!-- data-attribute="class" data-val=$class1 data-postfix=' ' -->
+<!-- data-attribute='class' data-val=$class2 -->
+<div class='error'>suzuki</div>
+<hr />
+
+</html>

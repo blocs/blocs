@@ -1,0 +1,38 @@
+<html>
+
+<form action='./' method='post'>
+
+<font color='red'>push_menu_array</font>
+<hr />
+
+<select id="type" name="type">
+<option value="company">法人のお客様</option>
+<option value="private">個人のお客様</option>
+<option value="other">その他</option>
+</select>
+<hr />
+
+<label><input type="checkbox" name="size[]" value="s" /> S</label>
+<label><input type="checkbox" name="size[]" value="m" /> M</label>
+<label><input type="checkbox" name="size[]" value="l" /> L</label>
+<label data-repeat=$menu_size>
+<!-- data-attribute="value" data-val=$value -->
+<input type="checkbox" name="size[]" /> <!-- data-val=$label -->
+</label>
+<hr />
+
+<input id="sex_m" type="radio" name="sex" value="m" checked="checked" /> <label for="sex_m">男</label>
+<label><input type="radio" name="sex" value="f" /> 女</label>
+<hr />
+
+<label data-repeat=$menu_sex2>
+<!-- data-attribute="value" data-val=$value -->
+<input type="radio" name='sex2' /> <!-- data-val=$label -->
+</label>
+<hr />
+
+<input type='submit' />
+
+</form>
+
+</html>

@@ -1,0 +1,74 @@
+<html>
+
+<font color='red'>data-convert</font>
+<hr />
+
+<?php $price = 30000; ?>
+<font color='blue'>number</font><br />
+<div data-val=$price data-prefix='¥'>suzuki</div>
+<!-- data-val=$price data-prefix='¥' -->
+<div data-val=$price data-prefix='¥' data-convert='number'>suzuki</div>
+<!-- data-val=$price data-prefix='¥' data-convert='number' -->
+<div data-val="{$price}" data-convert='number'>suzuki</div>
+<!-- data-val="{$price}" data-convert='number' -->
+<div><!-- data-val="{$price}" data-convert='number:2' --></div>
+<div><!-- data-val="{$price}" data-convert='number:"3"' --></div>
+<hr />
+
+<?php $insert = '2013-12-05'; ?>
+<font color='blue'>mdate</font><br />
+<div data-val=$insert data-prefix='¥' data-convert='jdate:"m/d(D)"'>suzuki</div>
+<!-- data-val=$insert data-prefix='¥' data-convert='jdate:"m/d(D)"' -->
+<div data-val="{$insert}" data-convert='jdate:"m/d(D)"'>suzuki</div>
+<!-- data-val="{$insert}" data-convert='jdate:"m/d(D)"' -->
+<hr />
+
+<font color='blue'>date</font><br />
+<div data-val=$insert data-prefix='¥' data-convert='jdate'>suzuki</div>
+<!-- data-val=$insert data-prefix='¥' data-convert='jdate' -->
+<div data-val="{$insert}" data-convert='jdate'>suzuki</div>
+<!-- data-val="{$insert}" data-convert='jdate' -->
+<hr />
+
+<font color='blue'>tdate</font><br />
+<div data-val=$insert data-prefix='¥' data-convert='jdate:"Y/m/d H:i:s"'>suzuki</div>
+<!-- data-val=$insert data-prefix='¥' data-convert='jdate:"Y/m/d H:i:s"' -->
+<div data-val="{$insert}" data-convert='jdate:"Y/m/d H:i:s"'>suzuki</div>
+<!-- data-val="{$insert}" data-convert='jdate:"Y/m/d H:i:s"' -->
+<hr />
+
+<font color='blue'>sdate</font><br />
+<div data-val=$insert data-prefix='¥' data-convert='jdate:"Y.m.d"'>suzuki</div>
+<!-- data-val=$insert data-prefix='¥' data-convert='jdate:"Y.m.d"' -->
+<div data-val="{$insert}" data-convert='jdate:"Y.m.d"'>suzuki</div>
+<!-- data-val="{$insert}" data-convert='jdate:"Y.m.d"' -->
+<hr />
+
+<font color='blue'>hidden</font><br />
+<div data-val=$insert data-prefix='¥' data-convert='hidden'>suzuki</div>
+<!-- data-val=$insert data-prefix='¥' data-convert='hidden' -->
+<div data-val="{$insert}" data-convert='hidden'>suzuki</div>
+<!-- data-val="{$insert}" data-convert='hidden' -->
+<hr />
+
+<?php $insert = '<test>'; ?>
+<font color='blue'>original</font><br />
+<div data-val=$insert data-prefix='¥' data-convert='original'>suzuki</div>
+<hr />
+
+<?php $insert = '<test>'; ?>
+<font color='blue'>raw_original</font><br />
+<div data-val=$insert data-prefix='¥' data-convert='raw_original'>suzuki</div>
+<hr />
+
+<?php $insert = '<test>'; ?>
+<font color='blue'>raw_original2</font><br />
+<div data-val=$insert data-prefix='¥' data-convert='raw_original2'>suzuki</div>
+<hr />
+
+<font color='blue'>data-filter</font><br />
+<input type='text' name='name' id='name' data-filter='trim|katakana'>
+<div data-val=$name>suzuki</div>
+<hr />
+
+</html>
