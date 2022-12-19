@@ -34,12 +34,12 @@ LaravelにはBladeがありますが、より使い勝手のいいテンプレ�
 ```html
 <form method="post">
 @csrf
-<label for='name'>名前</label>
-<input type='text' name='name' data-filter='katakana' required />
+<label for="name">名前</label>
+<input type="text" name="name" data-filter="katakana" required />
 <!-- data-form="name" data-validate="required" data-lang="必須入力です。" -->
 
-@error('name') <div>{{ $message }}</div> @enderror
-<input type='submit' />
+@error("name") <div>{{ $message }}</div> @enderror
+<input type="submit" />
 </form>
 ```
 
@@ -83,10 +83,10 @@ BLOCSテンプレートのファイル名は`*.blocs.html`です。データ属�
 
 /routes/web.php
 ```php
-Route::get('/blocs', function () {
-    return view('example', [
-        'name' => 'BLOCS',
-        'url' => 'https://blocs.jp/'
+Route::get("/blocs", function () {
+    return view("example", [
+        "name" => "BLOCS",
+        "url" => "https://blocs.jp/"
     ]);
 });
 ```
@@ -102,28 +102,30 @@ http://127.0.0.1:8000/blocs
 他のテンプレートを読み込む時や、HTMLタグに属性を動的に追加する時に、コメント記法で記述します。データ属性`data-attribute`は、コメント記法の次にあるHTMLタグの属性値を置換します。下記の例では`$url`の値を`a`の`href`にセットします。タグ記法とコメント記法は併用できます。
 
 /resources/views/example.blocs.html  
-2行目 `a`に`href`を付加  
-3行目 `a`にデータ属性を追加
+2行目 header.htmlを読み込み  
 ```html
 <html>
-<!-- data-attribute='href' data-val=$url -->
-<a data-val=$name></a>
+<!-- data-include="header.html" $name="BLOCS" -->
 </html>
+```
+
+/resources/views/header.html  
+```html
+ヘッダー
+<div data-val=$name><a>test</a></div>
 ```
 
 /routes/web.php
 ```php
-Route::get('/blocs', function () {
-    return view('example', [
-        'name' => 'BLOCS',
-        'url' => 'https://blocs.jp/'
-    ]);
+Route::get("/blocs", function () {
+    return view("example");
 });
 ```
 
 http://127.0.0.1:8000/blocs
 ```html
 <html>
-<a href="https://blocs.jp/">BLOCS</a>
+ヘッダー
+<div>BLOCS</div>
 </html>
 ```
