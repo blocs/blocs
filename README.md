@@ -82,10 +82,10 @@ BLOCSテンプレートのファイル名は`*.blocs.html`です。データ属�
 /routes/web.php
 ```php
 Route::get("/blocs", function () {
-    return view("example", [
-		"error" => true,
-		"message" => "A fatal error has occurred."
-    ]);
+  return view("example", [
+    "error" => true,
+    "message" => "A fatal error has occurred."
+  ]);
 });
 ```
 
@@ -111,10 +111,10 @@ http://127.0.0.1:8000/blocs
 /routes/web.php
 ```php
 Route::get("/blocs", function () {
-    return view("example", [
-		"error" => false,
-		"message" => "No error has occurred."
-    ]);
+  return view("example", [
+    "error" => false,
+    "message" => "No error has occurred."
+  ]);
 });
 ```
 
