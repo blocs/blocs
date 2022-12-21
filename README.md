@@ -25,9 +25,7 @@ LaravelにはBladeがありますが、より使い勝手のいいテンプレ�
 ## 特徴
 - HTMLと相性のよい記述方法（タグ記法、コメント記法）、Bladeも使える
 ```html
-<font color="red" data-val=$message>
-    Test
-</font>
+<font color="red" data-exist=$error data-val=$message>Message</font>
 ```
 
 - テンプレートでバリデーションを指定
@@ -71,13 +69,13 @@ php >= 7.2.5
 BLOCSテンプレートのファイル名は`*.blocs.html`です。データ属性は、HTMLタグに属性を追加するタグ記法と、コメントで記述するコメント記法の２つの記述方法があります。4種類のデータ属性をタグ記法とコメント記法で記述してHTMLを動的に生成します。
 
 ## タグ記法
-タグ記法は、HTMLタグにデータ属性`data-*`を追加する記述方法です。開始タグに追加したデータ属性は、終了タグまで影響します。下記の例では`$name`の値で`div`の間のコンテンツをすべて置換します。追加したデータ属性は、BLOCSが生成したHTMLでは削除されます。
+タグ記法は、HTMLタグにデータ属性`data-*`を追加する記述方法です。開始タグに追加したデータ属性は、終了タグまで影響します。下記の例では`$message`の値で`font`の間のコンテンツをすべて置換します。追加したデータ属性は、BLOCSが生成したHTMLでは削除されます。
 
 /resources/views/example.blocs.html  
-2行目 `div`にデータ属性を追加
+2行目 `$error`があれば、`$message`を表示
 ```html
 <html>
-<div data-val=$name><a>test</a></div>
+<font color="red" data-exist=$error data-val=$message>Message</font>
 </html>
 ```
 
@@ -85,8 +83,8 @@ BLOCSテンプレートのファイル名は`*.blocs.html`です。データ属�
 ```php
 Route::get("/blocs", function () {
     return view("example", [
-        "name" => "BLOCS",
-        "url" => "https://blocs.jp/"
+		"error" => true,
+		"message" => "A fatal error has occurred."
     ]);
 });
 ```
@@ -94,38 +92,35 @@ Route::get("/blocs", function () {
 http://127.0.0.1:8000/blocs
 ```html
 <html>
-<div>BLOCS</div>
+<font color="red">A fatal error has occurred.</font>
 </html>
 ```
 
 ## コメント記法
-他のテンプレートを読み込む時や、HTMLタグに属性を動的に追加する時に、コメント記法で記述します。データ属性`data-attribute`は、コメント記法の次にあるHTMLタグの属性値を置換します。下記の例では`$url`の値を`a`の`href`にセットします。タグ記法とコメント記法は併用できます。
+他のテンプレートを読み込む時や、HTMLタグに属性を動的に追加する時に、コメント記法で記述します。データ属性`data-attribute`は、コメント記法の次にあるHTMLタグの属性値を置換します。下記の例では`$error`がない（エラーが発生しなかった）時は、`font`の`color`に`blue`をセットします。タグ記法とコメント記法は併用できます。
 
 /resources/views/example.blocs.html  
-2行目 header.htmlを読み込み  
+2行目 `$error`がなければ、`font`の`color`を`blue`にする   
 ```html
 <html>
-<!-- data-include="header.html" $name="BLOCS" -->
+<!-- data-attribute="color" data-val="blue" data-none=$error -->
+<font color="red" data-val=$message>Message</font>
 </html>
-```
-
-/resources/views/header.html  
-```html
-ヘッダー
-<div data-val=$name><a>test</a></div>
 ```
 
 /routes/web.php
 ```php
 Route::get("/blocs", function () {
-    return view("example");
+    return view("example", [
+		"error" => false,
+		"message" => "No error has occurred."
+    ]);
 });
 ```
 
 http://127.0.0.1:8000/blocs
 ```html
 <html>
-ヘッダー
-<div>BLOCS</div>
+<font color="blue">No error has occurred.</font>
 </html>
 ```
