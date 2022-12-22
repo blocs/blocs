@@ -23,9 +23,9 @@ BLOCSは、PHPのテンプレートエンジンです。BLOCSは、プログラ�
 LaravelにはBladeがありますが、より使い勝手のいいテンプレートエンジンを目指して開発しています。
 
 ## 特徴
-- HTMLと相性のよい記述方法（タグ記法、コメント記法）、Bladeも使える
+- HTMLをくずさない記述方法（タグ記法、コメント記法）、Bladeも使える
 ```html
-<font color="red" data-exist=$error data-val=$message>Message</font>
+<font color="red" data-exist=$error>{{ $message }}</font>
 ```
 
 - テンプレートでバリデーションを指定
@@ -42,6 +42,43 @@ LaravelにはBladeがありますが、より使い勝手のいいテンプレ�
 ```
 
 - `select` `radio` `checkbox`の項目を動的に追加
+
+/routes/web.php  
+2行目 `Warning`を追加
+```php
+Route::get("/blocs", function () {
+  \Blocs\Option::add("level", ["2" => "Warning"]);
+
+  return view("example", [
+    "level" => "2"
+  ]);
+});
+```
+
+/resources/views/example.blocs.html
+```html
+<html>
+<form>
+  <select name="level">
+    <option value="">No error</option>
+    <option value="1">Fatal error</option>
+  </select>
+</form>
+</html>
+```
+
+http://127.0.0.1:8000/blocs
+```html
+<html>
+<form>
+  <select name="level">
+    <option value="">No error</option>
+    <option value="1">Fatal error</option>
+    <option value="2" selected>Warning</option>
+  </select>
+</form>
+</html>
+```
 
 # 導入方法
 composerで導入してください。
@@ -66,18 +103,10 @@ Laravel >= 7
 php >= 7.2.5
 
 # 使い方
-BLOCSテンプレートのファイル名は`*.blocs.html`です。データ属性は、HTMLタグに属性を追加するタグ記法と、コメントで記述するコメント記法の２つの記述方法があります。4種類のデータ属性をタグ記法とコメント記法で記述してHTMLを動的に生成します。
+BLOCSテンプレートのファイル名は`*.blocs.html`です。データ属性`data-*`は、HTMLタグに属性を追加するタグ記法と、コメントで記述するコメント記法の２つの記述方法があります。4種類のデータ属性をタグ記法とコメント記法で記述して、HTMLを動的に生成します。
 
 ## タグ記法
-タグ記法は、HTMLタグにデータ属性`data-*`を追加する記述方法です。開始タグに追加したデータ属性は、終了タグまで影響します。下記の例では`$message`の値で`font`の間のコンテンツをすべて置換します。追加したデータ属性は、BLOCSが生成したHTMLでは削除されます。
-
-/resources/views/example.blocs.html  
-2行目 `$error`があれば、`$message`を表示
-```html
-<html>
-<font color="red" data-exist=$error data-val=$message>Message</font>
-</html>
-```
+タグ記法は、HTMLタグにデータ属性を追加する記述方法です。開始タグに追加したデータ属性は、終了タグまで影響します。下記の例では、`$message`の値で`font`の間のコンテンツをすべて置換します。追加したデータ属性は、BLOCSが生成したHTMLでは削除されます。
 
 /routes/web.php
 ```php
@@ -87,6 +116,14 @@ Route::get("/blocs", function () {
     "message" => "A fatal error has occurred."
   ]);
 });
+```
+
+/resources/views/example.blocs.html  
+2行目 `$error`があれば、`$message`を表示
+```html
+<html>
+<font color="red" data-exist=$error data-val=$message>Message</font>
+</html>
 ```
 
 http://127.0.0.1:8000/blocs
@@ -99,15 +136,6 @@ http://127.0.0.1:8000/blocs
 ## コメント記法
 他のテンプレートを読み込む時や、HTMLタグに属性を動的に追加する時に、コメント記法で記述します。データ属性`data-attribute`は、コメント記法の次にあるHTMLタグの属性値を置換します。下記の例では`$error`がない（エラーが発生しなかった）時は、`font`の`color`に`blue`をセットします。タグ記法とコメント記法は併用できます。
 
-/resources/views/example.blocs.html  
-2行目 `$error`がなければ、`font`の`color`を`blue`にする   
-```html
-<html>
-<!-- data-attribute="color" data-val="blue" data-none=$error -->
-<font color="red" data-val=$message>Message</font>
-</html>
-```
-
 /routes/web.php
 ```php
 Route::get("/blocs", function () {
@@ -116,6 +144,15 @@ Route::get("/blocs", function () {
     "message" => "No error has occurred."
   ]);
 });
+```
+
+/resources/views/example.blocs.html  
+2行目 `$error`がなければ、`font`の`color`を`blue`にする   
+```html
+<html>
+<!-- data-attribute="color" data-val="blue" data-none=$error -->
+<font color="red" data-val=$message>Message</font>
+</html>
 ```
 
 http://127.0.0.1:8000/blocs
