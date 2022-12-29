@@ -1,0 +1,6 @@
+<snippet>
+    <content><![CDATA[<!-- data-assign=\$${1:variable} data-val=\$${2:variable} -->]]></content>
+    <tabTrigger>data-assign</tabTrigger>
+    <scope>text.html.basic</scope>
+    <description><![CDATA[data-assign=$variable]]></description>
+</snippet>
