@@ -491,10 +491,6 @@ class BlocsCompiler
     // コメントタグをパーシングしてコメント記法を処理
     private function parseCommentTag(&$htmlBuff, &$htmlArray)
     {
-        if (false === strpos($htmlBuff, 'data-')) {
-            return;
-        }
-
         // コメントタグをパース
         list($includeBuff) = Parser::parse($htmlBuff, true);
         if (!isset($includeBuff['attribute'])) {
@@ -504,6 +500,21 @@ class BlocsCompiler
         $rawBuff = $includeBuff['raw'];
         $attrArray = $includeBuff['attribute'];
         $quotesArray = $includeBuff['quotes'];
+
+        // 変数の代入だけの時は簡単に記述できるように
+        $is_assignValue = true;
+        foreach ($attrArray as $key => $value) {
+            if (!Common::checkValueName($key) && '--' !== $key) {
+                $is_assignValue = false;
+                break;
+            }
+        }
+
+        if ($is_assignValue) {
+            $htmlBuff = self::assignValue($attrArray, $quotesArray);
+
+            return;
+        }
 
         /* コメント記法のデータ属性処理 */
 
@@ -581,15 +592,9 @@ class BlocsCompiler
             }
 
             $htmlArray = array_merge($resultArray, $htmlArray);
-            $htmlBuff = '';
 
             // 引数を渡せるように
-            foreach ($attrArray as $key => $value) {
-                if (Common::checkValueName($key)) {
-                    $quotes = empty($quotesArray[$key]) ? '' : $quotesArray[$key];
-                    $htmlBuff .= "<?php {$key} = {$quotes}{$value}{$quotes}; ?>";
-                }
-            }
+            $htmlBuff = self::assignValue($attrArray, $quotesArray);
 
             return;
         }
@@ -1125,6 +1130,22 @@ END_of_HTML;
         }
 
         return $rawBuff;
+    }
+
+    private static function assignValue($attrArray, $quotesArray)
+    {
+        $htmlBuff = '';
+
+        foreach ($attrArray as $key => $value) {
+            if (!Common::checkValueName($key)) {
+                continue;
+            }
+
+            $quotes = empty($quotesArray[$key]) ? '' : $quotesArray[$key];
+            $htmlBuff .= "<?php {$key} = {$quotes}{$value}{$quotes}; ?>";
+        }
+
+        return $htmlBuff;
     }
 }
 

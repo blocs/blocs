@@ -16,42 +16,16 @@ class Parser
         '->',
     ];
 
-    private static $allHtmlString;
+    private static $htmlString;
 
     // HTMLをタグ単位で配列に分解
-    public static function parse($allHtmlString, $commentParse = false)
+    public static function parse($htmlString, $commentParse = false)
     {
-        self::$allHtmlString = $allHtmlString;
+        self::$htmlString = $htmlString;
+        $htmlString = self::escepeOperator($htmlString);
+        $htmlList = preg_split('/([<>="\'])/s', $htmlString, -1, PREG_SPLIT_DELIM_CAPTURE);
 
         $parsedHtml = [];
-        $isPhp = false;
-
-        if ($commentParse) {
-            // コメントをパースする
-            $commentList = [$allHtmlString];
-        } else {
-            // コメントはパースしない
-            $commentList = preg_split('/('.BLOCS_COMMENT_TAG_REGREX.')/s', $allHtmlString, -1, PREG_SPLIT_DELIM_CAPTURE);
-        }
-
-        foreach ($commentList as $commentNum => $htmlString) {
-            if ($commentNum % 2) {
-                // コメントはそのまま格納
-                array_push($parsedHtml, $htmlString);
-                continue;
-            }
-
-            self::parseHTML($parsedHtml, $isPhp, $htmlString);
-        }
-
-        return $parsedHtml;
-    }
-
-    private static function parseHTML(&$parsedHtml, &$isPhp, $htmlString)
-    {
-        $htmlString = self::escepeOperator($htmlString);
-
-        $htmlList = preg_split('/([<>="\'])/s', $htmlString, -1, PREG_SPLIT_DELIM_CAPTURE);
         $rawString = '';
         $attrString = '';
 
@@ -60,6 +34,7 @@ class Parser
         $attrList = [];
         $quotesList = [];
 
+        $isPhp = false;
         $isQuote = '';
 
         foreach ($htmlList as $htmlNum => $htmlBuff) {
@@ -112,12 +87,17 @@ class Parser
                     $attrList[$attrName] = substr($attrValue, 1, -1);
                 }
 
-                array_push($parsedHtml, [
-                    'raw' => self::replaceAliasAttrName($rawString),
-                    'tag' => $tagName,
-                    'attribute' => $attrList,
-                    'quotes' => $quotesList,
-                ]);
+                if ('!--' === $tagName && !$commentParse) {
+                    // コメントをパースしない
+                    strlen($rawString) && $parsedHtml[] = $rawString;
+                } else {
+                    array_push($parsedHtml, [
+                        'raw' => self::replaceAliasAttrName($rawString),
+                        'tag' => $tagName,
+                        'attribute' => $attrList,
+                        'quotes' => $quotesList,
+                    ]);
+                }
 
                 $rawString = '';
                 $attrString = '';
@@ -170,6 +150,8 @@ class Parser
         }
 
         strlen($rawString) && $parsedHtml[] = $rawString;
+
+        return $parsedHtml;
     }
 
     private static function addAttrList(&$attrList, $attrName, $attrString, &$rawString)
@@ -183,7 +165,7 @@ class Parser
         // collectionでなければ、data-loopをdata-repeatに置換（現行の機能保証）
         if (BLOCS_DATA_LOOP === $attrName && !empty($attrValue)) {
             $strSingular = method_exists('Str', 'singular') ? \Str::singular(substr($attrValue, 1)) : false;
-            if (!$strSingular || !strpos(self::$allHtmlString, '$'.$strSingular.'->')) {
+            if (!$strSingular || !strpos(self::$htmlString, '$'.$strSingular.'->')) {
                 unset($attrList[BLOCS_DATA_LOOP]);
                 $attrName = BLOCS_DATA_REPEAT;
 
@@ -224,19 +206,15 @@ class Parser
 
     private static function escepeOperator($htmlString)
     {
-        if (strlen($htmlString) < 2) {
-            return $htmlString;
-        }
-
-        $firstChar = substr($htmlString, 0, 1);
-        $lastChar = substr($htmlString, -1);
-        $htmlString = substr($htmlString, 1, -1);
+        $htmlString = str_replace('-->', 'REPLACE_TO_COMMENT_OPERATOR', $htmlString);
 
         foreach (self::$escapeOperatorList as $num => $escapeOperator) {
             $htmlString = str_replace($escapeOperator, "REPLACE_TO_OPERATOR_{$num}", $htmlString);
         }
 
-        return $firstChar.$htmlString.$lastChar;
+        $htmlString = str_replace('REPLACE_TO_COMMENT_OPERATOR', '-->', $htmlString);
+
+        return $htmlString;
     }
 
     private static function backOperator($htmlString)
