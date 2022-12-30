@@ -1,0 +1,6 @@
+<snippet>
+    <content><![CDATA[data-postfix="${1:postfix}"]]></content>
+    <tabTrigger>data-postfix</tabTrigger>
+    <scope>text.html.basic</scope>
+    <description><![CDATA[data-postfix="postfix"]]></description>
+</snippet>

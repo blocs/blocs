@@ -1,0 +1,6 @@
+<snippet>
+    <content><![CDATA[<!-- data-form="${1:form}" data-validate="${2:validate}" data-lang="${3:code}" -->]]></content>
+    <tabTrigger>data-validate</tabTrigger>
+    <scope>text.html.basic</scope>
+    <description><![CDATA[data-validate="validate"]]></description>
+</snippet>
