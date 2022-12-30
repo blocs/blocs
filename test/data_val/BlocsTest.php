@@ -1,6 +1,6 @@
 <?php
 
-namespace data_var;
+namespace data_val;
 
 use PHPUnit\Framework\TestCase;
 
