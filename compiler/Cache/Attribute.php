@@ -8,16 +8,20 @@ class Attribute
     public static function val($attrArray, $quotesArray, &$dataAttribute, $tag = '', &$tagCounter = null, &$htmlArray = null)
     {
         $resultBuff = '';
+
+        isset($quotesArray[BLOCS_DATA_VAL]) || $quotesArray[BLOCS_DATA_VAL] = '';
+        $dataVal = $quotesArray[BLOCS_DATA_VAL].$attrArray[BLOCS_DATA_VAL].$quotesArray[BLOCS_DATA_VAL];
+
+        if (Common::checkValueName($attrArray[BLOCS_DATA_VAL])) {
+            $resultBuff .= "<?php if(isset({$attrArray[BLOCS_DATA_VAL]}) && !is_object({$attrArray[BLOCS_DATA_VAL]}) && !is_array({$attrArray[BLOCS_DATA_VAL]}) && strlen({$attrArray[BLOCS_DATA_VAL]})): ?>\n";
+        } else {
+            $resultBuff .= "<?php if(strlen({$dataVal})): ?>\n";
+        }
+
         if (!empty($attrArray[BLOCS_DATA_QUERY])) {
             Common::checkValueName($attrArray[BLOCS_DATA_QUERY]) || trigger_error('B012: Invalid condition "'.BLOCS_DATA_QUERY.'" ('.$attrArray[BLOCS_DATA_QUERY].')', E_USER_ERROR);
 
             $resultBuff .= "<?php \$dataVal = ''; ?>\n";
-        }
-
-        isset($quotesArray[BLOCS_DATA_VAL]) || $quotesArray[BLOCS_DATA_VAL] = '';
-        if (Common::checkValueName($attrArray[BLOCS_DATA_VAL])) {
-            $resultBuff .= "<?php if(isset({$attrArray[BLOCS_DATA_VAL]}) && (is_array({$attrArray[BLOCS_DATA_VAL]}) || strlen({$attrArray[BLOCS_DATA_VAL]}))): ?>\n";
-            $quotesArray[BLOCS_DATA_VAL] = '';
         }
 
         $resultBuff = self::addFixValue($attrArray, $quotesArray, $resultBuff, BLOCS_DATA_PREFIX);
@@ -38,9 +42,9 @@ class Attribute
             list($convertClass, $convertFunc, $convertArg) = Common::checkFunc($attrArray[BLOCS_DATA_CONVERT]);
             $convertFunc = self::findConvertFunc($convertClass, $convertFunc);
 
-            $resultBuff .= $convertFunc.'('.$quotesArray[BLOCS_DATA_VAL].$attrArray[BLOCS_DATA_VAL].$quotesArray[BLOCS_DATA_VAL].$convertArg.')';
+            $resultBuff .= $convertFunc.'('.$dataVal.$convertArg.')';
         } else {
-            $resultBuff .= $quotesArray[BLOCS_DATA_VAL].$attrArray[BLOCS_DATA_VAL].$quotesArray[BLOCS_DATA_VAL];
+            $resultBuff .= $dataVal;
         }
         isset($postConvert) && $resultBuff .= $postConvert;
 
@@ -56,7 +60,7 @@ class Attribute
             $resultBuff .= "<?php {$attrArray[BLOCS_DATA_QUERY]} = \$dataVal; ?>\n";
         }
 
-        Common::checkValueName($attrArray[BLOCS_DATA_VAL]) && $resultBuff .= BLOCS_ENDIF_SCRIPT;
+        $resultBuff .= BLOCS_ENDIF_SCRIPT;
 
         if (isset($attrArray[BLOCS_DATA_ATTRIBUTE])) {
             // data-attributeが設定されている時の処理
@@ -233,12 +237,12 @@ END_of_HTML;
 
     private static function addFixValue($attrArray, $quotesArray, $resultBuff, $attrName)
     {
-        if (!(isset($attrArray[$attrName]) && Common::checkValueName($attrArray[BLOCS_DATA_VAL]))) {
+        if (!(isset($attrArray[$attrName]))) {
             return $resultBuff;
         }
 
         if (empty($attrArray[BLOCS_DATA_QUERY])) {
-            if (Common::checkValueName($attrArray[$attrName])) {
+            if (empty($quotesArray[$attrName])) {
                 // 変数の場合
                 return $resultBuff."<?php echo({$attrArray[$attrName]}); ?>\n";
             } else {
