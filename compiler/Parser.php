@@ -16,221 +16,243 @@ class Parser
         '->',
     ];
 
-    // HTMLをタグ単位で配列に分解
-    public static function parse($writeBuff, $commentParse = false)
-    {
-        $pairTag = [];
-        $commentTagRegex = '<!(?:--[^-]*-(?:[^-]+-)*?-(?:[^>-]*(?:-[^>-]+)*?)??)*(?:>|$(?!\n)|--.*$)';
-        $tagNameRegex = '[a-zA-Z\_\:\!\$][a-zA-Z0-9\_\:\-\.]*';
+    private static $allHtmlString;
 
-        $pairBuff = '';
-        $phpBuff = '';
-        $resultArray = [''];
+    // HTMLをタグ単位で配列に分解
+    public static function parse($allHtmlString, $commentParse = false)
+    {
+        self::$allHtmlString = $allHtmlString;
+
+        $parsedHtml = [];
+        $isPhp = false;
 
         if ($commentParse) {
-            // コメントもパースする
-            $comArray = [$writeBuff];
+            // コメントをパースする
+            $commentList = [$allHtmlString];
         } else {
             // コメントはパースしない
-            $comArray = preg_split('/('.$commentTagRegex.')/s', $writeBuff, -1, PREG_SPLIT_DELIM_CAPTURE);
+            $commentList = preg_split('/('.BLOCS_COMMENT_TAG_REGREX.')/s', $allHtmlString, -1, PREG_SPLIT_DELIM_CAPTURE);
         }
 
-        foreach ($comArray as $comNum => $comBuff) {
-            if ($comNum % 2) {
-                strlen(end($resultArray)) || array_pop($resultArray);
-                array_push($resultArray, $comBuff, '');
+        foreach ($commentList as $commentNum => $htmlString) {
+            if ($commentNum % 2) {
+                // コメントはそのまま格納
+                array_push($parsedHtml, $htmlString);
                 continue;
             }
 
-            $comBuff = self::escepeOperator($comBuff);
+            self::parseHTML($parsedHtml, $isPhp, $htmlString);
+        }
 
-            $tagName = '';
-            $attrName = '';
-            $tmpBuff = '';
-            $quotesBuff = '';
-            $attrBuff = '';
-            $attrList = [];
-            $quotesArray = [];
-            $tagArray = preg_split('/([<>="\'])/s', $comBuff, -1, PREG_SPLIT_DELIM_CAPTURE);
-            foreach ($tagArray as $tagNum => $tagBuff) {
-                $tagBuff = self::backOperator($tagBuff);
+        return $parsedHtml;
+    }
 
-                if ('<' === $tagBuff) {
-                    if (isset($tagArray[$tagNum + 1])) {
-                        if (!strncmp($tagArray[$tagNum + 1], '?', 1)) {
-                            $phpBuff = 1;
-                        } elseif (!strlen($quotesBuff) && !strlen($tagName) && !strlen($phpBuff)) {
-                            if (preg_match('/^('.$tagNameRegex.')/s', $tagArray[$tagNum + 1], $matcheList) || preg_match('/^(\/\s*'.$tagNameRegex.')/s', $tagArray[$tagNum + 1], $matcheList)) {
-                                $tagName = $matcheList[0];
-                            }
-                        }
+    private static function parseHTML(&$parsedHtml, &$isPhp, $htmlString)
+    {
+        $htmlString = self::escepeOperator($htmlString);
+
+        $htmlList = preg_split('/([<>="\'])/s', $htmlString, -1, PREG_SPLIT_DELIM_CAPTURE);
+        $rawString = '';
+        $attrString = '';
+
+        $tagName = '';
+        $attrName = '';
+        $attrList = [];
+        $quotesList = [];
+
+        $isQuote = '';
+
+        foreach ($htmlList as $htmlNum => $htmlBuff) {
+            $htmlBuff = self::backOperator($htmlBuff);
+
+            if ('<' === $htmlBuff && isset($htmlList[$htmlNum + 1])) {
+                $nextHtmlBuff = $htmlList[$htmlNum + 1];
+
+                if (!strncmp($nextHtmlBuff, '?', 1)) {
+                    $isPhp = true;
+                }
+
+                if (!strlen($tagName) && empty($isQuote) && !$isPhp) {
+                    if (preg_match('/^('.BLOCS_TAG_NAME_REGREX.')/s', $nextHtmlBuff, $matcheList) || preg_match('/^(\/\s*'.BLOCS_TAG_NAME_REGREX.')/s', $nextHtmlBuff, $matcheList)) {
+                        // タグ処理に切替
+                        $tagName = strtolower($matcheList[0]);
+
+                        // テキストを格納
+                        strlen($rawString) && $parsedHtml[] = $rawString;
+                        $rawString = '';
                     }
                 }
+            }
 
-                if ('>' === $tagBuff && isset($tagArray[$tagNum - 1]) && '?' === substr($tagArray[$tagNum - 1], -1)) {
-                    $phpBuff = '';
-                }
+            if ('>' === $htmlBuff && isset($htmlList[$htmlNum - 1]) && '?' === substr($htmlList[$htmlNum - 1], -1)) {
+                $isPhp = false;
+            }
 
-                if (!strlen($tagName)) {
-                    $resultArray[count($resultArray) - 1] .= $tagBuff;
-                    continue;
-                }
+            strlen($htmlBuff) && $rawString .= $htmlBuff;
 
-                $tmpBuff .= $tagBuff;
+            if (!strlen($tagName) || $isPhp) {
+                // タグ処理でない
+                continue;
+            }
 
-                if ('>' === $tagBuff && !strlen($quotesBuff)) {
-                    !strncmp($attrBuff, '<'.$tagName, strlen('<'.$tagName)) && !count($attrList) && $attrBuff = substr($attrBuff, strlen('<'.$tagName));
-                    $buff = array_filter(preg_split("/\s/", $attrBuff), 'strlen');
+            if ('>' === $htmlBuff && empty($isQuote)) {
+                $attrString = self::deleteTagName($attrString, $tagName);
+                self::addAttrList($attrList, $attrName, $attrString, $rawString);
 
-                    // collectionでなければ、data-loopをdata-repeatに置換
-                    if (BLOCS_DATA_LOOP === $attrName && !empty($buff[0])) {
-                        $strSingular = method_exists('Str', 'singular') ? \Str::singular(substr($buff[0], 1)) : false;
-                        if (!$strSingular || !strpos($writeBuff, '$'.$strSingular.'->')) {
-                            $tmpBuff = self::replaceAttribute($tmpBuff, [BLOCS_DATA_REPEAT => $buff[0]], BLOCS_DATA_REPEAT, BLOCS_DATA_LOOP);
-                            $attrName = BLOCS_DATA_REPEAT;
-                            unset($attrList[BLOCS_DATA_LOOP]);
-                        }
-                    }
-
-                    self::addAttrList($attrList, $attrName, $buff);
-
-                    $tagName = strtolower(preg_replace("/\s/s", '', $tagName));
-                    $pairBuff && $tagName === '/'.$pairBuff && $pairBuff = '';
-
-                    if ($pairBuff) {
-                        $resultArray[count($resultArray) - 1] .= $tmpBuff;
-                        $tmpBuff = '';
-                    } else {
-                        strlen(end($resultArray)) || array_pop($resultArray);
-                        in_array($tagName, $pairTag) && $pairBuff = $tagName;
-
-                        array_push($resultArray, [
-                            'raw' => self::replaceDataAttribute($tmpBuff, $attrList),
-                            'tag' => $tagName,
-                            'attribute' => $attrList,
-                            'quotes' => $quotesArray,
-                        ], '');
-                    }
-
-                    $tagName = '';
-                    $attrName = '';
-                    $tmpBuff = '';
-                    $quotesBuff = '';
-                    $attrBuff = '';
-                    $attrList = [];
-                    $quotesArray = [];
-                    continue;
-                }
-
-                if ('=' === $tagBuff && !strlen($quotesBuff) && !strlen($phpBuff)) {
-                    $buff = ((!strncmp($attrBuff, '<'.$tagName, strlen('<'.$tagName)) && !count($attrList)) ? substr($attrBuff, strlen('<'.$tagName)) : $attrBuff);
-                    $buff = array_filter(preg_split("/\s/", $buff), 'strlen');
-                    if (count($buff) && preg_match('/^'.$tagNameRegex.'$/s', end($buff))) {
-                        self::addAttrList($attrList, $attrName, $buff);
-
-                        $attrName = array_pop($buff);
-                        $attrBuff = '';
+                // "", ''で囲われていない属性
+                foreach ($attrList as $attrName => $attrValue) {
+                    if (empty($quotesList[$attrName])) {
                         continue;
                     }
+                    if (substr($attrValue, 0, 1) !== $quotesList[$attrName] || substr($attrValue, -1) !== $quotesList[$attrName]) {
+                        unset($quotesList[$attrName]);
+                        continue;
+                    }
+
+                    $attrList[$attrName] = substr($attrValue, 1, -1);
                 }
 
-                if (('"' === $tagBuff || '\'' === $tagBuff) && strlen($attrName) && !strlen($phpBuff)) {
-                    if ($quotesBuff) {
-                        if ($quotesBuff === $tagBuff) {
-                            $attrList[self::aliasAttrName($attrName)] .= $attrBuff;
-                            $quotesArray[self::aliasAttrName($attrName)] = $quotesBuff;
-                            $attrName = '';
-                            $quotesBuff = '';
-                            $attrBuff = '';
-                            continue;
-                        }
-                    } else {
-                        if (isset($tagArray[$tagNum - 1]) && !trim($tagArray[$tagNum - 1])) {
-                            if (isset($tagArray[$tagNum - 2]) && '=' === $tagArray[$tagNum - 2]) {
-                                $quotesBuff = $tagBuff;
-                                $attrBuff = '';
-                                continue;
-                            }
-                        }
+                array_push($parsedHtml, [
+                    'raw' => self::replaceAliasAttrName($rawString),
+                    'tag' => $tagName,
+                    'attribute' => $attrList,
+                    'quotes' => $quotesList,
+                ]);
+
+                $rawString = '';
+                $attrString = '';
+
+                // タグ処理を解除
+                $tagName = '';
+                $attrName = '';
+                $attrList = [];
+                $quotesList = [];
+
+                $isQuote = '';
+
+                continue;
+            }
+
+            if ('=' === $htmlBuff && empty($isQuote)) {
+                $attrString = self::deleteTagName($attrString, $tagName);
+                self::addAttrList($attrList, $attrName, $attrString, $rawString);
+
+                // =の前は次の属性名とする
+                $attrValueList = array_filter(preg_split("/\s/", $attrString), 'strlen');
+                $nextAttrName = end($attrValueList);
+                if (count($attrValueList) && preg_match('/^'.BLOCS_ATTR_NAME_REGREX.'$/s', $nextAttrName)) {
+                    $attrName = self::replaceAliasAttrName($nextAttrName);
+                } else {
+                    $attrName = '';
+                }
+
+                $attrString = '';
+
+                continue;
+            }
+
+            if (('"' === $htmlBuff || "'" === $htmlBuff) && strlen($attrName)) {
+                if (!empty($isQuote)) {
+                    if ($isQuote === $htmlBuff) {
+                        // quoteを無効にする
+                        $quotesList[$attrName] = $isQuote;
+                        $isQuote = '';
+                    }
+                } else {
+                    if (isset($htmlList[$htmlNum - 1]) && !trim($htmlList[$htmlNum - 1]) && isset($htmlList[$htmlNum - 2]) && '=' === $htmlList[$htmlNum - 2]) {
+                        // quoteを有効にする
+                        $isQuote = $htmlBuff;
                     }
                 }
-
-                $attrBuff .= $tagBuff;
             }
 
-            $tmpBuff && $resultArray[count($resultArray) - 1] .= $tmpBuff;
+            $attrString .= $htmlBuff;
         }
 
-        strlen(end($resultArray)) || array_pop($resultArray);
-
-        return $resultArray;
+        strlen($rawString) && $parsedHtml[] = $rawString;
     }
 
-    private static function addAttrList(&$attrList, $attrName, $attrBuff)
+    private static function addAttrList(&$attrList, $attrName, $attrString, &$rawString)
     {
-        foreach ($attrBuff as $buff) {
-            if ($attrName) {
-                $attrList[self::aliasAttrName($attrName)] = $buff;
-                $attrName = '';
+        $attrString = self::replaceAliasAttrName($attrString);
+        $attrValueList = preg_split("/(\s)/", trim($attrString), -1, PREG_SPLIT_DELIM_CAPTURE);
+
+        // 一つ目は必ず引数とする
+        $attrValue = count($attrValueList) ? array_shift($attrValueList) : '';
+
+        // collectionでなければ、data-loopをdata-repeatに置換（現行の機能保証）
+        if (BLOCS_DATA_LOOP === $attrName && !empty($attrValue)) {
+            $strSingular = method_exists('Str', 'singular') ? \Str::singular(substr($attrValue, 1)) : false;
+            if (!$strSingular || !strpos(self::$allHtmlString, '$'.$strSingular.'->')) {
+                unset($attrList[BLOCS_DATA_LOOP]);
+                $attrName = BLOCS_DATA_REPEAT;
+
+                $rawString = str_replace(BLOCS_DATA_LOOP, BLOCS_DATA_REPEAT, $rawString);
+            }
+        }
+
+        foreach (array_reverse($attrValueList) as $attrBuff) {
+            if (preg_match('/^'.BLOCS_ATTR_NAME_REGREX.'$/s', $attrBuff)) {
+                // 論理属性
+                $attrList[$attrBuff] = '';
+
+                array_pop($attrValueList);
+            } elseif (!strlen(trim($attrBuff))) {
+                array_pop($attrValueList);
             } else {
-                $attrList[self::aliasAttrName($buff)] = '';
-            }
-        }
-    }
-
-    private static function aliasAttrName($attrName)
-    {
-        foreach (self::$aliasAttrName as $aliasName => $realName) {
-            if ($aliasName === $attrName) {
-                return $realName;
+                break;
             }
         }
 
-        return $attrName;
+        $attrValue = $attrValue.implode('', $attrValueList);
+        if (empty($attrName)) {
+            strlen($attrValue) && $attrList[$attrValue] = '';
+        } else {
+            $attrList[$attrName] = $attrValue;
+        }
     }
 
-    private static function replaceAttribute($rawBuff, $attrArray, $attrName, $aliasName)
+    private static function replaceAliasAttrName($rawString)
     {
-        $rawBuff = preg_replace('/(\s+)'.$aliasName.'(\s*=\s*["\']{0,1}'.str_replace('/', '\/', preg_quote($attrArray[$attrName])).'["\']{0,1}[\s>\/]+)/si', '${1}'.$attrName.'${2}', $rawBuff);
-        $rawBuff = preg_replace('/(\s+)'.$aliasName.'([\s>\/]+)/si', '${1}'.$attrName.'${2}', $rawBuff);
-
-        return $rawBuff;
-    }
-
-    private static function replaceDataAttribute($rawBuff, $attrArray)
-    {
-        // エイリアス名に変換
+        // エイリアス名を変換
         foreach (self::$aliasAttrName as $aliasName => $attrName) {
-            isset($attrArray[$attrName]) && $rawBuff = self::replaceAttribute($rawBuff, $attrArray, $attrName, $aliasName);
+            $rawString = str_replace($aliasName, $attrName, $rawString);
         }
 
-        return $rawBuff;
+        return $rawString;
     }
 
-    private static function escepeOperator($comBuff)
+    private static function escepeOperator($htmlString)
     {
-        if (strlen($comBuff) < 2) {
-            return $comBuff;
+        if (strlen($htmlString) < 2) {
+            return $htmlString;
         }
 
-        $firstChar = substr($comBuff, 0, 1);
-        $lastChar = substr($comBuff, -1);
-        $comBuff = substr($comBuff, 1, -1);
+        $firstChar = substr($htmlString, 0, 1);
+        $lastChar = substr($htmlString, -1);
+        $htmlString = substr($htmlString, 1, -1);
 
         foreach (self::$escapeOperatorList as $num => $escapeOperator) {
-            $comBuff = str_replace($escapeOperator, "REPLACE_TO_OPERATOR_{$num}", $comBuff);
+            $htmlString = str_replace($escapeOperator, "REPLACE_TO_OPERATOR_{$num}", $htmlString);
         }
 
-        return $firstChar.$comBuff.$lastChar;
+        return $firstChar.$htmlString.$lastChar;
     }
 
-    private static function backOperator($comBuff)
+    private static function backOperator($htmlString)
     {
         foreach (self::$escapeOperatorList as $num => $escapeOperator) {
-            $comBuff = str_replace("REPLACE_TO_OPERATOR_{$num}", $escapeOperator, $comBuff);
+            $htmlString = str_replace("REPLACE_TO_OPERATOR_{$num}", $escapeOperator, $htmlString);
         }
 
-        return $comBuff;
+        return $htmlString;
+    }
+
+    private static function deleteTagName($attrString, $tagName)
+    {
+        strncmp($attrString, '<'.$tagName, strlen('<'.$tagName)) || $attrString = substr($attrString, strlen('<'.$tagName));
+
+        return $attrString;
     }
 }
 
