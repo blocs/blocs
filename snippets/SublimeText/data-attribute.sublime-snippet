@@ -1,0 +1,6 @@
+<snippet>
+    <content><![CDATA[<!-- data-attribute="${1:attribute}" data-val=\$${2:variable} -->]]></content>
+    <tabTrigger>data-attribute</tabTrigger>
+    <scope>text.html.basic</scope>
+    <description><![CDATA[data-attribute="attribute"]]></description>
+</snippet>
