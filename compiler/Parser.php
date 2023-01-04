@@ -162,17 +162,6 @@ class Parser
         // 一つ目は必ず引数とする
         $attrValue = count($attrValueList) ? array_shift($attrValueList) : '';
 
-        // collectionでなければ、data-loopをdata-repeatに置換（現行の機能保証）
-        if (BLOCS_DATA_LOOP === $attrName && !empty($attrValue)) {
-            $strSingular = method_exists('Str', 'singular') ? \Str::singular(substr($attrValue, 1)) : false;
-            if (!$strSingular || !strpos(self::$htmlString, '$'.$strSingular.'->')) {
-                unset($attrList[BLOCS_DATA_LOOP]);
-                $attrName = BLOCS_DATA_REPEAT;
-
-                $rawString = str_replace(BLOCS_DATA_LOOP, BLOCS_DATA_REPEAT, $rawString);
-            }
-        }
-
         foreach (array_reverse($attrValueList) as $attrBuff) {
             if (preg_match('/^'.BLOCS_ATTR_NAME_REGREX.'$/s', $attrBuff)) {
                 // 論理属性

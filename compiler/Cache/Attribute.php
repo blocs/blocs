@@ -221,9 +221,13 @@ END_of_HTML;
     // data-loopのスクリプトを生成
     public static function loop($attrList, $tagCounterNum)
     {
-        $strSingular = \Str::singular(substr($attrList[BLOCS_DATA_LOOP], 1));
+        if (empty($attrArray[BLOCS_DATA_ASSIGN])) {
+            $strSingular = '$'.\Str::singular(substr($attrArray[BLOCS_DATA_LOOP], 1));
+        } else {
+            $strSingular = $attrArray[BLOCS_DATA_ASSIGN];
+        }
 
-        $compiledTag = "@foreach ({$attrList[BLOCS_DATA_LOOP]} as \${$strSingular})\n";
+        $compiledTag = "@foreach ({$attrArray[BLOCS_DATA_LOOP]} as {$strSingular})\n";
         $compiledTag .= "@php \$repeatIndex{$tagCounterNum} = \$loop->index; @endphp\n";
 
         return $compiledTag;
