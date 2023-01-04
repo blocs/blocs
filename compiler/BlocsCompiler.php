@@ -180,16 +180,16 @@ class BlocsCompiler
 
             /* タグを処理 */
 
-            $attrArray = $htmlBuff['attribute'];
-            $quotesArray = $htmlBuff['quotes'];
-            $tag = $htmlBuff['tag'];
-            $type = isset($attrArray['type']) ? strtolower($attrArray['type']) : '';
+            $tagName = $htmlBuff['tag'];
+            $attrList = $htmlBuff['attribute'];
+            $quotesList = $htmlBuff['quotes'];
+            $type = isset($attrList['type']) ? strtolower($attrList['type']) : '';
 
             // データ属性削除
-            $compiledTag = self::deleteDataAttribute($htmlBuff['raw'], $attrArray);
+            $compiledTag = self::deleteDataAttribute($htmlBuff['raw'], $attrList);
 
             // タグ記法のためのカウンター
-            $endTagCounterList = $this->checkTagCounter($tag);
+            $endTagCounterList = $this->checkTagCounter($tagName);
 
             // カウンターの終了処理
             foreach ($endTagCounterList as $endTagCounter) {
@@ -221,80 +221,80 @@ class BlocsCompiler
             }
 
             // data_attributeをタグに反映
-            $compiledTag = $this->mergeDataAttribute($compiledTag, $tag, $attrArray);
+            $compiledTag = $this->mergeDataAttribute($compiledTag, $attrList);
 
             /* タグ記法のデータ属性処理 */
 
-            if (isset($attrArray[BLOCS_DATA_PART])) {
+            if (isset($attrList[BLOCS_DATA_PART])) {
                 // タグ記法でのdata-part開始処理
-                $this->partName = $attrArray[BLOCS_DATA_PART];
+                $this->partName = $attrList[BLOCS_DATA_PART];
                 $this->partInclude[$this->partName] = [$compiledTag];
 
                 $this->setTagCounter([
-                    'tag' => $tag,
+                    'tag' => $tagName,
                     'type' => 'part',
                 ]);
 
                 continue;
             }
 
-            if (isset($attrArray[BLOCS_DATA_VAL])) {
+            if (isset($attrList[BLOCS_DATA_VAL])) {
                 $tagCounter = [];
-                Attribute::val($attrArray, $quotesArray, $this->dataAttribute, $tag, $tagCounter, $htmlArray);
+                Attribute::val($attrList, $quotesList, $this->dataAttribute, $tagName, $tagCounter, $htmlArray);
                 count($tagCounter) && $this->setTagCounter($tagCounter);
             }
 
-            if (isset($attrArray[BLOCS_DATA_NOTICE])) {
+            if (isset($attrList[BLOCS_DATA_NOTICE])) {
                 $tagCounter = [];
-                Attribute::notice($attrArray, $quotesArray, $this->dataAttribute, $tag, $tagCounter, $htmlArray);
+                Attribute::notice($attrList, $quotesList, $this->dataAttribute, $tagName, $tagCounter, $htmlArray);
                 count($tagCounter) && $this->setTagCounter($tagCounter);
             }
 
-            if (isset($attrArray[BLOCS_DATA_EXIST]) || isset($attrArray[BLOCS_DATA_NONE]) || isset($attrArray[BLOCS_DATA_IF]) || isset($attrArray[BLOCS_DATA_UNLESS])) {
+            if (isset($attrList[BLOCS_DATA_EXIST]) || isset($attrList[BLOCS_DATA_NONE]) || isset($attrList[BLOCS_DATA_IF]) || isset($attrList[BLOCS_DATA_UNLESS])) {
                 $tagCounter = [];
-                $compiledTag = Attribute::condition($compiledTag, $attrArray, $quotesArray, $tag, $tagCounter, $htmlArray);
+                $compiledTag = Attribute::condition($compiledTag, $attrList, $quotesList, $tagName, $tagCounter, $htmlArray);
                 count($tagCounter) && $this->setTagCounter($tagCounter);
             }
 
-            if (isset($attrArray[BLOCS_DATA_REPEAT])) {
-                if (!Common::checkValueName($attrArray[BLOCS_DATA_REPEAT])) {
-                    trigger_error('B002: Invalid condition "'.BLOCS_DATA_REPEAT.'" ('.$attrArray[BLOCS_DATA_REPEAT].')', E_USER_ERROR);
+            if (isset($attrList[BLOCS_DATA_REPEAT])) {
+                if (!Common::checkValueName($attrList[BLOCS_DATA_REPEAT])) {
+                    trigger_error('B002: Invalid condition "'.BLOCS_DATA_REPEAT.'" ('.$attrList[BLOCS_DATA_REPEAT].')', E_USER_ERROR);
                 }
 
-                $compiledTag = Attribute::repeat($attrArray, count($this->tagCounter)).$compiledTag;
+                $compiledTag = Attribute::repeat($attrList, count($this->tagCounter)).$compiledTag;
 
                 $this->setTagCounter([
-                    'tag' => $tag,
-                    'after' => Attribute::endrepeat($attrArray),
-                    'array_form' => substr($attrArray[BLOCS_DATA_REPEAT], 1),
+                    'tag' => $tagName,
+                    'after' => Attribute::endrepeat($attrList),
+                    'array_form' => substr($attrList[BLOCS_DATA_REPEAT], 1),
                 ]);
             }
 
-            if (isset($attrArray[BLOCS_DATA_LOOP])) {
-                if (!Common::checkValueName($attrArray[BLOCS_DATA_LOOP])) {
-                    trigger_error('B002: Invalid condition "'.BLOCS_DATA_LOOP.'" ('.$attrArray[BLOCS_DATA_LOOP].')', E_USER_ERROR);
+            if (isset($attrList[BLOCS_DATA_LOOP])) {
+                if (!Common::checkValueName($attrList[BLOCS_DATA_LOOP])) {
+                    trigger_error('B002: Invalid condition "'.BLOCS_DATA_LOOP.'" ('.$attrList[BLOCS_DATA_LOOP].')', E_USER_ERROR);
                 }
 
-                $compiledTag = Attribute::loop($attrArray, count($this->tagCounter)).$compiledTag;
+                $compiledTag = Attribute::loop($attrList, count($this->tagCounter)).$compiledTag;
 
                 $this->setTagCounter([
-                    'tag' => $tag,
-                    'after' => Attribute::endloop($attrArray),
-                    'array_form' => substr($attrArray[BLOCS_DATA_LOOP], 1),
+                    'tag' => $tagName,
+                    'after' => Attribute::endloop($attrList),
+                    'array_form' => substr($attrList[BLOCS_DATA_LOOP], 1),
                 ]);
             }
 
-            if (isset($attrArray[BLOCS_DATA_FILTER]) && isset($attrArray['name']) && strlen($attrArray['name'])) {
-                foreach (explode('|', $attrArray[BLOCS_DATA_FILTER]) as $buff) {
-                    isset($this->filter[$attrArray['name']]) || $this->filter[$attrArray['name']] = '';
-                    $this->filter[$attrArray['name']] .= $this->generateFilter($buff);
+            if (isset($attrList[BLOCS_DATA_FILTER]) && isset($attrList['name']) && strlen($attrList['name'])) {
+                foreach (explode('|', $attrList[BLOCS_DATA_FILTER]) as $buff) {
+                    isset($this->filter[$attrList['name']]) || $this->filter[$attrList['name']] = '';
+                    $this->filter[$attrList['name']] .= $this->generateFilter($buff);
                 }
             }
 
             // スクリプトの中のタグを無効化
-            if ('script' === $tag || 'style' === $tag) {
+            if ('script' === $tagName || 'style' === $tagName) {
                 ++$scriptCounter;
-            } elseif ('/script' === $tag || '/style' === $tag) {
+            } elseif ('/script' === $tagName || '/style' === $tagName) {
                 --$scriptCounter;
             }
 
@@ -310,47 +310,47 @@ class BlocsCompiler
 
             /* フォーム部品の処理 */
 
-            if ('input' === $tag && isset($attrArray['name']) && strlen($attrArray['name'])) {
-                $formName = Common::checkFormName($attrArray['name']);
+            if ('input' === $tagName && isset($attrList['name']) && strlen($attrList['name'])) {
+                $formName = Common::checkFormName($attrList['name']);
                 if (false !== $formName) {
-                    $attrArray['name'] = $formName;
-                    isset($labelArray) && $labelArray = array_merge($labelArray, $attrArray);
+                    $attrList['name'] = $formName;
+                    isset($labelArray) && $labelArray = array_merge($labelArray, $attrList);
 
-                    if (('radio' === $type || 'checkbox' === $type) && isset($attrArray['value'])) {
-                        !isset($labelArray) && isset($attrArray['id']) && $this->menu[] = $attrArray;
+                    if (('radio' === $type || 'checkbox' === $type) && isset($attrList['value'])) {
+                        !isset($labelArray) && isset($attrList['id']) && $this->menu[] = $attrList;
 
-                        $selected = (isset($attrArray['checked']) ? 'true' : 'false');
-                        $compiledTag = Form::check($compiledTag, $attrArray['name'], $attrArray['value'], 'checked', $selected);
+                        $selected = (isset($attrList['checked']) ? 'true' : 'false');
+                        $compiledTag = Form::check($compiledTag, $attrList['name'], $attrList['value'], 'checked', $selected);
 
-                        $this->generateDummyForm($attrArray['name'], $compiledTag, $dummyArray);
+                        $this->generateDummyForm($attrList['name'], $compiledTag, $dummyArray);
                     }
                     if (in_array($type, ['text', 'hidden', 'search', 'tel', 'url', 'email', 'datetime', 'date', 'month', 'week', 'time', 'datetime-local', 'number', 'range', 'color'])) {
-                        $compiledTag = Form::value($compiledTag, $attrArray);
+                        $compiledTag = Form::value($compiledTag, $attrList);
                     }
-                    if ('text' === $type && isset($attrArray['class'])) {
-                        $classList = preg_split("/\s/", $attrArray['class']);
-                        in_array('upload', $classList) && $this->validateUpload[] = $attrArray['name'];
+                    if ('text' === $type && isset($attrList['class'])) {
+                        $classList = preg_split("/\s/", $attrList['class']);
+                        in_array('upload', $classList) && $this->validateUpload[] = $attrList['name'];
                     }
                 }
             }
 
-            if ('select' === $tag && isset($attrArray['name']) && strlen($attrArray['name'])) {
-                $formName = Common::checkFormName($attrArray['name']);
+            if ('select' === $tagName && isset($attrList['name']) && strlen($attrList['name'])) {
+                $formName = Common::checkFormName($attrList['name']);
                 if (false !== $formName) {
-                    $attrArray['name'] = $formName;
-                    isset($attrArray['multiple']) && $this->generateDummyForm($attrArray['name'], $compiledTag, $dummyArray);
+                    $attrList['name'] = $formName;
+                    isset($attrList['multiple']) && $this->generateDummyForm($attrList['name'], $compiledTag, $dummyArray);
 
-                    $selectName = $attrArray['name'];
+                    $selectName = $attrList['name'];
                 }
-            } elseif ('option' === $tag && strlen($selectName) && isset($attrArray['value'])) {
-                $optionArray = $attrArray;
+            } elseif ('option' === $tagName && strlen($selectName) && isset($attrList['value'])) {
+                $optionArray = $attrList;
                 $optionArray['type'] = 'select';
                 $optionArray['name'] = $selectName;
                 isset($optionArray['label']) || $optionArray['label'] = '';
 
-                $selected = (isset($attrArray['selected']) ? 'true' : 'false');
-                $compiledTag = Form::check($compiledTag, $selectName, $attrArray['value'], 'selected', $selected);
-            } elseif ('/option' === $tag && isset($optionArray)) {
+                $selected = (isset($attrList['selected']) ? 'true' : 'false');
+                $compiledTag = Form::check($compiledTag, $selectName, $attrList['value'], 'selected', $selected);
+            } elseif ('/option' === $tagName && isset($optionArray)) {
                 $optionArray['label'] = trim($optionArray['label']);
                 if (!isset($optionArray['value'])) {
                     $optionArray['value'] = $optionArray['label'];
@@ -358,28 +358,28 @@ class BlocsCompiler
 
                 $this->menu[] = $optionArray;
                 unset($optionArray);
-            } elseif ('/select' === $tag) {
+            } elseif ('/select' === $tagName) {
                 // メニューのグループタグを追加
                 Form::select($compiledTag, $htmlArray, $selectName);
 
                 continue;
             }
 
-            if ('textarea' === $tag && isset($attrArray['name']) && strlen($attrArray['name'])) {
-                $formName = Common::checkFormName($attrArray['name']);
+            if ('textarea' === $tagName && isset($attrList['name']) && strlen($attrList['name'])) {
+                $formName = Common::checkFormName($attrList['name']);
                 if (false !== $formName) {
-                    $attrArray['name'] = $formName;
+                    $attrList['name'] = $formName;
 
                     $tagCounter = [];
-                    Form::value($compiledTag, $attrArray, $tag, $tagCounter, $htmlArray);
+                    Form::value($compiledTag, $attrList, $tagName, $tagCounter, $htmlArray);
                     count($tagCounter) && $this->setTagCounter($tagCounter);
                 }
             }
 
-            if ('label' === $tag) {
-                isset($attrArray['for']) && $labelArray['id'] = $attrArray['for'];
+            if ('label' === $tagName) {
+                isset($attrList['for']) && $labelArray['id'] = $attrList['for'];
                 $labelArray['label'] = '';
-            } elseif ('/label' === $tag) {
+            } elseif ('/label' === $tagName) {
                 preg_match('/<br>$/si', $labelArray['label']) && $labelArray['label'] = substr($labelArray['label'], 0, -4);
                 preg_match('/<br \/>$/si', $labelArray['label']) && $labelArray['label'] = substr($labelArray['label'], 0, -6);
                 $labelArray['label'] = trim($labelArray['label']);
@@ -389,45 +389,45 @@ class BlocsCompiler
             }
 
             // formのidを取得
-            if ((isset($attrArray['id']) || isset($attrArray['for'])) && $arrayPath = $this->generateArrayFormName(1)) {
-                isset($attrArray['id']) && false === strpos($attrArray['id'], '<?php') && $compiledTag = Common::mergeAttribute($compiledTag, 'id', $arrayPath.'_'.$attrArray['id'], $attrArray, false);
-                isset($attrArray['for']) && false === strpos($attrArray['for'], '<?php') && $compiledTag = Common::mergeAttribute($compiledTag, 'for', $arrayPath.'_'.$attrArray['for'], $attrArray, false);
+            if ((isset($attrList['id']) || isset($attrList['for'])) && $arrayPath = $this->generateArrayFormName(1)) {
+                isset($attrList['id']) && false === strpos($attrList['id'], '<?php') && $compiledTag = Common::mergeAttribute($compiledTag, 'id', $arrayPath.'_'.$attrList['id'], $attrList, false);
+                isset($attrList['for']) && false === strpos($attrList['for'], '<?php') && $compiledTag = Common::mergeAttribute($compiledTag, 'for', $arrayPath.'_'.$attrList['for'], $attrList, false);
             }
 
-            if (isset($attrArray['class'])) {
-                $classList = preg_split("/\s/", $attrArray['class']);
+            if (isset($attrList['class'])) {
+                $classList = preg_split("/\s/", $attrList['class']);
 
                 // auto includeの候補に追加
                 $this->autoincludeClass = array_merge($this->autoincludeClass, $classList);
             }
 
-            if (('input' === $tag || 'select' === $tag || 'textarea' === $tag) && isset($attrArray['name']) && strlen($attrArray['name'])) {
+            if (('input' === $tagName || 'select' === $tagName || 'textarea' === $tagName) && isset($attrList['name']) && strlen($attrList['name'])) {
                 // HTML5のフォームバリデーション対応
-                self::addHtml5Validation($this->validate, $attrArray);
+                self::addHtml5Validation($this->validate, $attrList);
 
                 if ($arrayForm = $this->generateArrayFormName()) {
-                    $compiledTag = Common::mergeAttribute($compiledTag, 'name', $arrayForm.'['.$attrArray['name'].']', $attrArray, false);
+                    $compiledTag = Common::mergeAttribute($compiledTag, 'name', $arrayForm.'['.$attrList['name'].']', $attrList, false);
                     $arrayPath = $this->generateArrayFormName(1);
                     $arrayMsg = $this->generateArrayFormName(2);
                 } else {
                     $arrayPath = $arrayMsg = '';
                 }
-                $arrayMsg .= "['{$attrArray['name']}']";
+                $arrayMsg .= "['{$attrList['name']}']";
 
                 $formArray[] = [
-                    'name' => $attrArray['name'],
+                    'name' => $attrList['name'],
                     'array_path' => $arrayPath,
                     'array_msg' => $arrayMsg,
                 ];
 
-                if (isset($attrArray[BLOCS_DATA_VALIDATE])) {
+                if (isset($attrList[BLOCS_DATA_VALIDATE])) {
                     // バリデーションを設定
-                    $this->validate[$attrArray['name']][] = $attrArray[BLOCS_DATA_VALIDATE];
+                    $this->validate[$attrList['name']][] = $attrList[BLOCS_DATA_VALIDATE];
                 }
             }
 
-            'option' !== $tag && isset($optionArray['label']) && $optionArray['label'] .= $compiledTag;
-            'label' !== $tag && 'input' !== $tag && isset($labelArray['label']) && $labelArray['label'] .= $compiledTag;
+            'option' !== $tagName && isset($optionArray['label']) && $optionArray['label'] .= $compiledTag;
+            'label' !== $tagName && 'input' !== $tagName && isset($labelArray['label']) && $labelArray['label'] .= $compiledTag;
 
             // 結果出力
             if ($autoincludeDepth) {
@@ -497,13 +497,13 @@ class BlocsCompiler
             return;
         }
 
-        $rawBuff = $includeBuff['raw'];
-        $attrArray = $includeBuff['attribute'];
-        $quotesArray = $includeBuff['quotes'];
+        $rawString = $includeBuff['raw'];
+        $attrList = $includeBuff['attribute'];
+        $quotesList = $includeBuff['quotes'];
 
         // 変数の代入だけの時は簡単に記述できるように
         $is_assignValue = true;
-        foreach ($attrArray as $key => $value) {
+        foreach ($attrList as $key => $value) {
             if (!Common::checkValueName($key) && '--' !== $key) {
                 $is_assignValue = false;
                 break;
@@ -511,27 +511,27 @@ class BlocsCompiler
         }
 
         if ($is_assignValue) {
-            $htmlBuff = self::assignValue($attrArray, $quotesArray);
+            $htmlBuff = self::assignValue($attrList, $quotesList);
 
             return;
         }
 
         /* コメント記法のデータ属性処理 */
 
-        if (isset($attrArray[BLOCS_DATA_PART])) {
+        if (isset($attrList[BLOCS_DATA_PART])) {
             // コメント記法でのdata-part開始処理
             ++$this->partDepth;
 
             if (1 === $this->partDepth) {
                 // ブロック処理開始
-                $this->partName = $attrArray[BLOCS_DATA_PART];
+                $this->partName = $attrList[BLOCS_DATA_PART];
                 $this->partInclude[$this->partName] = [];
                 $htmlBuff = '';
             }
 
             return;
         }
-        if (isset($attrArray[BLOCS_DATA_ENDPART])) {
+        if (isset($attrList[BLOCS_DATA_ENDPART])) {
             // コメント記法でのdata-part終了処理
             --$this->partDepth;
             $this->partDepth < 0 && $this->partDepth = 0;
@@ -549,31 +549,31 @@ class BlocsCompiler
             return;
         }
 
-        if (isset($attrArray[BLOCS_DATA_CHDIR])) {
-            chdir($attrArray[BLOCS_DATA_CHDIR]);
+        if (isset($attrList[BLOCS_DATA_CHDIR])) {
+            chdir($attrList[BLOCS_DATA_CHDIR]);
             $htmlBuff = '';
 
             return;
         }
 
-        if (isset($attrArray[BLOCS_DATA_INCLUDE])) {
+        if (isset($attrList[BLOCS_DATA_INCLUDE])) {
             // auto includeのタグの埋め込み
             $autoincludeDir = self::getAutoincludeDir();
-            if (false !== $autoincludeDir && basename($autoincludeDir) == $attrArray[BLOCS_DATA_INCLUDE]) {
+            if (false !== $autoincludeDir && basename($autoincludeDir) == $attrList[BLOCS_DATA_INCLUDE]) {
                 $htmlBuff = '{{REPLACE_TO_AUTOINCLUDE}}';
 
                 return;
             }
 
             $resultArray = [];
-            if (isset($this->partInclude[$attrArray[BLOCS_DATA_INCLUDE]])) {
-                $resultArray = $this->partInclude[$attrArray[BLOCS_DATA_INCLUDE]];
+            if (isset($this->partInclude[$attrList[BLOCS_DATA_INCLUDE]])) {
+                $resultArray = $this->partInclude[$attrList[BLOCS_DATA_INCLUDE]];
             } else {
-                $resultArray = $this->addDataInclude($attrArray, $htmlBuff);
+                $resultArray = $this->addDataInclude($attrList, $htmlBuff);
             }
 
-            if (empty($attrArray[BLOCS_DATA_EXIST])) {
-                unset($attrArray[BLOCS_DATA_EXIST]);
+            if (empty($attrList[BLOCS_DATA_EXIST])) {
+                unset($attrList[BLOCS_DATA_EXIST]);
             }
 
             if (empty($resultArray)) {
@@ -585,7 +585,7 @@ class BlocsCompiler
             $resultArray[] = '<!-- '.BLOCS_DATA_CHDIR.'="'.getcwd().'" -->';
 
             // conditionで挟み込み
-            $condition = Attribute::condition('', $attrArray, $quotesArray);
+            $condition = Attribute::condition('', $attrList, $quotesList);
             if (!empty($condition)) {
                 array_unshift($resultArray, $condition);
                 $resultArray[] = BLOCS_ENDIF_SCRIPT;
@@ -594,66 +594,66 @@ class BlocsCompiler
             $htmlArray = array_merge($resultArray, $htmlArray);
 
             // 引数を渡せるように
-            $htmlBuff = self::assignValue($attrArray, $quotesArray);
+            $htmlBuff = self::assignValue($attrList, $quotesList);
 
             return;
         }
 
-        if (isset($attrArray[BLOCS_DATA_VAL])) {
-            $htmlBuff = Attribute::val($attrArray, $quotesArray, $this->dataAttribute);
+        if (isset($attrList[BLOCS_DATA_VAL])) {
+            $htmlBuff = Attribute::val($attrList, $quotesList, $this->dataAttribute);
         }
-        if (isset($attrArray[BLOCS_DATA_NOTICE])) {
-            $htmlBuff = Attribute::notice($attrArray, $quotesArray, $this->dataAttribute);
+        if (isset($attrList[BLOCS_DATA_NOTICE])) {
+            $htmlBuff = Attribute::notice($attrList, $quotesList, $this->dataAttribute);
         }
 
-        if (isset($attrArray[BLOCS_DATA_VALIDATE]) && isset($attrArray[BLOCS_DATA_FORM])) {
-            self::checkDataValidate($this->validate, $attrArray[BLOCS_DATA_FORM], $attrArray[BLOCS_DATA_VALIDATE]) && $this->validate[$attrArray[BLOCS_DATA_FORM]][] = $attrArray[BLOCS_DATA_VALIDATE];
+        if (isset($attrList[BLOCS_DATA_VALIDATE]) && isset($attrList[BLOCS_DATA_FORM])) {
+            self::checkDataValidate($this->validate, $attrList[BLOCS_DATA_FORM], $attrList[BLOCS_DATA_VALIDATE]) && $this->validate[$attrList[BLOCS_DATA_FORM]][] = $attrList[BLOCS_DATA_VALIDATE];
 
-            if (isset($attrArray[BLOCS_DATA_NOTICE])) {
-                $validateMethod = self::getValidateMethod($attrArray[BLOCS_DATA_VALIDATE]);
-                $this->validateMessage[$attrArray[BLOCS_DATA_FORM]][$validateMethod] = $attrArray[BLOCS_DATA_NOTICE];
+            if (isset($attrList[BLOCS_DATA_NOTICE])) {
+                $validateMethod = self::getValidateMethod($attrList[BLOCS_DATA_VALIDATE]);
+                $this->validateMessage[$attrList[BLOCS_DATA_FORM]][$validateMethod] = $attrList[BLOCS_DATA_NOTICE];
             }
             $htmlBuff = '';
 
             return;
         }
 
-        if (isset($attrArray[BLOCS_DATA_EXIST]) || isset($attrArray[BLOCS_DATA_NONE]) || isset($attrArray[BLOCS_DATA_IF]) || isset($attrArray[BLOCS_DATA_UNLESS])) {
-            if (isset($attrArray[BLOCS_DATA_VAL]) || isset($attrArray[BLOCS_DATA_NOTICE])) {
-                if (isset($attrArray[BLOCS_DATA_ATTRIBUTE])) {
-                    $rawBuff = $this->dataAttribute[count($this->dataAttribute) - 1]['value'];
+        if (isset($attrList[BLOCS_DATA_EXIST]) || isset($attrList[BLOCS_DATA_NONE]) || isset($attrList[BLOCS_DATA_IF]) || isset($attrList[BLOCS_DATA_UNLESS])) {
+            if (isset($attrList[BLOCS_DATA_VAL]) || isset($attrList[BLOCS_DATA_NOTICE])) {
+                if (isset($attrList[BLOCS_DATA_ATTRIBUTE])) {
+                    $rawString = $this->dataAttribute[count($this->dataAttribute) - 1]['value'];
                 } else {
-                    $rawBuff = $htmlBuff;
+                    $rawString = $htmlBuff;
                 }
             } else {
-                $rawBuff = '';
+                $rawString = '';
             }
 
-            $htmlBuff = Attribute::condition($rawBuff, $attrArray, $quotesArray);
+            $htmlBuff = Attribute::condition($rawString, $attrList, $quotesList);
 
-            if (isset($attrArray[BLOCS_DATA_VAL]) || isset($attrArray[BLOCS_DATA_NOTICE])) {
+            if (isset($attrList[BLOCS_DATA_VAL]) || isset($attrList[BLOCS_DATA_NOTICE])) {
                 $htmlBuff .= BLOCS_ENDIF_SCRIPT;
-                if (isset($attrArray[BLOCS_DATA_ATTRIBUTE])) {
+                if (isset($attrList[BLOCS_DATA_ATTRIBUTE])) {
                     $this->dataAttribute[count($this->dataAttribute) - 1]['value'] = $htmlBuff;
                     $htmlBuff = '';
                 }
             }
         }
-        if (isset($attrArray[BLOCS_DATA_ENDEXIST]) || isset($attrArray[BLOCS_DATA_ENDNONE]) || isset($attrArray[BLOCS_DATA_ENDIF]) || isset($attrArray[BLOCS_DATA_ENDUNLESS])) {
+        if (isset($attrList[BLOCS_DATA_ENDEXIST]) || isset($attrList[BLOCS_DATA_ENDNONE]) || isset($attrList[BLOCS_DATA_ENDIF]) || isset($attrList[BLOCS_DATA_ENDUNLESS])) {
             $htmlBuff = BLOCS_ENDIF_SCRIPT;
         }
 
-        if (isset($attrArray[BLOCS_DATA_REPEAT])) {
-            $rawBuff = '';
-            $htmlBuff = Attribute::repeat($attrArray, count($this->tagCounter));
-            $this->endrepeat[] = $attrArray;
+        if (isset($attrList[BLOCS_DATA_REPEAT])) {
+            $rawString = '';
+            $htmlBuff = Attribute::repeat($attrList, count($this->tagCounter));
+            $this->endrepeat[] = $attrList;
 
             $this->setTagCounter([
                 'tag' => BLOCS_DATA_REPEAT,
-                'array_form' => substr($attrArray[BLOCS_DATA_REPEAT], 1),
+                'array_form' => substr($attrList[BLOCS_DATA_REPEAT], 1),
             ], false);
         }
-        if (isset($attrArray[BLOCS_DATA_ENDREPEAT]) && !empty($this->endrepeat)) {
+        if (isset($attrList[BLOCS_DATA_ENDREPEAT]) && !empty($this->endrepeat)) {
             $htmlBuff = Attribute::endrepeat(array_pop($this->endrepeat));
 
             $target = '';
@@ -685,14 +685,14 @@ class BlocsCompiler
         array_unshift($this->tagCounter, $tagCounter);
     }
 
-    private function checkTagCounter($tag)
+    private function checkTagCounter($tagName)
     {
         $endTagCounterList = [];
 
         foreach ($this->tagCounter as $num => $tagCounter) {
             isset($tagCounter['num']) || $this->tagCounter[$num]['num'] = 1;
-            $tag === $tagCounter['tag'] && $this->tagCounter[$num]['num']++;
-            $tag === '/'.$tagCounter['tag'] && $this->tagCounter[$num]['num']--;
+            $tagName === $tagCounter['tag'] && $this->tagCounter[$num]['num']++;
+            $tagName === '/'.$tagCounter['tag'] && $this->tagCounter[$num]['num']--;
 
             if ($this->tagCounter[$num]['num']) {
                 // カウントが残っている時は何もしない
@@ -709,28 +709,28 @@ class BlocsCompiler
 
     /* data-includeのメソッド */
 
-    private function addDataInclude($attrArray, $htmlBuff)
+    private function addDataInclude($attrList, $htmlBuff)
     {
-        if (!strncmp($attrArray[BLOCS_DATA_INCLUDE], '/', 1)) {
+        if (!strncmp($attrList[BLOCS_DATA_INCLUDE], '/', 1)) {
             // ルートディレクトリのパスを変換
-            $attrArray[BLOCS_DATA_INCLUDE] = BLOCS_ROOT_DIR.$attrArray[BLOCS_DATA_INCLUDE];
+            $attrList[BLOCS_DATA_INCLUDE] = BLOCS_ROOT_DIR.$attrList[BLOCS_DATA_INCLUDE];
         }
 
         $_ = function ($s) {
             return $s;
         };
-        eval("\$attrArray[BLOCS_DATA_INCLUDE] = <<<EOS\n{$attrArray[BLOCS_DATA_INCLUDE]}\nEOS;\n");
-        if (!strlen(($realpath = str_replace(DIRECTORY_SEPARATOR, '/', realpath($attrArray[BLOCS_DATA_INCLUDE]))))) {
-            if (false !== ($resultBuff = $this->addAutoinclude($attrArray, $htmlBuff))) {
+        eval("\$attrList[BLOCS_DATA_INCLUDE] = <<<EOS\n{$attrList[BLOCS_DATA_INCLUDE]}\nEOS;\n");
+        if (!strlen(($realpath = str_replace(DIRECTORY_SEPARATOR, '/', realpath($attrList[BLOCS_DATA_INCLUDE]))))) {
+            if (false !== ($resultBuff = $this->addAutoinclude($attrList, $htmlBuff))) {
                 // data-includeができないのでauto includeしてみる
                 return $resultBuff;
             }
 
-            if (isset($attrArray[BLOCS_DATA_EXIST])) {
+            if (isset($attrList[BLOCS_DATA_EXIST])) {
                 return [];
             }
 
-            trigger_error('B003: Can not find template ('.getcwd().'/'.$attrArray[BLOCS_DATA_INCLUDE].')', E_USER_ERROR);
+            trigger_error('B003: Can not find template ('.getcwd().'/'.$attrList[BLOCS_DATA_INCLUDE].')', E_USER_ERROR);
         }
 
         if (count($this->include) > BLOCS_INCLUDE_MAX) {
@@ -756,14 +756,14 @@ class BlocsCompiler
         return $this->partInclude[$realpath];
     }
 
-    private function addAutoinclude($attrArray, $htmlBuff)
+    private function addAutoinclude($attrList, $htmlBuff)
     {
         $autoincludeDir = self::getAutoincludeDir();
         if (false === $autoincludeDir) {
             return false;
         }
 
-        list($autoinclude) = explode('_', $attrArray[BLOCS_DATA_INCLUDE]);
+        list($autoinclude) = explode('_', $attrList[BLOCS_DATA_INCLUDE]);
         if (!is_file($autoincludeDir.'/'.$autoinclude.'.html')) {
             return false;
         }
@@ -883,7 +883,7 @@ class BlocsCompiler
         return $formName;
     }
 
-    private function generateDummyForm($attrName, &$rawBuff, &$dummyArray)
+    private function generateDummyForm($attrName, &$rawString, &$dummyArray)
     {
         if ($dummyForm = $this->generateArrayFormName()) {
             $dummyForm .= '['.$attrName.']';
@@ -902,11 +902,11 @@ class BlocsCompiler
         $dummyBuff .= "<?php \$dummyArray{$dummyMsg} = true; ?>\n";
         $dummyBuff .= BLOCS_ENDIF_SCRIPT;
 
-        $rawBuff = $dummyBuff.$rawBuff;
+        $rawString = $dummyBuff.$rawString;
         $dummyArray[$dummyForm] = true;
     }
 
-    private function mergeDataAttribute($compiledTag, $tag, &$attrArray)
+    private function mergeDataAttribute($compiledTag, &$attrList)
     {
         // data-attributeで属性書き換え
         if (isset($this->dataAttribute)) {
@@ -918,7 +918,7 @@ class BlocsCompiler
             unset($this->dataAttribute);
 
             foreach ($dataAttribute as $name => $value) {
-                $compiledTag = Common::mergeAttribute($compiledTag, $name, $value, $attrArray);
+                $compiledTag = Common::mergeAttribute($compiledTag, $name, $value, $attrList);
             }
         }
 
@@ -996,29 +996,29 @@ END_of_HTML;
     }
 
     // HTML5のフォームバリデーション対応
-    private static function addHtml5Validation(&$dataValidate, $attrArray)
+    private static function addHtml5Validation(&$dataValidate, $attrList)
     {
-        if (isset($attrArray['required'])) {
-            $dataValidate[$attrArray['name']][] = 'required';
+        if (isset($attrList['required'])) {
+            $dataValidate[$attrList['name']][] = 'required';
         }
-        if (isset($attrArray['maxlength'])) {
-            $dataValidate[$attrArray['name']][] = 'string';
-            $dataValidate[$attrArray['name']][] = 'max:'.$attrArray['maxlength'];
+        if (isset($attrList['maxlength'])) {
+            $dataValidate[$attrList['name']][] = 'string';
+            $dataValidate[$attrList['name']][] = 'max:'.$attrList['maxlength'];
         }
-        if (isset($attrArray['minlength'])) {
-            $dataValidate[$attrArray['name']][] = 'string';
-            $dataValidate[$attrArray['name']][] = 'min:'.$attrArray['minlength'];
+        if (isset($attrList['minlength'])) {
+            $dataValidate[$attrList['name']][] = 'string';
+            $dataValidate[$attrList['name']][] = 'min:'.$attrList['minlength'];
         }
-        if (isset($attrArray['max'])) {
-            $dataValidate[$attrArray['name']][] = 'numeric';
-            $dataValidate[$attrArray['name']][] = 'max:'.$attrArray['max'];
+        if (isset($attrList['max'])) {
+            $dataValidate[$attrList['name']][] = 'numeric';
+            $dataValidate[$attrList['name']][] = 'max:'.$attrList['max'];
         }
-        if (isset($attrArray['min'])) {
-            $dataValidate[$attrArray['name']][] = 'numeric';
-            $dataValidate[$attrArray['name']][] = 'min:'.$attrArray['min'];
+        if (isset($attrList['min'])) {
+            $dataValidate[$attrList['name']][] = 'numeric';
+            $dataValidate[$attrList['name']][] = 'min:'.$attrList['min'];
         }
-        if (isset($attrArray['pattern'])) {
-            $dataValidate[$attrArray['name']][] = 'regex:/'.$attrArray['pattern'].'/';
+        if (isset($attrList['pattern'])) {
+            $dataValidate[$attrList['name']][] = 'regex:/'.$attrList['pattern'].'/';
         }
     }
 
@@ -1097,11 +1097,11 @@ END_of_HTML;
         return $viewBuff;
     }
 
-    private static function escapeQuestionTag($rawBuff)
+    private static function escapeQuestionTag($rawString)
     {
-        $rawBuff = explode('<?', $rawBuff);
-        $resultBuff = array_shift($rawBuff);
-        foreach ($rawBuff as $buff) {
+        $rawString = explode('<?', $rawString);
+        $resultBuff = array_shift($rawString);
+        foreach ($rawString as $buff) {
             $resultBuff .= '<?';
             if (false === strpos($buff, '?>')) {
                 $resultBuff .= $buff;
@@ -1118,30 +1118,30 @@ END_of_HTML;
         return $resultBuff;
     }
 
-    private static function deleteDataAttribute($rawBuff, $attrArray)
+    private static function deleteDataAttribute($rawString, $attrList)
     {
         foreach (self::$allAttrName as $attrName) {
-            if (!isset($attrArray[$attrName])) {
+            if (!isset($attrList[$attrName])) {
                 continue;
             }
 
-            $rawBuff = preg_replace('/\s+'.$attrName.'\s*=\s*["\']{0,1}'.str_replace('/', '\/', preg_quote($attrArray[$attrName])).'["\']{0,1}([\s>\/]+)/si', '${1}', $rawBuff);
-            $rawBuff = preg_replace('/\s+'.$attrName.'([\s>\/]+)/si', '${1}', $rawBuff);
+            $rawString = preg_replace('/\s+'.$attrName.'\s*=\s*["\']{0,1}'.str_replace('/', '\/', preg_quote($attrList[$attrName])).'["\']{0,1}([\s>\/]+)/si', '${1}', $rawString);
+            $rawString = preg_replace('/\s+'.$attrName.'([\s>\/]+)/si', '${1}', $rawString);
         }
 
-        return $rawBuff;
+        return $rawString;
     }
 
-    private static function assignValue($attrArray, $quotesArray)
+    private static function assignValue($attrList, $quotesList)
     {
         $htmlBuff = '';
 
-        foreach ($attrArray as $key => $value) {
+        foreach ($attrList as $key => $value) {
             if (!Common::checkValueName($key)) {
                 continue;
             }
 
-            $quotes = empty($quotesArray[$key]) ? '' : $quotesArray[$key];
+            $quotes = empty($quotesList[$key]) ? '' : $quotesList[$key];
             $htmlBuff .= "<?php {$key} = {$quotes}{$value}{$quotes}; ?>";
         }
 

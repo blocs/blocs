@@ -5,14 +5,14 @@ namespace Blocs\Compiler\Cache;
 class Common
 {
     // attributeの置き換え
-    public static function mergeAttribute($compiledTag, $attrName, $attrBuff, &$attrArray, $replace = true)
+    public static function mergeAttribute($compiledTag, $attrName, $attrBuff, &$attrList, $replace = true)
     {
-        if (isset($attrArray[$attrName])) {
+        if (isset($attrList[$attrName])) {
             if (BLOCS_ENDIF_SCRIPT === substr($attrBuff, -16) && false === strpos($attrBuff, '<?php else: ?>')) {
-                $attrBuff = substr($attrBuff, 0, -16)."<?php else: ?>\n".$attrArray[$attrName].BLOCS_ENDIF_SCRIPT;
+                $attrBuff = substr($attrBuff, 0, -16)."<?php else: ?>\n".$attrList[$attrName].BLOCS_ENDIF_SCRIPT;
             }
 
-            $compiledTag = preg_replace('/(\s+'.$attrName.'\s*=\s*["\']{0,1})'.str_replace('/', '\/', preg_quote($attrArray[$attrName])).'((\[\]){0,1}["\']{0,1}[\s<>\/]+)/si', '${1}'.$attrBuff.'${2}', $compiledTag);
+            $compiledTag = preg_replace('/(\s+'.$attrName.'\s*=\s*["\']{0,1})'.str_replace('/', '\/', preg_quote($attrList[$attrName])).'((\[\]){0,1}["\']{0,1}[\s<>\/]+)/si', '${1}'.$attrBuff.'${2}', $compiledTag);
         } elseif ('/>' === substr($compiledTag, -2)) {
             if ($condition = self::checkAttributeValue($attrBuff, " {$attrName}=\"", '"')) {
                 $compiledTag = rtrim(substr($compiledTag, 0, -2))."{$condition} />";
@@ -27,7 +27,7 @@ class Common
             }
         }
 
-        $replace && $attrArray[$attrName] = $attrBuff;
+        $replace && $attrList[$attrName] = $attrBuff;
 
         return $compiledTag;
     }
