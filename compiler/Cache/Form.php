@@ -5,27 +5,27 @@ namespace Blocs\Compiler\Cache;
 class Form
 {
     // フォーム部品に値をつける
-    public static function value($compiledTag, &$attrArray, $tag = '', &$tagCounter = null, &$htmlArray = null)
+    public static function value($compiledTag, &$attrList, $tagName = '', &$tagCounter = null, &$htmlArray = null)
     {
-        $valueBuff = "<?php if(isset(\${$attrArray['name']})): ?>\n";
-        $valueBuff .= "<?php echo(htmlspecialchars(\${$attrArray['name']}, ENT_QUOTES, 'UTF-8')); ?>\n";
+        $valueBuff = "<?php if(isset(\${$attrList['name']})): ?>\n";
+        $valueBuff .= "<?php echo(htmlspecialchars(\${$attrList['name']}, ENT_QUOTES, 'UTF-8')); ?>\n";
 
-        if ($tag) {
+        if ($tagName) {
             // textarea
             array_unshift($htmlArray, $valueBuff."<?php else: ?>\n");
 
             $tagCounter = [
-                'tag' => $tag,
+                'tag' => $tagName,
                 'before' => BLOCS_ENDIF_SCRIPT,
             ];
 
             return;
         }
 
-        isset($attrArray['value']) && $valueBuff .= "<?php else: ?>\n".$attrArray['value'];
+        isset($attrList['value']) && $valueBuff .= "<?php else: ?>\n".$attrList['value'];
         $valueBuff .= BLOCS_ENDIF_SCRIPT;
 
-        return Common::mergeAttribute($compiledTag, 'value', $valueBuff, $attrArray);
+        return Common::mergeAttribute($compiledTag, 'value', $valueBuff, $attrList);
     }
 
     // selectなどのフォーム部品にchecked、selectedをつける
