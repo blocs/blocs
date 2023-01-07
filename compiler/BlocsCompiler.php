@@ -402,9 +402,6 @@ class BlocsCompiler
             }
 
             if (('input' === $tagName || 'select' === $tagName || 'textarea' === $tagName) && isset($attrList['name']) && strlen($attrList['name'])) {
-                // HTML5のフォームバリデーション対応
-                self::addHtml5Validation($this->validate, $attrList);
-
                 if ($arrayForm = $this->generateArrayFormName()) {
                     $compiledTag = Common::mergeAttribute($compiledTag, 'name', $arrayForm.'['.$attrList['name'].']', $attrList, false);
                     $arrayPath = $this->generateArrayFormName(1);
@@ -422,8 +419,13 @@ class BlocsCompiler
 
                 if (isset($attrList[BLOCS_DATA_VALIDATE])) {
                     // バリデーションを設定
-                    $this->validate[$attrList['name']][] = $attrList[BLOCS_DATA_VALIDATE];
+                    foreach (explode('|', $attrList[BLOCS_DATA_VALIDATE]) as $validate) {
+                        $this->validate[$attrList['name']][] = $validate;
+                    }
                 }
+
+                // HTML5のフォームバリデーション対応
+                self::addHtml5Validation($this->validate, $attrList);
             }
 
             'option' !== $tagName && isset($optionArray['label']) && $optionArray['label'] .= $compiledTag;
