@@ -46,7 +46,16 @@ class Option
     public static function add($formName, $optionList)
     {
         isset(self::$appendOption[$formName]) || self::$appendOption[$formName] = [];
-        self::$appendOption[$formName] = array_merge(self::$appendOption[$formName], self::addMenu($optionList));
+
+        $valueList = [];
+        foreach (self::$appendOption[$formName] as $option) {
+            $valueList[] = $option['value'];
+        }
+
+        $optionList = self::addMenu($optionList);
+        foreach ($optionList as $option) {
+            in_array($option['value'], $valueList) || self::$appendOption[$formName][] = $option;
+        }
 
         // 設定ファイルを読み込み
         Common::readConfig();
