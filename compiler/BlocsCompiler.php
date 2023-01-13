@@ -394,8 +394,11 @@ class BlocsCompiler
                 isset($attrList['for']) && false === strpos($attrList['for'], '<?php') && $compiledTag = Common::mergeAttribute($compiledTag, 'for', $arrayPath.'_'.$attrList['for'], $attrList, false);
             }
 
-            if (isset($attrList['class'])) {
-                $classList = preg_split("/\s/", $attrList['class']);
+            if (isset($attrList['class']) || isset($attrList['data-toggle']) || isset($attrList['data-bs-toggle'])) {
+                $classList = [];
+                isset($attrList['class']) && $classList = preg_split("/\s/", $attrList['class']);
+                isset($attrList['data-toggle']) && $classList[] = $attrList['data-toggle'];
+                isset($attrList['data-bs-toggle']) && $classList[] = $attrList['data-bs-toggle'];
 
                 // auto includeの候補に追加
                 $this->autoincludeClass = array_merge($this->autoincludeClass, $classList);
@@ -440,7 +443,17 @@ class BlocsCompiler
         }
 
         // auto includeを呼び出された場所に移動
-        $compiledTemplate = str_replace('{{REPLACE_TO_AUTOINCLUDE}}', $autoincludeTemplate, $compiledTemplate);
+        if ($autoincludeTemplate) {
+            if (false !== strpos($compiledTemplate, '{{REPLACE_TO_AUTOINCLUDE}}')) {
+                $compiledTemplate = str_replace('{{REPLACE_TO_AUTOINCLUDE}}', $autoincludeTemplate, $compiledTemplate);
+            } elseif (false !== strpos($compiledTemplate, '</body>')) {
+                $compiledTemplate = str_replace('</body>', $autoincludeTemplate.'</body>', $compiledTemplate);
+            } elseif (false !== strpos($compiledTemplate, '</html>')) {
+                $compiledTemplate = str_replace('</html>', $autoincludeTemplate.'</html>', $compiledTemplate);
+            } else {
+                $compiledTemplate .= $autoincludeTemplate;
+            }
+        }
 
         // 開始スクリプトを追加
         $initScript = self::getInitialScript();
@@ -562,7 +575,10 @@ class BlocsCompiler
             // auto includeのタグの埋め込み
             $autoincludeDir = self::getAutoincludeDir();
             if (false !== $autoincludeDir && basename($autoincludeDir) == $attrList[BLOCS_DATA_INCLUDE]) {
-                $htmlBuff = '{{REPLACE_TO_AUTOINCLUDE}}';
+                // 引数を渡せるように
+                $htmlBuff = self::assignValue($attrList, $quotesList);
+
+                $htmlBuff .= '{{REPLACE_TO_AUTOINCLUDE}}';
 
                 return;
             }
@@ -713,7 +729,7 @@ class BlocsCompiler
 
     private function addDataInclude($attrList, $htmlBuff)
     {
-        if (!strncmp($attrList[BLOCS_DATA_INCLUDE], '/', 1)) {
+        if (!is_file($attrList[BLOCS_DATA_INCLUDE]) && !strncmp($attrList[BLOCS_DATA_INCLUDE], '/', 1)) {
             // ルートディレクトリのパスを変換
             $attrList[BLOCS_DATA_INCLUDE] = BLOCS_ROOT_DIR.$attrList[BLOCS_DATA_INCLUDE];
         }
@@ -929,14 +945,16 @@ class BlocsCompiler
 
     private function getAutoincludeDir()
     {
-        if (!defined('BLOCS_ROOT_DIR')) {
-            return false;
+        if (defined('BLOCS_ROOT_DIR')) {
+            if (defined('VIEW_PREFIX')) {
+                $autoincludeDir = BLOCS_ROOT_DIR.'/'.VIEW_PREFIX.'/';
+            } else {
+                $autoincludeDir = BLOCS_ROOT_DIR.'/';
+            }
         }
 
-        if (defined('VIEW_PREFIX')) {
-            $autoincludeDir = BLOCS_ROOT_DIR.'/'.VIEW_PREFIX.'/';
-        } else {
-            $autoincludeDir = BLOCS_ROOT_DIR.'/';
+        if (empty($autoincludeDir) || !is_dir($autoincludeDir.'autoinclude')) {
+            $autoincludeDir = realpath(__DIR__.'/../..').'/';
         }
 
         if (!is_dir($autoincludeDir.'autoinclude')) {
