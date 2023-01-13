@@ -119,26 +119,27 @@ class Common
             return '';
         }
 
-        $ifNum = 0;
+        $ifDepth = 0;
         $condition = "<?php \$preAttr='{$preAttr}'; \$postAttr=''; ?>\n".$partList[0];
         array_shift($partList);
         foreach ($partList as $buff) {
             $condition .= '<?php if';
-            if ($ifNum) {
+            if ($ifDepth) {
                 $condition .= $buff;
+                $buff = explode(': ?>', $buff, 2);
             } else {
                 $buff = explode(': ?>', $buff, 2);
                 $condition .= $buff[0].": ?>\n<?php echo(\$preAttr); \$preAttr=''; \$postAttr='{$postAttr}'; ?>".$buff[1];
             }
-            ++$ifNum;
+            ++$ifDepth;
 
             if (false !== strpos($buff[1], BLOCS_ENDIF_SCRIPT)) {
                 $buff = explode(BLOCS_ENDIF_SCRIPT, $buff[1]);
                 foreach ($buff as $endif) {
-                    if (!$ifNum && preg_replace("/\s/", '', $endif)) {
+                    if (!$ifDepth && preg_replace("/\s/", '', $endif)) {
                         return '';
                     }
-                    $ifNum && $ifNum--;
+                    $ifDepth && $ifDepth--;
                 }
             }
         }
