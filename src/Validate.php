@@ -63,6 +63,20 @@ class Validate
         return [$configValidate, $validateMessage];
     }
 
+    public static function rules($templateName)
+    {
+        list($rules, $messages) = self::get($templateName);
+
+        return $rules;
+    }
+
+    public static function messages($templateName)
+    {
+        list($rules, $messages) = self::get($templateName);
+
+        return $messages;
+    }
+
     /**
      * テンプレートで指定したバリデーションとメッセージを取得する
      * 取得したバリデーションとメッセージはLaravelのvalidateに渡す
