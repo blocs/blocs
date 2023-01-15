@@ -16,24 +16,40 @@ Laravelのためのテンプレートエンジン
 | [**English**](https://blocs.jp/en/readme.html)
 
 # 概要
-BLOCSは、PHPのテンプレートエンジンです。テンプレートエンジンを使えば、ビジネスロジック（プログラム）をテンプレートから分離できます。テンプレートエンジンでビジネスロジックを分離できますが、HTMLを動的にするロジック（プレゼンテーションロジック）はテンプレートに残ります。下記の例のように、LaravelのBladeのテンプレートは、プレゼンテーションロジックがHTMLと密に混じっています。
+BLOCSは、LaravelのBladeをもっと便利にする拡張パッケージです。Bladeのテンプレートでは、本の一覧表示などの繰り返し処理を以下のように記述します。
 
-```html
-@if ($name != "")
-  <p>Hello, {{$name}}.</p>
-@else
-  <p>Hello, Guest.</p>
-@endif
+```php
+@foreach($books as $book)
+    <tr>
+        <td>{{ $book->id }}</td>
+        <td>{{ $book->title }}</td>
+        ...
+        <td>
+            @foreach($book->tags as $bookTag)
+                <span>{{ $bookTag->name }}</span><br>
+            @endforeach
+        </td>
+        ...
+    </tr>
+@endforeach
 ```
 
-BLOCSは、プログラムで作ったデータと、テンプレートで指定したデータ属性でHTMLを動的に生成します。データ属性でプレゼンテーションロジックをHTMLからできるだけ分離して、HTMLをくずさないテンプレートエンジンを目指して開発しています。ロジックとHTMLを疎な関係にすることで、プログラマーとコーダーのお互いのソース変更や開発の遅れなどの影響を最小限にし、効率的な開発、維持を行うことができます。
+BLOCSを使うと、同様の処理を以下のように記述できます。テンプレートで指定したデータ属性`data-*`で、HTMLを動的に生成します。HTMLをくずさずに構造を活かして、シンプルに記述できるテンプレートエンジンを目指して、BLOCSを開発しています。
 
 ```html
-<p>Hello, <span data-val=$name>Guest</span>.</p>
+<tr data-loop=$books>
+    <td>{{ $book->id }}</td>
+    <td>{{ $book->title }}</td>
+    ...
+    <td>
+        <span data-loop=$book->tags data-assign=$bookTag>{{ $bookTag->name }}</br></span>
+    </td>
+    ...
+</tr>
 ```
 
 ## 特徴
-- HTMLをくずさない記述方法（タグ記法、コメント記法）、Bladeも使える
+- HTMLをくずさない記述方法（タグ記法、コメント記法）
 
 ```html
 <div class="error" data-exist=$error>{{ $message }}</div>

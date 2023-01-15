@@ -12,8 +12,8 @@ class Validate
      * 取得したバリデーションとメッセージはLaravelのvalidateに渡す
      * $requestを渡すと指定したフィルターをかける
      *
-     * list($validate, $message) = \Blocs\Validate::get('insert', $request);
-     * empty($validate) || $request->validate($validate, $message);
+     * list($rules, $messages) = \Blocs\Validate::get('insert', $request);
+     * empty($rules) || $request->validate($rules, $messages);
      *
      * @param string  $templateName テンプレート名
      * @param Request $request      リクエスト
@@ -83,8 +83,8 @@ class Validate
      * 新規入力、編集など複数のテンプレートで同じバリデーションを使うケースが多いので
      * テンプレートではなくディレクトリを指定する
      *
-     * list($validate, $message) = \Blocs\Validate::upload('/', 'upload');
-     * empty($validate) || $request->validate($validate, $message);
+     * list($rules, $messages) = \Blocs\Validate::upload('/', 'upload');
+     * empty($rules) || $request->validate($rules, $messages);
      *
      * @param string $templateDir テンプレートのあるディレクトリ
      * @param string $formName    フォーム名

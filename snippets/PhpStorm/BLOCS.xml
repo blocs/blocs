@@ -114,4 +114,34 @@
       <option name="PHP" value="true" />
     </context>
   </template>
+  <template name="data-endexist" value="&lt;!-- data-endexist --&gt;" description="data-endexist" toReformat="false" toShortenFQNames="true">
+    <context>
+      <option name="HTML" value="true" />
+      <option name="PHP" value="true" />
+    </context>
+  </template>
+  <template name="data-endnone" value="&lt;!-- data-endnone --&gt;" description="data-endnone" toReformat="false" toShortenFQNames="true">
+    <context>
+      <option name="HTML" value="true" />
+      <option name="PHP" value="true" />
+    </context>
+  </template>
+  <template name="data-endif" value="&lt;!-- data-endif --&gt;" description="data-endif" toReformat="false" toShortenFQNames="true">
+    <context>
+      <option name="HTML" value="true" />
+      <option name="PHP" value="true" />
+    </context>
+  </template>
+  <template name="data-endunless" value="&lt;!-- data-endunless --&gt;" description="data-endunless" toReformat="false" toShortenFQNames="true">
+    <context>
+      <option name="HTML" value="true" />
+      <option name="PHP" value="true" />
+    </context>
+  </template>
+  <template name="data-endbloc" value="&lt;!-- data-endbloc --&gt;" description="data-endbloc" toReformat="false" toShortenFQNames="true">
+    <context>
+      <option name="HTML" value="true" />
+      <option name="PHP" value="true" />
+    </context>
+  </template>
 </templateSet>
