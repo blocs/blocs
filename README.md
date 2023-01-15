@@ -38,8 +38,8 @@ BLOCSを使うと、同様の処理を以下のように記述できます。テ
 
 ```html
 <tr data-loop=$books>
-    <td data-val=$book->id></td>
-    <td data-val=$book->title></td>
+    <td>{{ $book->id }}</td>
+    <td>{{ $book->title }}</td>
     ...
     <td>
         <span data-loop=$book->tags data-assign=$bookTag>{{ $bookTag->name }}</br></span>
