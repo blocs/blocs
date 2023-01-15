@@ -62,5 +62,25 @@
     "data-validate BLOCS": {
         "prefix": "data-validate",
         "body": "<!-- data-form=\"${1:form}\" data-validate=\"${2:validate}\" data-lang=\"${3:code}\" -->"
+    },
+    "data-endexist BLOCS": {
+        "prefix": "data-endexist",
+        "body": "<!-- data-endexist -->"
+    },
+    "data-endnone BLOCS": {
+        "prefix": "data-endnone",
+        "body": "<!-- data-endnone -->"
+    },
+    "data-endif BLOCS": {
+        "prefix": "data-endif",
+        "body": "<!-- data-endif -->"
+    },
+    "data-endunless BLOCS": {
+        "prefix": "data-endunless",
+        "body": "<!-- data-endunless -->"
+    },
+    "data-endbloc BLOCS": {
+        "prefix": "data-endbloc",
+        "body": "<!-- data-endbloc -->"
     }
 }
