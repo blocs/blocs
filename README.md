@@ -18,7 +18,7 @@ Laravelのためのテンプレートエンジン
 # 概要
 BLOCSは、LaravelのBladeをもっと便利にする拡張パッケージです。Bladeのテンプレートでは、本の一覧表示などの繰り返し処理を以下のように記述します。
 
-```html
+```php
 @foreach($books as $book)
     <tr>
         <td>{{ $book->id }}</td>
