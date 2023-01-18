@@ -135,12 +135,6 @@ class Common
             $config = [];
         }
 
-        // 設定ファイルを更新
-        isset($config['menu']) || $config['menu'] = [];
-        if (!empty($blocsConfig->menu)) {
-            $config['menu'] = array_merge($config['menu'], $blocsConfig->menu);
-        }
-
         // ファイルアップロードのバリデーション
         $validateUpload = [];
         foreach ($blocsConfig->upload as $formName) {
@@ -163,6 +157,29 @@ class Common
         $config = self::updateConfig($config, 'validate', $path, $blocsConfig->validate);
         $config = self::updateConfig($config, 'message', $path, $blocsConfig->message);
         $config = self::updateConfig($config, 'filter', $path, $blocsConfig->filter);
+        $config = self::updateConfig($config, 'option', $path, $blocsConfig->menu);
+
+        // Optionをフォーム名ごとに集約
+        $existValueList = [];
+        $config['menu'] = [];
+        foreach ($config['option'] as $path => $configOption) {
+            foreach ($configOption as $formName => $optionList) {
+                foreach ($optionList as $option) {
+                    if (!isset($option['value'])) {
+                        continue;
+                    }
+                    if (isset($existValueList[$formName][$option['value']])) {
+                        // valueが重複している
+                        continue;
+                    }
+
+                    isset($config['menu'][$formName]) || $config['menu'][$formName] = [];
+                    $config['menu'][$formName][] = $option;
+
+                    $existValueList[$formName][$option['value']] = true;
+                }
+            }
+        }
 
         // 設定ファイルはディレクトリごとに作成
         $configJson = json_encode($config, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
