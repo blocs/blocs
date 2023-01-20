@@ -222,5 +222,3 @@ class Parser
         return $attrString;
     }
 }
-
-/* End of file */

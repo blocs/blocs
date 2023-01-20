@@ -1,147 +1,147 @@
 <templateSet group="BLOCS">
-  <template name="data-include" value="&lt;!-- data-include=&quot;$include$&quot; --&gt;" description="data-include=&quot;include.html&quot;" toReformat="false" toShortenFQNames="true">
-    <variable name="include" expression="&quot;include.html&quot;" defaultValue="" alwaysStopAt="true" />
-    <context>
-      <option name="HTML" value="true" />
-      <option name="PHP" value="true" />
-    </context>
-  </template>
-  <template name="data-bloc" value="data-bloc=&quot;$bloc$&quot;" description="data-bloc=&quot;bloc&quot;" toReformat="false" toShortenFQNames="true">
-    <variable name="bloc" expression="&quot;bloc&quot;" defaultValue="" alwaysStopAt="true" />
-    <context>
-      <option name="HTML" value="true" />
-      <option name="PHP" value="true" />
-    </context>
-  </template>
-  <template name="data-val" value="data-val=$$$variable$" description="data-val=$variable" toReformat="false" toShortenFQNames="true">
-    <variable name="variable" expression="&quot;variable&quot;" defaultValue="" alwaysStopAt="true" />
-    <context>
-      <option name="HTML" value="true" />
-      <option name="PHP" value="true" />
-    </context>
-  </template>
-  <template name="data-attribute" value="&lt;!-- data-attribute=&quot;$attribute$&quot; data-val=$$$variable$ --&gt;" description="data-attribute=&quot;attribute&quot;" toReformat="false" toShortenFQNames="true">
-    <variable name="attribute" expression="&quot;attribute&quot;" defaultValue="" alwaysStopAt="true" />
-    <variable name="variable" expression="&quot;variable&quot;" defaultValue="" alwaysStopAt="true" />
-    <context>
-      <option name="HTML" value="true" />
-      <option name="PHP" value="true" />
-    </context>
-  </template>
-  <template name="data-assign" value="&lt;!-- data-assign=$$$variable$ data-val=$$$variable$ --&gt;" description="data-assign=$variable" toReformat="false" toShortenFQNames="true">
-    <variable name="variable" expression="&quot;variable&quot;" defaultValue="" alwaysStopAt="true" />
-    <context>
-      <option name="HTML" value="true" />
-      <option name="PHP" value="true" />
-    </context>
-  </template>
-  <template name="data-prefix" value="data-prefix=&quot;$prefix$&quot;" description="data-prefix=&quot;prefix&quot;" toReformat="false" toShortenFQNames="true">
-    <variable name="prefix" expression="&quot;prefix&quot;" defaultValue="" alwaysStopAt="true" />
-    <context>
-      <option name="HTML" value="true" />
-      <option name="PHP" value="true" />
-    </context>
-  </template>
-  <template name="data-postfix" value="data-postfix=&quot;$postfix$&quot;" description="data-postfix=&quot;postfix&quot;" toReformat="false" toShortenFQNames="true">
-    <variable name="postfix" expression="&quot;postfix&quot;" defaultValue="" alwaysStopAt="true" />
-    <context>
-      <option name="HTML" value="true" />
-      <option name="PHP" value="true" />
-    </context>
-  </template>
-  <template name="data-convert" value="data-convert=&quot;$format$&quot;" description="data-convert=&quot;format&quot;" toReformat="false" toShortenFQNames="true">
-    <variable name="format" expression="&quot;format&quot;" defaultValue="" alwaysStopAt="true" />
-    <context>
-      <option name="HTML" value="true" />
-      <option name="PHP" value="true" />
-    </context>
-  </template>
-  <template name="data-lang" value="data-lang=&quot;$code$&quot;" description="data-lang=&quot;code&quot;" toReformat="false" toShortenFQNames="true">
-    <variable name="code" expression="&quot;code&quot;" defaultValue="" alwaysStopAt="true" />
-    <context>
-      <option name="HTML" value="true" />
-      <option name="PHP" value="true" />
-    </context>
-  </template>
-  <template name="data-exist" value="data-exist=$$$variable$" description="data-exist=$variable" toReformat="false" toShortenFQNames="true">
-    <variable name="variable" expression="&quot;variable&quot;" defaultValue="" alwaysStopAt="true" />
-    <context>
-      <option name="HTML" value="true" />
-      <option name="PHP" value="true" />
-    </context>
-  </template>
-  <template name="data-none" value="data-none=$$$variable$" description="data-none=$variable" toReformat="false" toShortenFQNames="true">
-    <variable name="variable" expression="&quot;variable&quot;" defaultValue="" alwaysStopAt="true" />
-    <context>
-      <option name="HTML" value="true" />
-      <option name="PHP" value="true" />
-    </context>
-  </template>
-  <template name="data-if" value="data-if=&quot;$condition$&quot;" description="data-if=&quot;condition&quot;" toReformat="false" toShortenFQNames="true">
-    <variable name="condition" expression="&quot;condition&quot;" defaultValue="" alwaysStopAt="true" />
-    <context>
-      <option name="HTML" value="true" />
-      <option name="PHP" value="true" />
-    </context>
-  </template>
-  <template name="data-unless" value="data-unless=&quot;$condition$&quot;" description="data-unless=&quot;condition&quot;" toReformat="false" toShortenFQNames="true">
-    <variable name="condition" expression="&quot;condition&quot;" defaultValue="" alwaysStopAt="true" />
-    <context>
-      <option name="HTML" value="true" />
-      <option name="PHP" value="true" />
-    </context>
-  </template>
-  <template name="data-loop" value="data-loop=$$$variable$" description="data-loop=$variable" toReformat="false" toShortenFQNames="true">
-    <variable name="variable" expression="&quot;variable&quot;" defaultValue="" alwaysStopAt="true" />
-    <context>
-      <option name="HTML" value="true" />
-      <option name="PHP" value="true" />
-    </context>
-  </template>
-  <template name="data-filter" value="data-filter=&quot;$format$&quot;" description="data-filter=&quot;format&quot;" toReformat="false" toShortenFQNames="true">
-    <variable name="format" expression="&quot;format&quot;" defaultValue="" alwaysStopAt="true" />
-    <context>
-      <option name="HTML" value="true" />
-      <option name="PHP" value="true" />
-    </context>
-  </template>
-  <template name="data-validate" value="&lt;!-- data-form=&quot;$form$&quot; data-validate=&quot;$validate$&quot; data-lang=&quot;$code$&quot; --&gt;" description="data-validate=&quot;validate&quot;" toReformat="false" toShortenFQNames="true">
-    <variable name="form" expression="&quot;form&quot;" defaultValue="" alwaysStopAt="true" />
-    <variable name="validate" expression="&quot;validate&quot;" defaultValue="" alwaysStopAt="true" />
-    <variable name="code" expression="&quot;code&quot;" defaultValue="" alwaysStopAt="true" />
-    <context>
-      <option name="HTML" value="true" />
-      <option name="PHP" value="true" />
-    </context>
-  </template>
-  <template name="data-endexist" value="&lt;!-- data-endexist --&gt;" description="data-endexist" toReformat="false" toShortenFQNames="true">
-    <context>
-      <option name="HTML" value="true" />
-      <option name="PHP" value="true" />
-    </context>
-  </template>
-  <template name="data-endnone" value="&lt;!-- data-endnone --&gt;" description="data-endnone" toReformat="false" toShortenFQNames="true">
-    <context>
-      <option name="HTML" value="true" />
-      <option name="PHP" value="true" />
-    </context>
-  </template>
-  <template name="data-endif" value="&lt;!-- data-endif --&gt;" description="data-endif" toReformat="false" toShortenFQNames="true">
-    <context>
-      <option name="HTML" value="true" />
-      <option name="PHP" value="true" />
-    </context>
-  </template>
-  <template name="data-endunless" value="&lt;!-- data-endunless --&gt;" description="data-endunless" toReformat="false" toShortenFQNames="true">
-    <context>
-      <option name="HTML" value="true" />
-      <option name="PHP" value="true" />
-    </context>
-  </template>
-  <template name="data-endbloc" value="&lt;!-- data-endbloc --&gt;" description="data-endbloc" toReformat="false" toShortenFQNames="true">
-    <context>
-      <option name="HTML" value="true" />
-      <option name="PHP" value="true" />
-    </context>
-  </template>
+    <template name="data-include" value="&lt;!-- data-include=&quot;$include$&quot; --&gt;" description="data-include=&quot;include.html&quot;" toReformat="false" toShortenFQNames="true">
+        <variable name="include" expression="&quot;include.html&quot;" defaultValue="" alwaysStopAt="true" />
+        <context>
+            <option name="HTML" value="true" />
+            <option name="PHP" value="true" />
+        </context>
+    </template>
+    <template name="data-bloc" value="data-bloc=&quot;$bloc$&quot;" description="data-bloc=&quot;bloc&quot;" toReformat="false" toShortenFQNames="true">
+        <variable name="bloc" expression="&quot;bloc&quot;" defaultValue="" alwaysStopAt="true" />
+        <context>
+            <option name="HTML" value="true" />
+            <option name="PHP" value="true" />
+        </context>
+    </template>
+    <template name="data-val" value="data-val=$$$variable$" description="data-val=$variable" toReformat="false" toShortenFQNames="true">
+        <variable name="variable" expression="&quot;variable&quot;" defaultValue="" alwaysStopAt="true" />
+        <context>
+            <option name="HTML" value="true" />
+            <option name="PHP" value="true" />
+        </context>
+    </template>
+    <template name="data-attribute" value="&lt;!-- data-attribute=&quot;$attribute$&quot; data-val=$$$variable$ --&gt;" description="data-attribute=&quot;attribute&quot;" toReformat="false" toShortenFQNames="true">
+        <variable name="attribute" expression="&quot;attribute&quot;" defaultValue="" alwaysStopAt="true" />
+        <variable name="variable" expression="&quot;variable&quot;" defaultValue="" alwaysStopAt="true" />
+        <context>
+            <option name="HTML" value="true" />
+            <option name="PHP" value="true" />
+        </context>
+    </template>
+    <template name="data-assign" value="&lt;!-- data-assign=$$$variable$ data-val=$$$variable$ --&gt;" description="data-assign=$variable" toReformat="false" toShortenFQNames="true">
+        <variable name="variable" expression="&quot;variable&quot;" defaultValue="" alwaysStopAt="true" />
+        <context>
+            <option name="HTML" value="true" />
+            <option name="PHP" value="true" />
+        </context>
+    </template>
+    <template name="data-prefix" value="data-prefix=&quot;$prefix$&quot;" description="data-prefix=&quot;prefix&quot;" toReformat="false" toShortenFQNames="true">
+        <variable name="prefix" expression="&quot;prefix&quot;" defaultValue="" alwaysStopAt="true" />
+        <context>
+            <option name="HTML" value="true" />
+            <option name="PHP" value="true" />
+        </context>
+    </template>
+    <template name="data-postfix" value="data-postfix=&quot;$postfix$&quot;" description="data-postfix=&quot;postfix&quot;" toReformat="false" toShortenFQNames="true">
+        <variable name="postfix" expression="&quot;postfix&quot;" defaultValue="" alwaysStopAt="true" />
+        <context>
+            <option name="HTML" value="true" />
+            <option name="PHP" value="true" />
+        </context>
+    </template>
+    <template name="data-convert" value="data-convert=&quot;$format$&quot;" description="data-convert=&quot;format&quot;" toReformat="false" toShortenFQNames="true">
+        <variable name="format" expression="&quot;format&quot;" defaultValue="" alwaysStopAt="true" />
+        <context>
+            <option name="HTML" value="true" />
+            <option name="PHP" value="true" />
+        </context>
+    </template>
+    <template name="data-lang" value="data-lang=&quot;$code$&quot;" description="data-lang=&quot;code&quot;" toReformat="false" toShortenFQNames="true">
+        <variable name="code" expression="&quot;code&quot;" defaultValue="" alwaysStopAt="true" />
+        <context>
+            <option name="HTML" value="true" />
+            <option name="PHP" value="true" />
+        </context>
+    </template>
+    <template name="data-exist" value="data-exist=$$$variable$" description="data-exist=$variable" toReformat="false" toShortenFQNames="true">
+        <variable name="variable" expression="&quot;variable&quot;" defaultValue="" alwaysStopAt="true" />
+        <context>
+            <option name="HTML" value="true" />
+            <option name="PHP" value="true" />
+        </context>
+    </template>
+    <template name="data-none" value="data-none=$$$variable$" description="data-none=$variable" toReformat="false" toShortenFQNames="true">
+        <variable name="variable" expression="&quot;variable&quot;" defaultValue="" alwaysStopAt="true" />
+        <context>
+            <option name="HTML" value="true" />
+            <option name="PHP" value="true" />
+        </context>
+    </template>
+    <template name="data-if" value="data-if=&quot;$condition$&quot;" description="data-if=&quot;condition&quot;" toReformat="false" toShortenFQNames="true">
+        <variable name="condition" expression="&quot;condition&quot;" defaultValue="" alwaysStopAt="true" />
+        <context>
+            <option name="HTML" value="true" />
+            <option name="PHP" value="true" />
+        </context>
+    </template>
+    <template name="data-unless" value="data-unless=&quot;$condition$&quot;" description="data-unless=&quot;condition&quot;" toReformat="false" toShortenFQNames="true">
+        <variable name="condition" expression="&quot;condition&quot;" defaultValue="" alwaysStopAt="true" />
+        <context>
+            <option name="HTML" value="true" />
+            <option name="PHP" value="true" />
+        </context>
+    </template>
+    <template name="data-loop" value="data-loop=$$$variable$" description="data-loop=$variable" toReformat="false" toShortenFQNames="true">
+        <variable name="variable" expression="&quot;variable&quot;" defaultValue="" alwaysStopAt="true" />
+        <context>
+            <option name="HTML" value="true" />
+            <option name="PHP" value="true" />
+        </context>
+    </template>
+    <template name="data-filter" value="data-filter=&quot;$format$&quot;" description="data-filter=&quot;format&quot;" toReformat="false" toShortenFQNames="true">
+        <variable name="format" expression="&quot;format&quot;" defaultValue="" alwaysStopAt="true" />
+        <context>
+            <option name="HTML" value="true" />
+            <option name="PHP" value="true" />
+        </context>
+    </template>
+    <template name="data-validate" value="&lt;!-- data-form=&quot;$form$&quot; data-validate=&quot;$validate$&quot; data-lang=&quot;$code$&quot; --&gt;" description="data-validate=&quot;validate&quot;" toReformat="false" toShortenFQNames="true">
+        <variable name="form" expression="&quot;form&quot;" defaultValue="" alwaysStopAt="true" />
+        <variable name="validate" expression="&quot;validate&quot;" defaultValue="" alwaysStopAt="true" />
+        <variable name="code" expression="&quot;code&quot;" defaultValue="" alwaysStopAt="true" />
+        <context>
+            <option name="HTML" value="true" />
+            <option name="PHP" value="true" />
+        </context>
+    </template>
+    <template name="data-endexist" value="&lt;!-- data-endexist --&gt;" description="data-endexist" toReformat="false" toShortenFQNames="true">
+        <context>
+            <option name="HTML" value="true" />
+            <option name="PHP" value="true" />
+        </context>
+    </template>
+    <template name="data-endnone" value="&lt;!-- data-endnone --&gt;" description="data-endnone" toReformat="false" toShortenFQNames="true">
+        <context>
+            <option name="HTML" value="true" />
+            <option name="PHP" value="true" />
+        </context>
+    </template>
+    <template name="data-endif" value="&lt;!-- data-endif --&gt;" description="data-endif" toReformat="false" toShortenFQNames="true">
+        <context>
+            <option name="HTML" value="true" />
+            <option name="PHP" value="true" />
+        </context>
+    </template>
+    <template name="data-endunless" value="&lt;!-- data-endunless --&gt;" description="data-endunless" toReformat="false" toShortenFQNames="true">
+        <context>
+            <option name="HTML" value="true" />
+            <option name="PHP" value="true" />
+        </context>
+    </template>
+    <template name="data-endbloc" value="&lt;!-- data-endbloc --&gt;" description="data-endbloc" toReformat="false" toShortenFQNames="true">
+        <context>
+            <option name="HTML" value="true" />
+            <option name="PHP" value="true" />
+        </context>
+    </template>
 </templateSet>

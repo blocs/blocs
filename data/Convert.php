@@ -85,5 +85,3 @@ class Convert
         return $str;
     }
 }
-
-/* End of file */
