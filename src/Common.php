@@ -73,7 +73,7 @@ class Common
         if (is_array($str)) {
             count($str) || $str = null;
         } else {
-            strlen($str) || $str = null;
+            isset($str) && strlen($str) || $str = null;
         }
 
         if (!isset($str)) {
