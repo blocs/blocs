@@ -39,5 +39,3 @@ class Lang
         return $message;
     }
 }
-
-/* End of file */
