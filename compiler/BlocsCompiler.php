@@ -1168,5 +1168,3 @@ END_of_HTML;
         return $htmlBuff;
     }
 }
-
-/* End of file */

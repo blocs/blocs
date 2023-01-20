@@ -76,5 +76,3 @@ class Filter
         return $str;
     }
 }
-
-/* End of file */
