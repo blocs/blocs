@@ -945,6 +945,10 @@ class BlocsCompiler
 
     private function getAutoincludeDir()
     {
+        if (defined('BLOCS_AUTOINCLUDE') && !BLOCS_AUTOINCLUDE) {
+            return false;
+        }
+
         if (defined('BLOCS_ROOT_DIR')) {
             if (defined('VIEW_PREFIX')) {
                 $autoincludeDir = BLOCS_ROOT_DIR.'/'.VIEW_PREFIX.'/';
