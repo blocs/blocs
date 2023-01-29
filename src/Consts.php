@@ -56,6 +56,7 @@ define('BLOCS_DATA_ENDUNLESS', 'data-endunless');
 define('BLOCS_DATA_REPEAT', 'data-repeat');
 define('BLOCS_DATA_LOOP', 'data-loop');
 define('BLOCS_DATA_ENDREPEAT', 'data-endrepeat');
+define('BLOCS_DATA_ENDLOOP', 'data-endloop');
 
 define('BLOCS_DATA_FORM', 'data-form');
 define('BLOCS_DATA_VALIDATE', 'data-validate');
