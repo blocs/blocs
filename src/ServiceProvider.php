@@ -17,7 +17,6 @@ class ServiceProvider extends ViewServiceProvider
     public function boot()
     {
         // 定数の読み込み
-        is_file(app_path().'/Consts/Blocs.php') && \App\Consts\Blocs::define();
         require_once 'Consts.php';
 
         $this->registerExtension();
