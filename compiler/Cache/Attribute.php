@@ -234,7 +234,7 @@ END_of_HTML;
     }
 
     // data-endloopのスクリプトを生成
-    public static function endloop($attrList)
+    public static function endloop()
     {
         return "@endforeach\n";
     }

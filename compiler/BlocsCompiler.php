@@ -279,7 +279,7 @@ class BlocsCompiler
 
                 $this->setTagCounter([
                     'tag' => $tagName,
-                    'after' => Attribute::endloop($attrList),
+                    'after' => Attribute::endloop(),
                     'array_form' => substr($attrList[BLOCS_DATA_LOOP], 1),
                 ]);
             }
@@ -677,6 +677,32 @@ class BlocsCompiler
             $target = '';
             foreach ($this->tagCounter as $num => $buff) {
                 if (!isset($buff['array_form']) || BLOCS_DATA_REPEAT !== $buff['tag']) {
+                    continue;
+                }
+                $target = $num;
+            }
+            if (strlen($target)) {
+                unset($this->tagCounter[$target]);
+                $this->tagCounter = array_merge($this->tagCounter);
+            }
+        }
+
+        if (isset($attrList[BLOCS_DATA_LOOP])) {
+            $rawString = '';
+            $htmlBuff = Attribute::loop($attrList, count($this->tagCounter));
+            $this->endrepeat[] = $attrList;
+
+            $this->setTagCounter([
+                'tag' => BLOCS_DATA_LOOP,
+                'array_form' => substr($attrList[BLOCS_DATA_LOOP], 1),
+            ], false);
+        }
+        if (isset($attrList[BLOCS_DATA_ENDLOOP]) && !empty($this->endrepeat)) {
+            $htmlBuff = Attribute::endloop();
+
+            $target = '';
+            foreach ($this->tagCounter as $num => $buff) {
+                if (!isset($buff['array_form']) || BLOCS_DATA_LOOP !== $buff['tag']) {
                     continue;
                 }
                 $target = $num;
