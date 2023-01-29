@@ -183,15 +183,15 @@ class Attribute
         $md5workKey = md5($attrList[BLOCS_DATA_REPEAT]);
         $compiledTag .= <<< END_of_HTML
 <?php
-    if(!empty({$attrList[BLOCS_DATA_REPEAT]})):
-        foreach({$attrList[BLOCS_DATA_REPEAT]} as \$repeatIndex => \$work_{$md5workKey}):
-            \$repeatIndex{$tagCounterNum} = \$repeatIndex;
-            \$parentItemList = [];
-            foreach(array_keys(\$work_{$md5workKey}) as \$parentItem){
-                isset(\$\$parentItem) && \$parentItemList[] = \$parentItem;
-            }
-            \$parent[] = compact(\$parentItemList);
-            extract(\$work_{$md5workKey});
+    empty({$attrList[BLOCS_DATA_REPEAT]}) && {$attrList[BLOCS_DATA_REPEAT]} = [];
+    foreach({$attrList[BLOCS_DATA_REPEAT]} as \$repeatIndex => \$work_{$md5workKey}):
+        \$repeatIndex{$tagCounterNum} = \$repeatIndex;
+        \$parentItemList = [];
+        foreach(array_keys(\$work_{$md5workKey}) as \$parentItem){
+            isset(\$\$parentItem) && \$parentItemList[] = \$parentItem;
+        }
+        \$parent[] = compact(\$parentItemList);
+        extract(\$work_{$md5workKey});
 ?>
 
 END_of_HTML;
@@ -205,12 +205,11 @@ END_of_HTML;
         $md5workKey = md5($attrList[BLOCS_DATA_REPEAT]);
         $compiledTag = <<< END_of_HTML
 <?php
-            foreach(array_keys(\$work_{$md5workKey}) as \$workKey){
-                unset(\$\$workKey);
-            };
-            extract(array_pop(\$parent));
-        endforeach;
-    endif;
+        foreach(array_keys(\$work_{$md5workKey}) as \$workKey){
+            unset(\$\$workKey);
+        };
+        extract(array_pop(\$parent));
+    endforeach;
 ?>
 
 END_of_HTML;
@@ -221,6 +220,10 @@ END_of_HTML;
     // data-loopのスクリプトを生成
     public static function loop($attrList, $tagCounterNum)
     {
+        if (isset($attrList[BLOCS_DATA_REPEAT])) {
+            return self::repeat($attrList, $tagCounterNum);
+        }
+
         if (empty($attrList[BLOCS_DATA_QUERY])) {
             $strSingular = '$'.\Str::singular(substr($attrList[BLOCS_DATA_LOOP], 1));
         } else {
@@ -234,8 +237,12 @@ END_of_HTML;
     }
 
     // data-endloopのスクリプトを生成
-    public static function endloop()
+    public static function endloop($attrList)
     {
+        if (isset($attrList[BLOCS_DATA_REPEAT]) || isset($attrList[BLOCS_DATA_ENDREPEAT])) {
+            return self::endrepeat($attrList);
+        }
+
         return "@endforeach\n";
     }
 

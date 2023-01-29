@@ -256,19 +256,8 @@ class BlocsCompiler
                 count($tagCounter) && $this->setTagCounter($tagCounter);
             }
 
-            if (isset($attrList[BLOCS_DATA_REPEAT])) {
-                if (!Common::checkValueName($attrList[BLOCS_DATA_REPEAT])) {
-                    trigger_error('B002: Invalid condition "'.BLOCS_DATA_REPEAT.'" ('.$attrList[BLOCS_DATA_REPEAT].')', E_USER_ERROR);
-                }
-
-                $compiledTag = Attribute::repeat($attrList, count($this->tagCounter)).$compiledTag;
-
-                $this->setTagCounter([
-                    'tag' => $tagName,
-                    'after' => Attribute::endrepeat($attrList),
-                    'array_form' => substr($attrList[BLOCS_DATA_REPEAT], 1),
-                ]);
-            }
+            // data-repeatとdata-loopの処理を共通化
+            isset($attrList[BLOCS_DATA_REPEAT]) && $attrList[BLOCS_DATA_LOOP] = $attrList[BLOCS_DATA_REPEAT];
 
             if (isset($attrList[BLOCS_DATA_LOOP])) {
                 if (!Common::checkValueName($attrList[BLOCS_DATA_LOOP])) {
@@ -279,7 +268,7 @@ class BlocsCompiler
 
                 $this->setTagCounter([
                     'tag' => $tagName,
-                    'after' => Attribute::endloop(),
+                    'after' => Attribute::endloop($attrList),
                     'array_form' => substr($attrList[BLOCS_DATA_LOOP], 1),
                 ]);
             }
@@ -661,31 +650,9 @@ class BlocsCompiler
             $htmlBuff = BLOCS_ENDIF_SCRIPT;
         }
 
-        if (isset($attrList[BLOCS_DATA_REPEAT])) {
-            $rawString = '';
-            $htmlBuff = Attribute::repeat($attrList, count($this->tagCounter));
-            $this->endrepeat[] = $attrList;
-
-            $this->setTagCounter([
-                'tag' => BLOCS_DATA_REPEAT,
-                'array_form' => substr($attrList[BLOCS_DATA_REPEAT], 1),
-            ], false);
-        }
-        if (isset($attrList[BLOCS_DATA_ENDREPEAT]) && !empty($this->endrepeat)) {
-            $htmlBuff = Attribute::endrepeat(array_pop($this->endrepeat));
-
-            $target = '';
-            foreach ($this->tagCounter as $num => $buff) {
-                if (!isset($buff['array_form']) || BLOCS_DATA_REPEAT !== $buff['tag']) {
-                    continue;
-                }
-                $target = $num;
-            }
-            if (strlen($target)) {
-                unset($this->tagCounter[$target]);
-                $this->tagCounter = array_merge($this->tagCounter);
-            }
-        }
+        // data-repeatとdata-loopの処理を共通化
+        isset($attrList[BLOCS_DATA_REPEAT]) && $attrList[BLOCS_DATA_LOOP] = $attrList[BLOCS_DATA_REPEAT];
+        isset($attrList[BLOCS_DATA_ENDREPEAT]) && $attrList[BLOCS_DATA_ENDLOOP] = $attrList[BLOCS_DATA_ENDREPEAT];
 
         if (isset($attrList[BLOCS_DATA_LOOP])) {
             $rawString = '';
@@ -698,7 +665,7 @@ class BlocsCompiler
             ], false);
         }
         if (isset($attrList[BLOCS_DATA_ENDLOOP]) && !empty($this->endrepeat)) {
-            $htmlBuff = Attribute::endloop();
+            $htmlBuff = Attribute::endloop(array_pop($this->endrepeat));
 
             $target = '';
             foreach ($this->tagCounter as $num => $buff) {
