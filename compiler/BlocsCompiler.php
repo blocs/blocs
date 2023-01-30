@@ -10,7 +10,7 @@ class BlocsConfig
 {
     public $include;
     public $filter;
-    public $menu;
+    public $option;
     public $validate;
     public $message;
     public $upload;
@@ -20,7 +20,7 @@ class BlocsCompiler
 {
     private $include;
     private $filter;
-    private $menu;
+    private $option;
 
     // バリデーション変数
     private $validate;
@@ -52,7 +52,7 @@ class BlocsCompiler
     public function __construct()
     {
         $this->filter = [];
-        $this->menu = [];
+        $this->option = [];
         $this->validate = [];
         $this->validateMessage = [];
         $this->validateUpload = [];
@@ -95,7 +95,7 @@ class BlocsCompiler
         $blocsConfig = new BlocsConfig();
         $blocsConfig->include = array_merge(array_unique($this->include));
         $blocsConfig->filter = $this->filter;
-        $blocsConfig->menu = $this->menu;
+        $blocsConfig->option = $this->option;
         $blocsConfig->validate = $this->validate;
         $blocsConfig->message = $this->validateMessage;
         $blocsConfig->upload = $this->validateUpload;
@@ -306,7 +306,7 @@ class BlocsCompiler
                     isset($labelArray) && $labelArray = array_merge($labelArray, $attrList);
 
                     if (('radio' === $type || 'checkbox' === $type) && isset($attrList['value'])) {
-                        !isset($labelArray) && isset($attrList['id']) && $this->menu[] = $attrList;
+                        !isset($labelArray) && isset($attrList['id']) && $this->option[] = $attrList;
 
                         $selected = (isset($attrList['checked']) ? 'true' : 'false');
                         $compiledTag = Form::check($compiledTag, $attrList['name'], $attrList['value'], 'checked', $selected);
@@ -345,7 +345,7 @@ class BlocsCompiler
                     $optionArray['value'] = $optionArray['label'];
                 }
 
-                $this->menu[] = $optionArray;
+                $this->option[] = $optionArray;
                 unset($optionArray);
             } elseif ('/select' === $tagName) {
                 // メニューのグループタグを追加
@@ -373,7 +373,7 @@ class BlocsCompiler
                 preg_match('/<br \/>$/si', $labelArray['label']) && $labelArray['label'] = substr($labelArray['label'], 0, -6);
                 $labelArray['label'] = trim($labelArray['label']);
 
-                (count($labelArray) > 2) ? $this->menu[] = $labelArray : array_unshift($this->menu, $labelArray);
+                (count($labelArray) > 2) ? $this->option[] = $labelArray : array_unshift($this->option, $labelArray);
                 unset($labelArray);
             }
 
@@ -451,7 +451,7 @@ class BlocsCompiler
         // タグを削除してキャッシュを整形
         $compiledTemplate = preg_replace("/\?\>\n\<\?php/", "\n", $compiledTemplate);
 
-        self::cleanupMenu($this->menu);
+        self::cleanupOption($this->option);
 
         return $compiledTemplate;
     }
@@ -862,7 +862,7 @@ class BlocsCompiler
 
         $formName = '';
         foreach (array_reverse($this->tagCounter) as $num => $buff) {
-            if (!isset($buff['array_form']) || !strncmp($buff['array_form'], 'menu_', 5)) {
+            if (!isset($buff['array_form']) || !strncmp($buff['array_form'], 'option_', 7)) {
                 continue;
             }
 
@@ -967,7 +967,7 @@ class BlocsCompiler
         return <<< END_of_HTML
 <?php
     \$_appendOption = \\Blocs\\Option::append();
-    extract(\$_appendOption, EXTR_PREFIX_ALL, 'menu');
+    extract(\$_appendOption, EXTR_PREFIX_ALL, 'option');
 
     if (function_exists('old')) {
         \$_oldValue = old();
@@ -1039,32 +1039,32 @@ END_of_HTML;
         }
     }
 
-    private static function cleanupMenu(&$thisMenu)
+    private static function cleanupOption(&$thisOption)
     {
         $idList = [];
-        foreach ($thisMenu as $num => $buff) {
+        foreach ($thisOption as $num => $buff) {
             if ((isset($buff['label']) && !strncmp($buff['label'], '<?php', 5)) || (isset($buff['value']) && !strncmp($buff['value'], '<?php', 5))) {
-                unset($thisMenu[$num]);
+                unset($thisOption[$num]);
                 continue;
             }
 
             if (!isset($buff['id'])) {
                 if (!isset($buff['name']) || !isset($buff['value'])) {
-                    unset($thisMenu[$num]);
+                    unset($thisOption[$num]);
                 }
                 continue;
             }
 
             if (isset($idList[$buff['id']])) {
-                $thisMenu[$num] = array_merge($buff, $thisMenu[$idList[$buff['id']]]);
-                unset($thisMenu[$idList[$buff['id']]]);
+                $thisOption[$num] = array_merge($buff, $thisOption[$idList[$buff['id']]]);
+                unset($thisOption[$idList[$buff['id']]]);
             }
             $idList[$buff['id']] = $num;
         }
-        $thisMenu = array_merge($thisMenu);
+        $thisOption = array_merge($thisOption);
 
-        $menuItemList = [];
-        foreach ($thisMenu as $num => $buff) {
+        $optionItemList = [];
+        foreach ($thisOption as $num => $buff) {
             if (!isset($buff['name']) || !isset($buff['value']) || !isset($buff['label'])) {
                 continue;
             }
@@ -1072,9 +1072,9 @@ END_of_HTML;
                 continue;
             }
 
-            $menuItemList[$buff['name']][] = $buff;
+            $optionItemList[$buff['name']][] = $buff;
         }
-        $thisMenu = $menuItemList;
+        $thisOption = $optionItemList;
     }
 
     private function generateFilter($filter)

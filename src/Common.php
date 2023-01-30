@@ -154,10 +154,10 @@ class Common
 
         $config = self::updateConfig($config, 'include', $path, $blocsConfig->include);
         $config = self::updateConfig($config, 'timestamp', $path, time());
+        $config = self::updateConfig($config, 'filter', $path, $blocsConfig->filter);
+        $config = self::updateConfig($config, 'option', $path, $blocsConfig->option);
         $config = self::updateConfig($config, 'validate', $path, $blocsConfig->validate);
         $config = self::updateConfig($config, 'message', $path, $blocsConfig->message);
-        $config = self::updateConfig($config, 'filter', $path, $blocsConfig->filter);
-        $config = self::updateConfig($config, 'option', $path, $blocsConfig->menu);
 
         // Optionをフォーム名ごとに集約
         $existValueList = [];

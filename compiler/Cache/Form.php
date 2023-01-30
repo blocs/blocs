@@ -56,9 +56,9 @@ class Form
     // optionグループのHTMLを生成
     public static function select($compiledTag, &$htmlArray, $selectName)
     {
-        $menuBuff = <<< END_of_HTML
+        $optionBuff = <<< END_of_HTML
 <!-- data-query=\$preGroup data-val="" -->
-<!-- data-repeat=\$menu_{$selectName} -->
+<!-- data-repeat=\$option_{$selectName} -->
 
     <!-- data-if="!empty(\$preGroup) && (!isset(\$optionGroupList) || \$optionGroupList != \$preGroup)" -->
         </optgroup>
@@ -82,8 +82,8 @@ class Form
 
 END_of_HTML;
 
-        $menuArray = \Blocs\Compiler\Parser::parse($menuBuff);
-        $menuArray[] = $compiledTag;
-        $htmlArray = array_merge($menuArray, $htmlArray);
+        $optionArray = \Blocs\Compiler\Parser::parse($optionBuff);
+        $optionArray[] = $compiledTag;
+        $htmlArray = array_merge($optionArray, $htmlArray);
     }
 }
