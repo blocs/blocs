@@ -442,6 +442,8 @@ class BlocsCompiler
             } else {
                 $compiledTemplate .= $autoincludeTemplate;
             }
+        } else {
+            $compiledTemplate = str_replace('{{REPLACE_TO_AUTOINCLUDE}}', '', $compiledTemplate);
         }
 
         // 開始スクリプトを追加
