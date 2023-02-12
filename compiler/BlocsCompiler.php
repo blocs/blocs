@@ -945,8 +945,8 @@ class BlocsCompiler
         }
 
         if (defined('BLOCS_ROOT_DIR')) {
-            if (defined('VIEW_PREFIX')) {
-                $autoincludeDir = BLOCS_ROOT_DIR.'/'.VIEW_PREFIX.'/';
+            if (defined('BLOCS_AUTOINCLUDE')) {
+                $autoincludeDir = BLOCS_ROOT_DIR.'/'.BLOCS_AUTOINCLUDE.'/';
             } else {
                 $autoincludeDir = BLOCS_ROOT_DIR.'/';
             }
