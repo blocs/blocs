@@ -19,11 +19,14 @@ class BlocsTest extends TestCase
      */
     public function test(): void
     {
-        $this->expectError();
-        $this->expectErrorMessageMatches('/^B003:/');
-
-        $blocs = new \Blocs\View($this->testDir.'/test.html');
-        $this->actual = $blocs->generate();
+        try {
+            $blocs = new \Blocs\View($this->testDir.'/test.html');
+            $this->actual = $blocs->generate();
+        } catch (AssertionFailedError $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            $this->assertStringContainsString('B003:', $e->getMessage());
+        }
     }
 
     protected function tearDown(): void

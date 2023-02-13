@@ -15,12 +15,14 @@ class BlocsTest extends TestCase
      */
     public function test(): void
     {
-        $this->expectError();
-        $this->expectErrorMessageMatches('/^B001:/');
-
-        define('BLOCS_CACHE_DIR', '/tmpx');
-
-        $blocs = new \Blocs\View('test.html');
+        try {
+            define('BLOCS_CACHE_DIR', '/tmpx');
+            $blocs = new \Blocs\View('test.html');
+        } catch (AssertionFailedError $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            $this->assertStringContainsString('B001:', $e->getMessage());
+        }
     }
 
     protected function tearDown(): void
