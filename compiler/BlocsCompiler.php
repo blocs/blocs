@@ -435,12 +435,6 @@ class BlocsCompiler
         if ($autoincludeTemplate) {
             if (false !== strpos($compiledTemplate, '{{REPLACE_TO_AUTOINCLUDE}}')) {
                 $compiledTemplate = str_replace('{{REPLACE_TO_AUTOINCLUDE}}', $autoincludeTemplate, $compiledTemplate);
-            } elseif (false !== strpos($compiledTemplate, '</body>')) {
-                $compiledTemplate = str_replace('</body>', $autoincludeTemplate.'</body>', $compiledTemplate);
-            } elseif (false !== strpos($compiledTemplate, '</html>')) {
-                $compiledTemplate = str_replace('</html>', $autoincludeTemplate.'</html>', $compiledTemplate);
-            } else {
-                $compiledTemplate .= $autoincludeTemplate;
             }
         } else {
             $compiledTemplate = str_replace('{{REPLACE_TO_AUTOINCLUDE}}', '', $compiledTemplate);
@@ -940,27 +934,23 @@ class BlocsCompiler
 
     private function getAutoincludeDir()
     {
-        if (defined('BLOCS_AUTOINCLUDE') && !BLOCS_AUTOINCLUDE) {
-            return false;
-        }
-
         if (defined('BLOCS_ROOT_DIR')) {
-            if (defined('BLOCS_AUTOINCLUDE')) {
-                $autoincludeDir = BLOCS_ROOT_DIR.'/'.BLOCS_AUTOINCLUDE.'/';
+            if (defined('BLOCS_AUTOINCLUDE_DIR')) {
+                $autoincludeDir = BLOCS_ROOT_DIR.'/'.BLOCS_AUTOINCLUDE_DIR;
             } else {
-                $autoincludeDir = BLOCS_ROOT_DIR.'/';
+                $autoincludeDir = BLOCS_ROOT_DIR;
             }
         }
 
-        if (empty($autoincludeDir) || !is_dir($autoincludeDir.'autoinclude')) {
-            $autoincludeDir = realpath(__DIR__.'/../..').'/';
+        if (empty($autoincludeDir) || !is_dir($autoincludeDir.'/autoinclude')) {
+            $autoincludeDir = realpath(__DIR__.'/../..');
         }
 
-        if (!is_dir($autoincludeDir.'autoinclude')) {
+        if (!is_dir($autoincludeDir.'/autoinclude')) {
             return false;
         }
 
-        return $autoincludeDir.'autoinclude';
+        return $autoincludeDir.'/autoinclude';
     }
 
     // テンプレートの初期処理
