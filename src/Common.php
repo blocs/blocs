@@ -182,8 +182,7 @@ class Common
         }
 
         // 設定ファイルはディレクトリごとに作成
-        $configJson = json_encode($config, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-        file_put_contents($configPath, $configJson) && chmod($configPath, 0666);
+        file_put_contents($configPath, json_encode($config, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)."\n") && chmod($configPath, 0666);
 
         // 設定ファイルを読み込み
         self::readConfig($path);
