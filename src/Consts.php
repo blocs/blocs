@@ -73,6 +73,8 @@ define('BLOCS_DATA_ASSIGN', 'data-assign');
 define('BLOCS_TAG_NAME_REGREX', '[a-zA-Z\_\:\!\$][a-zA-Z0-9\_\:\-\.]*');
 define('BLOCS_ATTR_NAME_REGREX', '[a-zA-Z0-9\-\$\/\_][a-zA-Z0-9\-\_]*');
 
+define('BLOCS_CLASS_UPLOAD', 'ai-upload');
+
 function setTemplateCacheDir()
 {
     $key = '/tmp';
