@@ -318,7 +318,7 @@ class BlocsCompiler
                     }
                     if ('text' === $type && isset($attrList['class'])) {
                         $classList = preg_split("/\s/", $attrList['class']);
-                        in_array('upload', $classList) && $this->validateUpload[] = $attrList['name'];
+                        in_array(BLOCS_CLASS_UPLOAD, $classList) && $this->validateUpload[] = $attrList['name'];
                     }
                 }
             }
@@ -385,7 +385,15 @@ class BlocsCompiler
 
             if (isset($attrList['class']) || isset($attrList['data-toggle']) || isset($attrList['data-bs-toggle'])) {
                 $classList = [];
-                isset($attrList['class']) && $classList = preg_split("/\s/", $attrList['class']);
+                if (isset($attrList['class'])) {
+                    $classNameList = preg_split("/\s/", $attrList['class']);
+                    foreach ($classNameList as $className) {
+                        if (!strncmp($className, 'ai-', 3)) {
+                            $classList[] = substr($className, 3);
+                        }
+                    }
+                }
+
                 isset($attrList['data-toggle']) && $classList[] = $attrList['data-toggle'];
                 isset($attrList['data-bs-toggle']) && $classList[] = $attrList['data-bs-toggle'];
 
@@ -559,7 +567,7 @@ class BlocsCompiler
         if (isset($attrList[BLOCS_DATA_INCLUDE])) {
             // auto includeのタグの埋め込み
             $autoincludeDir = self::getAutoincludeDir();
-            if (false !== $autoincludeDir && basename($autoincludeDir) == $attrList[BLOCS_DATA_INCLUDE]) {
+            if (false !== $autoincludeDir && 'auto' == $attrList[BLOCS_DATA_INCLUDE]) {
                 // 引数を渡せるように
                 $htmlBuff = self::assignValue($attrList, $quotesList);
 
