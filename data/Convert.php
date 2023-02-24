@@ -50,9 +50,10 @@ class Convert
     public static function uploadsize($str)
     {
         $label = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
-        for ($i = 0; $str >= 1024 && $i < (count($label) - 1); $str /= 1024, $i++);
+        for ($i = 0; $str >= 1024 && $i < (count($label) - 1); $str /= 1024, $i++) {
+        }
 
-        return  round($str, 1).' '.$label[$i];
+        return round($str, 1).' '.$label[$i];
     }
 
     // 省略表記
