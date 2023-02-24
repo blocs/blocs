@@ -734,7 +734,7 @@ class BlocsCompiler
             return $s;
         };
         eval("\$attrList[BLOCS_DATA_INCLUDE] = <<<EOS\n{$attrList[BLOCS_DATA_INCLUDE]}\nEOS;\n");
-        if (!strlen(($realpath = str_replace(DIRECTORY_SEPARATOR, '/', realpath($attrList[BLOCS_DATA_INCLUDE]))))) {
+        if (!strlen($realpath = str_replace(DIRECTORY_SEPARATOR, '/', realpath($attrList[BLOCS_DATA_INCLUDE])))) {
             if (false !== ($resultBuff = $this->addAutoinclude($attrList, $htmlBuff))) {
                 // data-includeができないのでauto includeしてみる
                 return $resultBuff;
