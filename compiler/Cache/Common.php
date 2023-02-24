@@ -60,7 +60,7 @@ class Common
             $argArray = preg_split('/([:"\'])/s', $arg, -1, PREG_SPLIT_DELIM_CAPTURE);
             $quotesBuff = $resultBuff = '';
             foreach ($argArray as $buff) {
-                if (("'" == $buff || '"' == $buff)) {
+                if ("'" == $buff || '"' == $buff) {
                     if (!strlen($quotesBuff)) {
                         $quotesBuff = $buff;
                     } elseif ($quotesBuff == $buff) {
