@@ -41,6 +41,8 @@ class View
     // HTMLを出力
     public function output($val = [], $withFixer = false)
     {
+        empty($val) && $val = [];
+
         echo $this->generate($val, $withFixer);
         exit;
     }
