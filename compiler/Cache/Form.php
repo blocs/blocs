@@ -57,18 +57,18 @@ class Form
     public static function select($compiledTag, &$htmlArray, $selectName)
     {
         $optionBuff = <<< END_of_HTML
-<!-- data-query=\$preGroup data-val="" -->
+<!-- \$preGroup=null -->
 <!-- data-repeat=\$option_{$selectName} -->
 
-    <!-- data-if="!empty(\$preGroup) && (!isset(\$optionGroupList) || \$optionGroupList != \$preGroup)" -->
+    <!-- data-if="!empty(\$preGroup) && (!isset(\$optgroup) || \$optgroup != \$preGroup)" -->
         </optgroup>
-        <!-- data-query=\$preGroup data-val="" -->
+        <!-- \$preGroup=null -->
     <!-- data-endif -->
 
-    <!-- data-if="isset(\$optionGroupList) && \$optionGroupList != \$preGroup" -->
-        <!-- data-attribute="label" data-val=\$optionGroupList -->
+    <!-- data-if="isset(\$optgroup) && \$optgroup != \$preGroup" -->
+        <!-- data-attribute="label" data-val=\$optgroup -->
         <optgroup>
-        <!-- data-query=\$preGroup data-val=\$optionGroupList -->
+        <!-- \$preGroup=\$optgroup -->
     <!-- data-endif -->
 
     <!-- data-attribute="value" data-val=\$value -->
