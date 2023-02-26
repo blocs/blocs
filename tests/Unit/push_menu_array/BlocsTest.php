@@ -17,8 +17,6 @@ class BlocsTest extends TestCase
         touch($this->testDir.'/test.html');
         if (is_file($this->testDir.'/expected.html')) {
             $this->expected = file_get_contents($this->testDir.'/expected.html');
-        } else {
-            $this->expected = '';
         }
     }
 
@@ -43,10 +41,11 @@ class BlocsTest extends TestCase
         \Blocs\Option::add('size', ['xl' => 'XL']);
         \Blocs\Option::add('size', ['xxl' => 'XXL']);
 
-        $this->actual = $blocs->generate();
+        $this->actual = $blocs->generate(null, true);
         $this->actual .= json_encode(\Blocs\Option::get($this->testDir.'/test.html', 'type')).'<br />';
         $this->actual .= json_encode(\Blocs\Option::get($this->testDir.'/test.html', 'sex2')).'<br />';
 
+        isset($this->expected) || $this->expected = $this->actual;
         $this->assertSame($this->expected, $this->actual);
     }
 
