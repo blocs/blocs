@@ -194,7 +194,7 @@ class Common
         self::readConfig($path);
     }
 
-    private static function getConfigPath($path)
+    public static function getConfigPath($path)
     {
         return BLOCS_CACHE_DIR.'/'.md5($path).'.json';
     }
