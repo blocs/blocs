@@ -21,7 +21,7 @@ class BlocsTest extends TestCase
     {
         try {
             $blocs = new \Blocs\View($this->testDir.'/test.html');
-            $this->actual = $blocs->generate();
+            $this->actual = $blocs->generate(null, true);
         } catch (AssertionFailedError $e) {
             throw $e;
         } catch (\Throwable $e) {
