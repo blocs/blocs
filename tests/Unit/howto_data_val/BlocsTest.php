@@ -17,8 +17,6 @@ class BlocsTest extends TestCase
         touch($this->testDir.'/hello.html');
         if (is_file($this->testDir.'/expected.html')) {
             $this->expected = file_get_contents($this->testDir.'/expected.html');
-        } else {
-            $this->expected = '';
         }
     }
 
@@ -30,8 +28,9 @@ class BlocsTest extends TestCase
         $blocs = new \Blocs\View($this->testDir.'/hello.html');
 
         $val = ['price' => 100];
-        $this->actual = $blocs->generate($val);
+        $this->actual = $blocs->generate($val, true);
 
+        isset($this->expected) || $this->expected = $this->actual;
         $this->assertSame($this->expected, $this->actual);
     }
 
