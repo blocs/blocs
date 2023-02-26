@@ -22,6 +22,8 @@ class View
     // HTMLを生成
     public function generate($val = [], $withFixer = false)
     {
+        empty($val) && $val = [];
+
         // キャッシュをチェック
         $compiledPath = $this->checkCache();
 

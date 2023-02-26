@@ -95,7 +95,7 @@ class Validate
     public static function upload($templateDir, $formName)
     {
         $templateDir = Common::getPath($templateDir);
-        $configPath = BLOCS_CACHE_DIR.'/'.md5($templateDir).'.json';
+        $configPath = Common::getConfigPath($templateDir);
         if (!is_file($configPath)) {
             return [[], []];
         }
