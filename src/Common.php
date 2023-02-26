@@ -100,16 +100,22 @@ class Common
         if (isset($path)) {
             self::$path = $path;
         } else {
-            if (empty(self::$path)) {
-                return [];
-            }
             $path = self::$path;
         }
+        if (empty(self::$path)) {
+            return [];
+        }
 
-        $configPath = self::getConfigPath($path);
+        $configPath = self::getConfigPath(dirname($path));
         if (!is_file($configPath)) {
             // 設定ファイルが見つからない
-            return [];
+            $blocsCompiler = new Compiler\BlocsCompiler();
+            $contents = $blocsCompiler->compile($path);
+
+            // 設定ファイルを作成
+            $blocsConfig = $blocsCompiler->getConfig();
+
+            return self::writeConfig($path, $blocsConfig);
         }
 
         self::$config = json_decode(file_get_contents($configPath), true);
@@ -127,7 +133,7 @@ class Common
     // 設定ファイルを書き込み
     public static function writeConfig($path, $blocsConfig)
     {
-        $configPath = self::getConfigPath($path);
+        $configPath = self::getConfigPath(dirname($path));
         if (is_file($configPath)) {
             $config = json_decode(file_get_contents($configPath), true);
         } else {
@@ -190,7 +196,7 @@ class Common
 
     private static function getConfigPath($path)
     {
-        return BLOCS_CACHE_DIR.'/'.md5(dirname($path)).'.json';
+        return BLOCS_CACHE_DIR.'/'.md5($path).'.json';
     }
 
     private static function updateConfig($config, $configName, $path, $blocsConfig)
