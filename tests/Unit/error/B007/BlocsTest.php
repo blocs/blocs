@@ -12,6 +12,11 @@ class BlocsTest extends TestCase
     protected function setUp(): void
     {
         $this->testDir = __DIR__;
+
+        // エラーを例外に変換
+        set_error_handler(function ($severity, $message, $filename, $lineno) {
+            throw new \ErrorException($message, 0, $severity, $filename, $lineno);
+        });
     }
 
     /**
@@ -22,9 +27,7 @@ class BlocsTest extends TestCase
         try {
             $blocs = new \Blocs\View($this->testDir.'/test.html');
             $this->actual = $blocs->generate(null, true);
-        } catch (AssertionFailedError $e) {
-            throw $e;
-        } catch (\Throwable $e) {
+        } catch (\ErrorException $e) {
             $this->assertStringContainsString('B007:', $e->getMessage());
         }
     }
