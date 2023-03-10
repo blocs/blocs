@@ -8,6 +8,10 @@ class BlocsTest extends TestCase
 {
     protected function setUp(): void
     {
+        // エラーを例外に変換
+        set_error_handler(function ($severity, $message, $filename, $lineno) {
+            throw new \ErrorException($message, 0, $severity, $filename, $lineno);
+        });
     }
 
     /**
@@ -18,9 +22,7 @@ class BlocsTest extends TestCase
         try {
             define('BLOCS_CACHE_DIR', '/tmpx');
             $blocs = new \Blocs\View('test.html');
-        } catch (AssertionFailedError $e) {
-            throw $e;
-        } catch (\Throwable $e) {
+        } catch (\ErrorException $e) {
             $this->assertStringContainsString('B001:', $e->getMessage());
         }
     }
