@@ -191,7 +191,7 @@ class Common
         file_put_contents($configPath, json_encode($config, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)."\n") && chmod($configPath, 0666);
 
         // 設定ファイルを読み込み
-        self::readConfig($path);
+        return self::readConfig($path);
     }
 
     public static function getConfigPath($path)
