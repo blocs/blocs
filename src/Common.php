@@ -210,4 +210,19 @@ class Common
 
         return $config;
     }
+
+    public static function routePrefix()
+    {
+        $currentName = \Route::currentRouteName();
+
+        if (empty($currentName)) {
+            return $currentName;
+        }
+
+        $currentNameList = explode('.', $currentName);
+        array_pop($currentNameList);
+        $currentPrefix = implode('.', $currentNameList);
+
+        return $currentPrefix;
+    }
 }
