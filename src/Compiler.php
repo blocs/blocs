@@ -11,6 +11,13 @@ class Compiler extends ViewCompiler implements CompilerInterface
     // Bladeを参照
     public function isExpired($path)
     {
+        // autoincludeの指定
+        if (isset($GLOBALS[\Route::currentRouteAction()])) {
+            foreach ($GLOBALS[\Route::currentRouteAction()] as $key => $value) {
+                $GLOBALS[$key] = $value;
+            }
+        }
+
         // 設定ファイルを読み込み
         Common::readConfig($path);
 
