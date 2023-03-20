@@ -943,20 +943,21 @@ class BlocsCompiler
 
     private function getAutoincludeDir()
     {
-        if (defined('BLOCS_ROOT_DIR')) {
-            $autoincludeDir = BLOCS_ROOT_DIR;
-            empty($GLOBALS['BLOCS_AUTOINCLUDE_DIR']) || $autoincludeDir .= '/'.$GLOBALS['BLOCS_AUTOINCLUDE_DIR'];
+        if (!empty($GLOBALS['BLOCS_AUTOINCLUDE_DIR'])) {
+            $autoincludeDir = $GLOBALS['BLOCS_AUTOINCLUDE_DIR'];
+        } elseif (defined('BLOCS_ROOT_DIR')) {
+            $autoincludeDir = BLOCS_ROOT_DIR.'/autoinclude';
         }
 
-        if (empty($autoincludeDir) || !is_dir($autoincludeDir.'/autoinclude')) {
-            $autoincludeDir = realpath(__DIR__.'/../..');
+        if (empty($autoincludeDir) || !is_dir($autoincludeDir)) {
+            $autoincludeDir = realpath(__DIR__.'/../../autoinclude');
         }
 
-        if (!is_dir($autoincludeDir.'/autoinclude')) {
+        if (empty($autoincludeDir) || !is_dir($autoincludeDir)) {
             return false;
         }
 
-        return $autoincludeDir.'/autoinclude';
+        return $autoincludeDir;
     }
 
     // テンプレートの初期処理
