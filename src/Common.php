@@ -106,13 +106,6 @@ class Common
             return [];
         }
 
-        // autoincludeの指定
-        if (isset($GLOBALS[\Route::currentRouteAction()])) {
-            foreach ($GLOBALS[\Route::currentRouteAction()] as $key => $value) {
-                $GLOBALS[$key] = $value;
-            }
-        }
-
         $configPath = self::getConfigPath(dirname($path));
         if (!is_file($configPath)) {
             // 設定ファイルが見つからない
