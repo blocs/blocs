@@ -509,15 +509,15 @@ class BlocsCompiler
         $quotesList = $includeBuff['quotes'];
 
         // 変数の代入だけの時は簡単に記述できるように
-        $is_assignValue = true;
+        $isAssignValue = true;
         foreach ($attrList as $key => $value) {
             if (!Common::checkValueName($key) && '--' !== $key) {
-                $is_assignValue = false;
+                $isAssignValue = false;
                 break;
             }
         }
 
-        if ($is_assignValue) {
+        if ($isAssignValue) {
             $htmlBuff = self::assignValue($attrList, $quotesList);
 
             return;
