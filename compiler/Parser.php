@@ -14,6 +14,7 @@ class Parser
 
     private static $escapeOperatorList = [
         '->',
+        '=>',
     ];
 
     private static $htmlString;
