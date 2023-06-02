@@ -64,11 +64,12 @@ class View
 
         // タイムスタンプをチェック
         $updateCache = false;
-        if (empty($this->config['timestamp'][$path])) {
+        if (!file_exists($compiledPath)) {
+            // キャッシュがない
             $updateCache = true;
         } else {
             foreach ($this->config['include'][$path] as $includeFile) {
-                if (filemtime($includeFile) > $this->config['timestamp'][$path]) {
+                if (filemtime($includeFile) > $this->config['timestamp'][$includeFile]) {
                     $updateCache = true;
                     break;
                 }
