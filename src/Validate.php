@@ -38,15 +38,6 @@ class Validate
         }
         $configValidate = self::$config['validate'][self::$path];
 
-        foreach ($configValidate as $formName => $validateList) {
-            foreach ($validateList as $validateNum => $validate) {
-                list($className) = explode('(', $validate, 2);
-                if (class_exists('\App\Rules\\'.$className)) {
-                    eval("\$configValidate[\$formName][\$validateNum] = new \\App\Rules\\{$validate};");
-                }
-            }
-        }
-
         if (empty(self::$config['message'][self::$path])) {
             $configMessage = [];
         } else {
@@ -57,6 +48,19 @@ class Validate
         foreach ($configMessage as $formName => $messageList) {
             foreach ($messageList as $dataValidate => $message) {
                 $validateMessage[$formName.'.'.$dataValidate] = \Blocs\Lang::get($message);
+            }
+        }
+
+        foreach ($configValidate as $formName => $validateList) {
+            foreach ($validateList as $validateNum => $validate) {
+                list($className) = explode('(', $validate, 2);
+                if (class_exists('\App\Rules\\'.$className)) {
+                    if (isset($validateMessage[$formName.'.'.$validate])) {
+                        $message = addslashes($validateMessage[$formName.'.'.$validate]);
+                        $validate = substr(trim($validate), 0, -1).", '".$message."')";
+                    }
+                    eval("\$configValidate[\$formName][\$validateNum] = new \App\Rules\\{$validate};");
+                }
             }
         }
 
