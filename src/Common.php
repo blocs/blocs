@@ -57,7 +57,7 @@ class Common
                 $query .= $menuLabel[$buff];
             }
 
-            $str = $query;
+            return $query;
         }
 
         // 文字列のエスケープ
