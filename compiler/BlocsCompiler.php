@@ -48,6 +48,7 @@ class BlocsCompiler
     private $autoincluded;
 
     private static $allAttrName;
+    private static $assignedValue;
 
     public function __construct()
     {
@@ -73,6 +74,8 @@ class BlocsCompiler
                 strncmp($key, 'BLOCS_DATA_', 11) || self::$allAttrName[] = $value;
             }
         }
+
+        self::$assignedValue = [];
     }
 
     // Bladeを参照
@@ -452,7 +455,7 @@ class BlocsCompiler
         $compiledTemplate = $initScript.$compiledTemplate;
 
         // タグを削除してキャッシュを整形
-        $compiledTemplate = preg_replace("/\?\>\n\<\?php/", "\n", $compiledTemplate);
+        $compiledTemplate = preg_replace("/\?\>\n*\<\?php/", "\n", $compiledTemplate);
 
         self::cleanupOption($this->option);
 
@@ -560,6 +563,9 @@ class BlocsCompiler
             chdir($attrList[BLOCS_DATA_CHDIR]);
             $htmlBuff = '';
 
+            // 引数継承のために属性値を保持
+            isset($attrList[BLOCS_DATA_QUERY]) && array_pop(self::$assignedValue);
+
             return;
         }
 
@@ -594,7 +600,7 @@ class BlocsCompiler
                 return;
             }
 
-            $resultArray[] = '<!-- '.BLOCS_DATA_CHDIR.'="'.getcwd().'" -->';
+            $resultArray[] = '<!-- '.BLOCS_DATA_CHDIR.'="'.getcwd().'" '.BLOCS_DATA_QUERY.' -->';
 
             // conditionで挟み込み
             $condition = Attribute::condition('', $attrList, $quotesList);
@@ -606,7 +612,7 @@ class BlocsCompiler
             $htmlArray = array_merge($resultArray, $htmlArray);
 
             // 引数を渡せるように
-            $htmlBuff = self::assignValue($attrList, $quotesList);
+            $htmlBuff = self::assignValue($attrList, $quotesList, true);
 
             return;
         }
@@ -1148,9 +1154,11 @@ END_of_HTML;
         return $rawString;
     }
 
-    private static function assignValue($attrList, $quotesList)
+    private static function assignValue($attrList, $quotesList, $assigned = false)
     {
         $htmlBuff = '';
+        $assignedValue = [];
+        $assigned && $assignedValue = count(self::$assignedValue) ? end(self::$assignedValue) : [];
 
         foreach ($attrList as $key => $value) {
             if (!Common::checkValueName($key)) {
@@ -1158,8 +1166,23 @@ END_of_HTML;
             }
 
             $quotes = empty($quotesList[$key]) ? '' : $quotesList[$key];
-            $htmlBuff .= "<?php {$key} = {$quotes}{$value}{$quotes}; ?>";
+            $value = "{$quotes}{$value}{$quotes}";
+
+            if (Common::checkValueName($value)) {
+                // 変数代入は継承しない
+                $assignedValue[$key] = "<?php isset({$value}) && {$key} = {$value}; ?>";
+            } else {
+                if (!isset($assignedValue[$key])) {
+                    // 変数を継承する
+                    $assignedValue[$key] = "<?php {$key} = {$value}; ?>";
+                }
+            }
+
+            $htmlBuff .= $assignedValue[$key];
         }
+
+        // 引数継承のために属性値を保持
+        $assigned && self::$assignedValue[] = $assignedValue;
 
         return $htmlBuff;
     }
