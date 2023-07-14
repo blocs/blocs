@@ -455,7 +455,7 @@ class BlocsCompiler
         $compiledTemplate = $initScript.$compiledTemplate;
 
         // タグを削除してキャッシュを整形
-        $compiledTemplate = preg_replace("/\?\>\n*\<\?php/", "\n", $compiledTemplate);
+        $compiledTemplate = preg_replace("/\?\>\n\<\?php/", "\n", $compiledTemplate);
 
         self::cleanupOption($this->option);
 
@@ -1170,11 +1170,11 @@ END_of_HTML;
 
             if (Common::checkValueName($value)) {
                 // 変数代入は継承しない
-                $assignedValue[$key] = "<?php isset({$value}) && {$key} = {$value}; ?>";
+                $assignedValue[$key] = "<?php isset({$value}) && {$key} = {$value}; ?>\n";
             } else {
                 if (!isset($assignedValue[$key])) {
                     // 変数を継承する
-                    $assignedValue[$key] = "<?php {$key} = {$value}; ?>";
+                    $assignedValue[$key] = "<?php {$key} = {$value}; ?>\n";
                 }
             }
 
