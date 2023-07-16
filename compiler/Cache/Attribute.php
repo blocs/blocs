@@ -225,7 +225,13 @@ END_of_HTML;
         }
 
         if (empty($attrList[BLOCS_DATA_QUERY])) {
-            $strSingular = '$'.\Str::singular(substr($attrList[BLOCS_DATA_LOOP], 1));
+            $strSingular = substr($attrList[BLOCS_DATA_LOOP], 1);
+            $propertyName = explode('->', $strSingular, 2);
+            if (count($propertyName) > 1) {
+                $strSingular = $propertyName[1];
+            }
+
+            $strSingular = '$'.\Str::singular($strSingular);
         } else {
             $strSingular = $attrList[BLOCS_DATA_QUERY];
         }
