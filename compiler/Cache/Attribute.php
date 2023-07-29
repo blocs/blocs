@@ -236,7 +236,8 @@ END_of_HTML;
             $strSingular = $attrList[BLOCS_DATA_QUERY];
         }
 
-        $compiledTag = "@foreach ({$attrList[BLOCS_DATA_LOOP]} as {$strSingular})\n";
+        $compiledTag = "@php empty({$attrList[BLOCS_DATA_LOOP]}) && {$attrList[BLOCS_DATA_LOOP]} = []; @endphp\n";
+        $compiledTag .= "@foreach ({$attrList[BLOCS_DATA_LOOP]} as {$strSingular})\n";
         $compiledTag .= "@php \$repeatIndex{$tagCounterNum} = \$loop->index; @endphp\n";
 
         return $compiledTag;
