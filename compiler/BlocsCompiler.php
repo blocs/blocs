@@ -386,7 +386,7 @@ class BlocsCompiler
                 isset($attrList['for']) && false === strpos($attrList['for'], '<?php') && $compiledTag = Common::mergeAttribute($compiledTag, 'for', $arrayPath.'_'.$attrList['for'], $attrList, false);
             }
 
-            if (isset($attrList['class']) || isset($attrList['data-bs-toggle'])) {
+            if (isset($attrList['class']) || isset($attrList['data-toggle'])) {
                 $classList = [];
                 if (isset($attrList['class'])) {
                     $classNameList = preg_split("/\s/", $attrList['class']);
@@ -397,7 +397,7 @@ class BlocsCompiler
                     }
                 }
 
-                isset($attrList['data-bs-toggle']) && $classList[] = $attrList['data-bs-toggle'];
+                isset($attrList['data-toggle']) && $classList[] = $attrList['data-toggle'];
 
                 // auto includeの候補に追加
                 $this->autoincludeClass = array_merge($this->autoincludeClass, $classList);
