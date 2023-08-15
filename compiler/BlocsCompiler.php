@@ -350,9 +350,10 @@ class BlocsCompiler
 
                 $this->option[] = $optionArray;
                 unset($optionArray);
-            } elseif ('/select' === $tagName) {
+            } elseif ('/select' === $tagName && strlen($selectName)) {
                 // メニューのグループタグを追加
                 Form::select($compiledTag, $htmlArray, $selectName);
+                $selectName = '';
 
                 continue;
             }
