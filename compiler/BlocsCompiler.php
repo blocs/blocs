@@ -333,6 +333,7 @@ class BlocsCompiler
                     isset($attrList['multiple']) && $this->generateDummyForm($attrList['name'], $compiledTag, $dummyArray);
 
                     $selectName = $attrList['name'];
+                    $isSelect = true;
                 }
             } elseif ('option' === $tagName && strlen($selectName) && isset($attrList['value'])) {
                 $optionArray = $attrList;
@@ -350,10 +351,10 @@ class BlocsCompiler
 
                 $this->option[] = $optionArray;
                 unset($optionArray);
-            } elseif ('/select' === $tagName && strlen($selectName)) {
+            } elseif ('/select' === $tagName && isset($isSelect)) {
                 // メニューのグループタグを追加
                 Form::select($compiledTag, $htmlArray, $selectName);
-                $selectName = '';
+                unset($isSelect);
 
                 continue;
             }
