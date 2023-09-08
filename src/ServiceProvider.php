@@ -25,9 +25,7 @@ class ServiceProvider extends ViewServiceProvider
     // Bladeを参照
     public function registerBlocsCompiler()
     {
-        $this->app->singleton('blocs.compiler', function ($app) {
-            return new Compiler($app['files'], $app['config']['view.compiled']);
-        });
+        $this->app->singleton('blocs.compiler', fn ($app) => new Compiler($app['files'], $app['config']['view.compiled']));
     }
 
     protected function registerExtension()
@@ -35,9 +33,7 @@ class ServiceProvider extends ViewServiceProvider
         $this->app['view']->addExtension(
             'blocs.html',
             'blocs',
-            function () {
-                return new CompilerEngine($this->app['blocs.compiler']);
-            }
+            fn () => new CompilerEngine($this->app['blocs.compiler'])
         );
     }
 }
