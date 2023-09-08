@@ -19,36 +19,36 @@ class BlocsConfig
 class BlocsCompiler
 {
     private $include;
-    private $filter;
+    private array $filter;
     private $option;
 
     // バリデーション変数
-    private $validate;
-    private $validateMessage;
-    private $validateUpload;
+    private array $validate;
+    private array $validateMessage;
+    private array $validateUpload;
 
     private $dataAttribute;
     private $endrepeat;
 
     // タグ記法のための変数
     private $tagCounter;
-    private $ignoreFlg;
+    private bool $ignoreFlg;
 
     // 処理中のdata-part
     private $partName;
 
     // ファイル、ブロックごとにタグを保持
-    private $partInclude;
+    private array $partInclude;
 
     // partDepth=0の時に$compiledTemplateに書き出す
-    private $partDepth;
+    private int $partDepth;
 
     // classでincludeするテンプレート
-    private $autoincludeClass;
-    private $autoincluded;
+    private array $autoincludeClass;
+    private array $autoincluded;
 
     private static $allAttrName;
-    private static $assignedValue;
+    private static array $assignedValue;
 
     public function __construct()
     {
@@ -740,9 +740,7 @@ class BlocsCompiler
             $attrList[BLOCS_DATA_INCLUDE] = BLOCS_ROOT_DIR.$attrList[BLOCS_DATA_INCLUDE];
         }
 
-        $_ = function ($s) {
-            return $s;
-        };
+        $_ = fn ($s) => $s;
         eval("\$attrList[BLOCS_DATA_INCLUDE] = <<<EOS\n{$attrList[BLOCS_DATA_INCLUDE]}\nEOS;\n");
         if (!strlen($realpath = str_replace(DIRECTORY_SEPARATOR, '/', realpath($attrList[BLOCS_DATA_INCLUDE])))) {
             if (false !== ($resultBuff = $this->addAutoinclude($attrList, $htmlBuff))) {
