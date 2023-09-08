@@ -4,7 +4,7 @@ namespace Blocs;
 
 class Option
 {
-    private static $appendOption = [];
+    private static array $appendOption = [];
 
     /**
      * テンプレートで定義したoptionを取得する
