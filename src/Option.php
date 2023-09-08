@@ -70,8 +70,6 @@ class Option
      *
      * @param string $templateName テンプレート名
      * @param string $formName     フォーム名
-     *
-     * @return array optionの値とラベル
      */
     public static function set($templateName, $formName)
     {
