@@ -122,7 +122,6 @@ class BlocsCompiler
         $selectName = '';
         $formArray = [];
         $dummyArray = [];
-        $labelArray = [];
 
         $validateMsg = [];
 
@@ -167,7 +166,6 @@ class BlocsCompiler
                     continue;
                 }
 
-                isset($dataForm) && $validateMsg[$dataForm][end($this->validate[$dataForm])] .= $htmlBuff;
                 isset($optionArray['label']) && $optionArray['label'] .= $htmlBuff;
                 isset($labelArray['label']) && $labelArray['label'] .= $htmlBuff;
 
@@ -373,10 +371,12 @@ class BlocsCompiler
             if ('label' === $tagName) {
                 isset($attrList['for']) && $labelArray['id'] = $attrList['for'];
                 $labelArray['label'] = '';
-            } elseif ('/label' === $tagName) {
-                preg_match('/<br>$/si', $labelArray['label']) && $labelArray['label'] = substr($labelArray['label'], 0, -4);
-                preg_match('/<br \/>$/si', $labelArray['label']) && $labelArray['label'] = substr($labelArray['label'], 0, -6);
-                $labelArray['label'] = trim($labelArray['label']);
+            } elseif ('/label' === $tagName && isset($labelArray)) {
+                if (isset($labelArray['label'])) {
+                    preg_match('/<br>$/si', $labelArray['label']) && $labelArray['label'] = substr($labelArray['label'], 0, -4);
+                    preg_match('/<br \/>$/si', $labelArray['label']) && $labelArray['label'] = substr($labelArray['label'], 0, -6);
+                    $labelArray['label'] = trim($labelArray['label']);
+                }
 
                 (count($labelArray) > 2) ? $this->option[] = $labelArray : array_unshift($this->option, $labelArray);
                 unset($labelArray);
