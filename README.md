@@ -9,7 +9,7 @@ Laravelのためのテンプレートエンジン
 [![GitHub license](https://img.shields.io/github/license/blocs/blocs)](https://github.com/blocs/blocs)
 [![Laravel awesome](https://img.shields.io/badge/Awesome-Laravel-green)](https://github.com/blocs/blocs)
 [![Laravel version](https://img.shields.io/badge/laravel-%3E%3D7-green)](https://github.com/blocs/blocs)
-[![PHP version](https://img.shields.io/badge/php-%3E%3D7.2.5-blue)](https://github.com/blocs/blocs)
+[![PHP version](https://img.shields.io/badge/php-%3E%3Df7.4-blue)](https://github.com/blocs/blocs)
 
 [**Website**](https://blocs.jp/)
 | [**Document**](https://blocs.jp/reference/)
@@ -128,7 +128,7 @@ Installing dependencies from lock file (including require-dev)
 
 ## システム要件
 Laravel >= 7  
-php >= 7.2.5
+php >= 7.4
 
 # 使い方
 BLOCSテンプレートのファイル名は`*.blocs.html`です。データ属性`data-*`は、HTMLタグに属性を追加するタグ記法と、コメントで記述するコメント記法の２つの記述方法があります。4種類のデータ属性をタグ記法とコメント記法で記述して、HTMLを動的に生成します。
