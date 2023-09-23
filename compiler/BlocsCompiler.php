@@ -1032,11 +1032,19 @@ END_of_HTML;
             $dataValidate[$attrList['name']][] = 'min:'.$attrList['minlength'];
         }
         if (isset($attrList['max'])) {
-            $dataValidate[$attrList['name']][] = 'numeric';
+            if (isset($attrList['step'])) {
+                $dataValidate[$attrList['name']][] = 'numeric';
+            } else {
+                $dataValidate[$attrList['name']][] = 'integer';
+            }
             $dataValidate[$attrList['name']][] = 'max:'.$attrList['max'];
         }
         if (isset($attrList['min'])) {
-            $dataValidate[$attrList['name']][] = 'numeric';
+            if (isset($attrList['step'])) {
+                $dataValidate[$attrList['name']][] = 'numeric';
+            } else {
+                $dataValidate[$attrList['name']][] = 'integer';
+            }
             $dataValidate[$attrList['name']][] = 'min:'.$attrList['min'];
         }
         if (isset($attrList['pattern'])) {
