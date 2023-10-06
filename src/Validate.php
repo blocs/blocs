@@ -136,7 +136,6 @@ class Validate
      * $requestAll = \Blocs\Validate::filter('insert', $requestAll);
      *
      * @param string $templateName テンプレート名
-     * @param array  $$requestAll  フィルターをかける配列
      *
      * @return array フィルターをかけた配列
      */

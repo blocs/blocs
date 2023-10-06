@@ -176,7 +176,7 @@ class Parser
             }
         }
 
-        $attrValue = $attrValue.implode('', $attrValueList);
+        $attrValue .= implode('', $attrValueList);
         if (empty($attrName)) {
             strlen($attrValue) && $attrList[$attrValue] = '';
         } else {
