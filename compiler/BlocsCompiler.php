@@ -735,7 +735,7 @@ class BlocsCompiler
 
     private function addDataInclude($attrList, $htmlBuff)
     {
-        if (!strncmp($attrList[BLOCS_DATA_INCLUDE], '/', 1)) {
+        if (!strncmp($attrList[BLOCS_DATA_INCLUDE], '/', 1) && !is_file($attrList[BLOCS_DATA_INCLUDE])) {
             // ルートディレクトリのパスを変換
             $attrList[BLOCS_DATA_INCLUDE] = BLOCS_ROOT_DIR.$attrList[BLOCS_DATA_INCLUDE];
         }
