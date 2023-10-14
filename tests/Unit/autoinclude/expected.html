@@ -16,13 +16,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js" integrity="sha512-57oZ/vW8ANMjR/KQ6Be9v/+/h6bq9/l3f0Oc7vn6qMqyhvPd1cvKBRWWpzu0QoneImqr2SkmO4MSqU+RpHom3Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <style>
-    #ui-datepicker-div {
-        z-index: 1000 !important;
-    }
+#ui-datepicker-div {
+    z-index: 1000 !important;
+}
 </style>
 
 <script type="text/javascript">
-    /* Japanese initialisation for the jQuery UI date picker plugin. */
+/* Japanese initialisation for the jQuery UI date picker plugin. */
 /* Written by Kentaro SATO (kentaro@ranvis.com). */
 ( function( factory ) {
     "use strict";
@@ -63,24 +63,24 @@
 
 } );
 
-    $(function(){
-        $('.ai-datepicker').datepicker({
-            dateFormat: 'yy-mm-dd'
-        });
-    });
+$(function(){
+    $('.ai-datepicker').datepicker({
+        dateFormat: "yy-mm-dd"
+    }).removeClass('ai-datepicker');
+});
 </script>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" integrity="sha512-nMNlpuaDPrqlEls3IX/Q56H36qvBASwb3ipuo3MxeWbsQB1881ox0cRv7UPTgBlriqoynt35KjEwgGUeUXIPnw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js" integrity="sha512-2ImtlRlf2VVmiGZsjm9bEyhjGW4dU7B6TNwh/hx/iSByxNENtj3WVE6o/9Lj4TJeVXPi4bnOIMXFIJJAeufa0A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <script type="text/javascript">
-    $(function() {
-        $('.ai-select2').each(function(){
-            $(this).select2({
-                tags: true
-            });
+$(function() {
+    $('.ai-select2').each(function(){
+        $(this).select2({
+            tags: true
         });
-    });
+    }).removeClass('ai-select2');
+});
 </script>
 
 </html>
