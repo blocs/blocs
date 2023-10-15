@@ -19,9 +19,22 @@ class Compiler extends ViewCompiler implements CompilerInterface
         }
 
         // 設定ファイルを読み込み
-        Common::readConfig($path);
+        $config = Common::readConfig($path);
 
-        return parent::isExpired($path);
+        if (parent::isExpired($path)) {
+            return true;
+        }
+
+        // includeファイルの更新を確認
+        if (isset($config['include'][$path]) && is_array($config['include'][$path])) {
+            foreach ($config['include'][$path] as $includeFile) {
+                if (filemtime($includeFile) > $config['timestamp'][$path]) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     // Bladeを参照
