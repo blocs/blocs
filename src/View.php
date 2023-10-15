@@ -67,7 +67,7 @@ class View
         if (!file_exists($compiledPath)) {
             // キャッシュがない
             $updateCache = true;
-        } elseif (isset($config['include'][$path]) && is_array($config['include'][$path])) {
+        } elseif (isset($this->config['include'][$path]) && is_array($this->config['include'][$path])) {
             foreach ($this->config['include'][$path] as $includeFile) {
                 if (filemtime($includeFile) > $this->config['timestamp'][$path]) {
                     $updateCache = true;
