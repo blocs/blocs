@@ -230,13 +230,18 @@ END_of_HTML;
             if (count($propertyName) > 1) {
                 $strSingular = $propertyName[1];
             }
+            $strSingular = str_replace('()', '', $strSingular);
 
             $strSingular = '$'.\Str::singular($strSingular);
         } else {
             $strSingular = $attrList[BLOCS_DATA_QUERY];
         }
 
-        $compiledTag = "@php empty({$attrList[BLOCS_DATA_LOOP]}) && {$attrList[BLOCS_DATA_LOOP]} = []; @endphp\n";
+        if ('()' === substr($attrList[BLOCS_DATA_LOOP], -2)) {
+            $compiledTag = '';
+        } else {
+            $compiledTag = "@php empty({$attrList[BLOCS_DATA_LOOP]}) && {$attrList[BLOCS_DATA_LOOP]} = []; @endphp\n";
+        }
         $compiledTag .= "@foreach ({$attrList[BLOCS_DATA_LOOP]} as {$strSingular})\n";
         $compiledTag .= "@php \$repeatIndex{$tagCounterNum} = \$loop->index; @endphp\n";
 
