@@ -96,6 +96,12 @@ class BlocsCompiler
             $this->validate[$formName] = array_merge(array_unique($validate));
         }
 
+        foreach (array_keys($this->validate) as $formName) {
+            if (false !== strpos($formName, '<?php')) {
+                unset($this->validate[$formName]);
+            }
+        }
+
         $blocsConfig = new BlocsConfig();
         $blocsConfig->include = array_merge(array_unique($this->include));
         $blocsConfig->filter = $this->filter;
