@@ -874,7 +874,7 @@ class BlocsCompiler
             $format = 2(PHP array): ['matrix'][$repeatIndex]
         */
 
-        if (empty($this->tagCounter)|| (isset($this->arrayFormName) && !$this->arrayFormName)) {
+        if (empty($this->tagCounter) || (isset($this->arrayFormName) && !$this->arrayFormName)) {
             return '';
         }
 
