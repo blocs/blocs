@@ -397,6 +397,7 @@ class BlocsCompiler
                 if (isset($attrList['class'])) {
                     $classNameList = preg_split("/\s/", $attrList['class']);
                     foreach ($classNameList as $className) {
+                        list($className) = preg_split("/\<\?php/", $className, 2);
                         if (!strncmp($className, 'ai-', 3)) {
                             $classList[] = substr($className, 3);
                         }
