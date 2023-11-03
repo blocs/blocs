@@ -33,6 +33,7 @@ class BlocsCompiler
     // タグ記法のための変数
     private $tagCounter;
     private bool $ignoreFlg;
+    private $arrayFormName;
 
     // 処理中のdata-part
     private $partName;
@@ -261,6 +262,9 @@ class BlocsCompiler
             isset($attrList[BLOCS_DATA_REPEAT]) && $attrList[BLOCS_DATA_LOOP] = $attrList[BLOCS_DATA_REPEAT];
 
             if (isset($attrList[BLOCS_DATA_LOOP])) {
+                // loop内のform名を置換するか
+                isset($attrList[BLOCS_DATA_FORM]) && $this->arrayFormName = $attrList[BLOCS_DATA_FORM];
+
                 if (!Common::checkValueName($attrList[BLOCS_DATA_LOOP])) {
                     trigger_error('B002: Invalid condition "'.BLOCS_DATA_LOOP.'" ('.$attrList[BLOCS_DATA_LOOP].')', E_USER_ERROR);
                 }
@@ -668,6 +672,9 @@ class BlocsCompiler
         isset($attrList[BLOCS_DATA_ENDREPEAT]) && $attrList[BLOCS_DATA_ENDLOOP] = $attrList[BLOCS_DATA_ENDREPEAT];
 
         if (isset($attrList[BLOCS_DATA_LOOP])) {
+            // loop内のform名を置換するか
+            isset($attrList[BLOCS_DATA_FORM]) && $this->arrayFormName = $attrList[BLOCS_DATA_FORM];
+
             $rawString = '';
             $htmlBuff = Attribute::loop($attrList, count($this->tagCounter));
             $this->endrepeat[] = $attrList;
@@ -867,7 +874,7 @@ class BlocsCompiler
             $format = 2(PHP array): ['matrix'][$repeatIndex]
         */
 
-        if (empty($this->tagCounter)) {
+        if (empty($this->tagCounter)|| (isset($this->arrayFormName) && !$this->arrayFormName)) {
             return '';
         }
 
