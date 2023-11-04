@@ -586,7 +586,13 @@ class BlocsCompiler
             // auto includeのタグの埋め込み
             $autoincludeDir = self::getAutoincludeDir();
             if ('auto' == $attrList[BLOCS_DATA_INCLUDE]) {
-                false === $autoincludeDir && trigger_error('B003: Can not find template (autoinclude)', E_USER_ERROR);
+                if (false === $autoincludeDir) {
+                    if (isset($attrList[BLOCS_DATA_EXIST])) {
+                        return;
+                    } else {
+                        trigger_error('B003: Can not find template (autoinclude)', E_USER_ERROR);
+                    }
+                }
 
                 // 引数を渡せるように
                 $htmlBuff = self::assignValue($attrList, $quotesList);
