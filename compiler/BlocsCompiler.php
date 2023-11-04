@@ -529,7 +529,13 @@ class BlocsCompiler
         foreach ($attrList as $key => $value) {
             if (!Common::checkValueName($key) && '--' !== $key) {
                 $isAssignValue = false;
-                break;
+            }
+
+            if (Common::checkValueName($key) && !strlen($value) && empty($quotesList[$key])) {
+                // data-valの省略表記
+                $attrList[BLOCS_DATA_VAL] = $key;
+                unset($attrList[$key]);
+                $isAssignValue = false;
             }
         }
 
