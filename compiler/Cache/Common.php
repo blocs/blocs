@@ -5,8 +5,17 @@ namespace Blocs\Compiler\Cache;
 class Common
 {
     // attributeの置き換え
-    public static function mergeAttribute($compiledTag, $attrName, $attrBuff, &$attrList, $replace = true)
+    public static function mergeAttribute($compiledTag, $attrName, $attrBuff, &$attrList, $replace = true, $noValue = false)
     {
+        // data-attributeと空白のdta-valが設定されている時の処理
+        if ($noValue) {
+            $preAttr = '';
+            $postAttr = '';
+        } else {
+            $preAttr = '="';
+            $postAttr = '"';
+        }
+
         if (isset($attrList[$attrName])) {
             if (BLOCS_ENDIF_SCRIPT === substr($attrBuff, -16) && false === strpos($attrBuff, '<?php else: ?>')) {
                 $attrBuff = substr($attrBuff, 0, -16)."<?php else: ?>\n".$attrList[$attrName].BLOCS_ENDIF_SCRIPT;
@@ -14,16 +23,16 @@ class Common
 
             $compiledTag = preg_replace('/(\s+'.$attrName.'\s*=\s*["\']{0,1})'.str_replace('/', '\/', preg_quote($attrList[$attrName])).'((\[\]){0,1}["\']{0,1}[\s<>\/]+)/si', '${1}'.$attrBuff.'${2}', $compiledTag);
         } elseif ('/>' === substr($compiledTag, -2)) {
-            if ($condition = self::checkAttributeValue($attrBuff, " {$attrName}=\"", '"')) {
+            if ($condition = self::checkAttributeValue($attrBuff, " {$attrName}{$preAttr}", $postAttr)) {
                 $compiledTag = rtrim(substr($compiledTag, 0, -2))."{$condition} />";
             } else {
-                $compiledTag = rtrim(substr($compiledTag, 0, -2))." {$attrName}=\"{$attrBuff}\" />";
+                $compiledTag = rtrim(substr($compiledTag, 0, -2))." {$attrName}{$preAttr}{$attrBuff}{$postAttr} />";
             }
         } else {
-            if ($condition = self::checkAttributeValue($attrBuff, " {$attrName}=\"", '"')) {
+            if ($condition = self::checkAttributeValue($attrBuff, " {$attrName}{$preAttr}", $postAttr)) {
                 $compiledTag = rtrim(substr($compiledTag, 0, -1))."{$condition}>";
             } else {
-                $compiledTag = rtrim(substr($compiledTag, 0, -1))." {$attrName}=\"{$attrBuff}\">";
+                $compiledTag = rtrim(substr($compiledTag, 0, -1))." {$attrName}{$preAttr}{$attrBuff}{$postAttr}>";
             }
         }
 

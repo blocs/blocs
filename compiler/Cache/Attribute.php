@@ -7,6 +7,17 @@ class Attribute
     // data-valのスクリプトを生成
     public static function val($attrList, $quotesList, &$dataAttribute, $tagName = '', &$tagCounter = null, &$htmlArray = null)
     {
+        if (isset($attrList[BLOCS_DATA_ATTRIBUTE]) && !strlen($attrList[BLOCS_DATA_VAL])) {
+            // data-attributeと空白のdta-valが設定されている時の処理
+            $dataAttribute[] = [
+                'name' => $attrList[BLOCS_DATA_ATTRIBUTE],
+                'value' => '',
+                'noValue' => true,
+            ];
+
+            return '';
+        }
+
         $resultBuff = '';
 
         isset($quotesList[BLOCS_DATA_VAL]) || $quotesList[BLOCS_DATA_VAL] = '';
