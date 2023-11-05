@@ -548,6 +548,11 @@ class BlocsCompiler
             return;
         }
 
+        // data-attributeだけが設定されている時の処理
+        if (isset($attrList[BLOCS_DATA_ATTRIBUTE]) && !isset($attrList[BLOCS_DATA_VAL])) {
+            $attrList[BLOCS_DATA_VAL] = '';
+        }
+
         /* コメント記法のデータ属性処理 */
 
         if (isset($attrList[BLOCS_DATA_PART])) {
@@ -961,15 +966,17 @@ class BlocsCompiler
     {
         // data-attributeで属性書き換え
         if (isset($this->dataAttribute)) {
+            $noValue = [];
             $dataAttribute = [];
             foreach ($this->dataAttribute as $buff) {
                 isset($dataAttribute[$buff['name']]) || $dataAttribute[$buff['name']] = '';
                 $dataAttribute[$buff['name']] .= $buff['value'];
+                isset($buff['noValue']) && $noValue[$buff['name']] = true;
             }
             unset($this->dataAttribute);
 
             foreach ($dataAttribute as $name => $value) {
-                $compiledTag = Common::mergeAttribute($compiledTag, $name, $value, $attrList);
+                $compiledTag = Common::mergeAttribute($compiledTag, $name, $value, $attrList, true, isset($noValue[$name]));
             }
         }
 
