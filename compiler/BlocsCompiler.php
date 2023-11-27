@@ -769,13 +769,14 @@ class BlocsCompiler
 
     private function addDataInclude($attrList, $htmlBuff)
     {
+        $_ = fn ($s) => $s;
+        eval("\$attrList[BLOCS_DATA_INCLUDE] = <<<EOS\n{$attrList[BLOCS_DATA_INCLUDE]}\nEOS;\n");
+
         if (!strncmp($attrList[BLOCS_DATA_INCLUDE], '/', 1) && !is_file($attrList[BLOCS_DATA_INCLUDE])) {
             // ルートディレクトリのパスを変換
             $attrList[BLOCS_DATA_INCLUDE] = BLOCS_ROOT_DIR.$attrList[BLOCS_DATA_INCLUDE];
         }
 
-        $_ = fn ($s) => $s;
-        eval("\$attrList[BLOCS_DATA_INCLUDE] = <<<EOS\n{$attrList[BLOCS_DATA_INCLUDE]}\nEOS;\n");
         if (!strlen($realpath = str_replace(DIRECTORY_SEPARATOR, '/', realpath($attrList[BLOCS_DATA_INCLUDE])))) {
             if (false !== ($resultBuff = $this->addAutoinclude($attrList, $htmlBuff))) {
                 // data-includeができないのでauto includeしてみる
@@ -999,7 +1000,7 @@ class BlocsCompiler
             return false;
         }
 
-        return $autoincludeDir;
+        return str_replace(DIRECTORY_SEPARATOR, '/', $autoincludeDir);
     }
 
     // テンプレートの初期処理
