@@ -40,7 +40,7 @@ class Common
 
             $menuLabel = [];
             foreach (self::$config['menu'][$key] as $buff) {
-                $menuLabel[$buff['value']] = $buff['label'];
+                strlen($buff['value']) && $menuLabel[$buff['value']] = $buff['label'];
             }
 
             if (empty($key) || empty(self::$config['menu'][$key])) {
