@@ -162,6 +162,10 @@ class BlocsCompiler
                     continue;
                 }
 
+                // ラベルを取得
+                isset($optionArray['label']) && $optionArray['label'] .= $htmlBuff;
+                isset($labelArray['label']) && $labelArray['label'] .= $htmlBuff;
+
                 if (!strncmp($htmlBuff, '<!', 2) && $this->isPart() < 2) {
                     // タグ記法でブロック処理中は実行しない
                     $this->parseCommentTag($htmlBuff, $htmlArray);
@@ -172,9 +176,6 @@ class BlocsCompiler
                     $this->partInclude[$this->partName][] = $htmlBuff;
                     continue;
                 }
-
-                isset($optionArray['label']) && $optionArray['label'] .= $htmlBuff;
-                isset($labelArray['label']) && $labelArray['label'] .= $htmlBuff;
 
                 // 結果出力
                 if ($autoincludeDepth) {
@@ -195,6 +196,36 @@ class BlocsCompiler
 
             // データ属性削除
             $compiledTag = self::deleteDataAttribute($htmlBuff['raw'], $attrList);
+
+            // ラベルを取得
+            if (isset($optionArray['label'])) {
+                if ('/option' === $tagName) {
+                    $optionArray['label'] = trim($optionArray['label']);
+                    if (!isset($optionArray['value'])) {
+                        $optionArray['value'] = $optionArray['label'];
+                    }
+
+                    $this->option[] = $optionArray;
+                    unset($optionArray);
+                } else {
+                    $optionArray['label'] .= $compiledTag;
+                }
+            }
+
+            if (isset($labelArray['label'])) {
+                if ('/label' === $tagName) {
+                    preg_match('/<br>$/si', $labelArray['label']) && $labelArray['label'] = substr($labelArray['label'], 0, -4);
+                    preg_match('/<br \/>$/si', $labelArray['label']) && $labelArray['label'] = substr($labelArray['label'], 0, -6);
+                    $labelArray['label'] = trim($labelArray['label']);
+
+                    (count($labelArray) > 2) ? $this->option[] = $labelArray : array_unshift($this->option, $labelArray);
+                    unset($labelArray);
+                } elseif ('input' === $tagName) {
+                    // ラベルに含めない
+                } else {
+                    $labelArray['label'] .= $compiledTag;
+                }
+            }
 
             // タグ記法のためのカウンター
             $endTagCounterList = $this->checkTagCounter($tagName);
@@ -351,14 +382,6 @@ class BlocsCompiler
 
                 $selected = (isset($attrList['selected']) ? 'true' : 'false');
                 $compiledTag = Form::check($compiledTag, $selectName, $attrList['value'], 'selected', $selected);
-            } elseif ('/option' === $tagName && isset($optionArray)) {
-                $optionArray['label'] = trim($optionArray['label']);
-                if (!isset($optionArray['value'])) {
-                    $optionArray['value'] = $optionArray['label'];
-                }
-
-                $this->option[] = $optionArray;
-                unset($optionArray);
             } elseif ('/select' === $tagName && isset($isSelect)) {
                 // メニューのグループタグを追加
                 Form::select($compiledTag, $htmlArray, $selectName);
@@ -381,15 +404,6 @@ class BlocsCompiler
             if ('label' === $tagName) {
                 isset($attrList['for']) && $labelArray['id'] = $attrList['for'];
                 $labelArray['label'] = '';
-            } elseif ('/label' === $tagName && isset($labelArray)) {
-                if (isset($labelArray['label'])) {
-                    preg_match('/<br>$/si', $labelArray['label']) && $labelArray['label'] = substr($labelArray['label'], 0, -4);
-                    preg_match('/<br \/>$/si', $labelArray['label']) && $labelArray['label'] = substr($labelArray['label'], 0, -6);
-                    $labelArray['label'] = trim($labelArray['label']);
-                }
-
-                (count($labelArray) > 2) ? $this->option[] = $labelArray : array_unshift($this->option, $labelArray);
-                unset($labelArray);
             }
 
             // formのidを取得
@@ -442,9 +456,6 @@ class BlocsCompiler
                 // HTML5のフォームバリデーション対応
                 self::addHtml5Validation($this->validate, $attrList);
             }
-
-            'option' !== $tagName && isset($optionArray['label']) && $optionArray['label'] .= $compiledTag;
-            'label' !== $tagName && 'input' !== $tagName && isset($labelArray['label']) && $labelArray['label'] .= $compiledTag;
 
             // 結果出力
             if ($autoincludeDepth) {
@@ -1093,7 +1104,7 @@ END_of_HTML;
     {
         $idList = [];
         foreach ($thisOption as $num => $buff) {
-            if ((isset($buff['label']) && !strncmp($buff['label'], '<?php', 5)) || (isset($buff['value']) && !strncmp($buff['value'], '<?php', 5))) {
+            if (isset($buff['value']) && !strncmp($buff['value'], '<?php', 5)) {
                 unset($thisOption[$num]);
                 continue;
             }
