@@ -54,7 +54,13 @@ class Common
                 }
 
                 strlen($query) && $query .= BLOCS_OPTION_SEPARATOR;
-                $query .= $menuLabel[$buff];
+
+                if (false === strpos($menuLabel[$buff], 'data-')) {
+                    $query .= $menuLabel[$buff];
+                } else {
+                    isset($blocsCompiler) || $blocsCompiler = new \Blocs\Compiler\BlocsCompiler();
+                    $query .= $blocsCompiler->template($menuLabel[$buff]);
+                }
             }
 
             return $query;

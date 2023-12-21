@@ -87,6 +87,15 @@ class BlocsCompiler
         return $this->compileTemplate(self::checkEncoding($templatePath), $templatePath);
     }
 
+    public function template($writeBuff)
+    {
+        ob_start();
+        eval(substr($this->compileTemplate($writeBuff, __FILE__), 5));
+        $writeBuff = ob_get_clean();
+
+        return $writeBuff;
+    }
+
     // テンプレートの設定を取得
     // テンプレートの設定はディレクトリごとにまとめて保持
     // optionなどを同じディレクトリのテンプレートで共有するため
