@@ -58,6 +58,7 @@ class BlocsCompiler
         $this->validate = [];
         $this->validateMessage = [];
         $this->validateUpload = [];
+        $this->label = [];
 
         $this->tagCounter = [];
         $this->ignoreFlg = false;
@@ -118,6 +119,7 @@ class BlocsCompiler
         $blocsConfig->validate = $this->validate;
         $blocsConfig->message = $this->validateMessage;
         $blocsConfig->upload = $this->validateUpload;
+        $blocsConfig->label = $this->label;
 
         return $blocsConfig;
     }
@@ -228,6 +230,8 @@ class BlocsCompiler
                     $labelArray['label'] = trim($labelArray['label']);
 
                     (count($labelArray) > 2) ? $this->option[] = $labelArray : array_unshift($this->option, $labelArray);
+
+                    isset($labelArray['id']) && $this->label[$labelArray['id']] = $labelArray['label'];
                     unset($labelArray);
                 } elseif ('input' === $tagName) {
                     // ラベルに含めない
