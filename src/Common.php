@@ -177,6 +177,7 @@ class Common
         $config = self::updateConfig($config, 'option', $path, $blocsConfig->option);
         $config = self::updateConfig($config, 'validate', $path, $blocsConfig->validate);
         $config = self::updateConfig($config, 'message', $path, $blocsConfig->message);
+        $config = self::updateConfig($config, 'label', $path, $blocsConfig->label);
 
         // Optionをフォーム名ごとに集約
         $existValueList = [];
