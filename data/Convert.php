@@ -56,6 +56,23 @@ class Convert
         return round($str, 1).' '.$label[$i];
     }
 
+    // サムネイル表示
+    public static function raw_download($str)
+    {
+        $json = json_decode($str, true);
+        if (empty($json)) {
+            return '';
+        }
+
+        $file = $json[0];
+        $downloadUrl = route(prefix().'.download', ['filename' => $file['filename']]).'?'.time();
+        if (empty($file['thumbnail'])) {
+            return "<a href='{$downloadUrl}'>{$file['name']}</a>";
+        }
+
+        return "<img src='{$downloadUrl}' width=100% />";
+    }
+
     // 省略表記
     public static function ellipsis($str, $length = null, $ellipsis = '...')
     {
