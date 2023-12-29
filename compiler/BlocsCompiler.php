@@ -88,11 +88,17 @@ class BlocsCompiler
         return $this->compileTemplate(self::checkEncoding($templatePath), $templatePath);
     }
 
-    public function template($writeBuff)
+    public function template($writeBuff, $val = [])
     {
+        // 引数をセット
+        extract($val);
+
         ob_start();
         eval(substr($this->compileTemplate($writeBuff, __FILE__), 5));
         $writeBuff = ob_get_clean();
+
+        // 不要な改行を削除
+        $writeBuff = preg_replace("/\n[\s\n]+\n/", "\n\n", $writeBuff);
 
         return $writeBuff;
     }
