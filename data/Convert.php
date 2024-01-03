@@ -57,7 +57,7 @@ class Convert
     }
 
     // サムネイル表示
-    public static function raw_download($str)
+    public static function raw_upload($str)
     {
         $json = json_decode($str, true);
         if (empty($json)) {
@@ -66,11 +66,11 @@ class Convert
 
         $file = $json[0];
         $downloadUrl = route(prefix().'.download', ['filename' => $file['filename']]).'?'.time();
-        if (empty($file['thumbnail'])) {
-            return "<a href='{$downloadUrl}'>{$file['name']}</a>";
+        if (!empty($file['thumbnail'])) {
+            $file['name'] = "<img src='{$downloadUrl}' width=100% />";
         }
 
-        return "<img src='{$downloadUrl}' width=100% />";
+        return "<a href='{$downloadUrl}'>{$file['name']}</a>";
     }
 
     // 省略表記
