@@ -237,7 +237,7 @@ class BlocsCompiler
 
                     (count($labelArray) > 2) ? $this->option[] = $labelArray : array_unshift($this->option, $labelArray);
 
-                    isset($labelArray['id']) && $this->label[$labelArray['id']] = $labelArray['label'];
+                    isset($labelArray['id']) && strlen($labelArray['label']) && $this->label[$labelArray['id']] = $labelArray['label'];
                     unset($labelArray);
                 } elseif ('input' === $tagName) {
                     // ラベルに含めない
