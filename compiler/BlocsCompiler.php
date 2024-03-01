@@ -930,6 +930,7 @@ class BlocsCompiler
             $format = 0(HTML form): matrix[<?php echo($repeatIndex); ?>]
             $format = 1(HTML id): matrix_<?php echo($repeatIndex); ?>
             $format = 2(PHP array): ['matrix'][$repeatIndex]
+            $format = 3(Laravel validate): matrix.*.
         */
 
         if (empty($this->tagCounter) || (isset($this->arrayFormName) && !$this->arrayFormName)) {
@@ -950,6 +951,8 @@ class BlocsCompiler
                 }
             } elseif (2 === $format) {
                 $formName .= "['{$buff['array_form']}']";
+            } elseif (3 === $format) {
+                $formName .= "{$buff['array_form']}.*.";
             } else {
                 if ($formName) {
                     $formName .= '['.$buff['array_form'].']';
@@ -1085,8 +1088,10 @@ END_of_HTML;
     }
 
     // HTML5のフォームバリデーション対応
-    private static function addHtml5Validation(&$dataValidate, $attrList)
+    private function addHtml5Validation(&$dataValidate, $attrList)
     {
+        $attrList['name'] = $this->generateArrayFormName(3).$attrList['name'];
+
         if (isset($attrList['required'])) {
             $dataValidate[$attrList['name']][] = 'required';
         }
