@@ -123,6 +123,11 @@ class Common
 
     private static function checkAttributeValue($attrBuff, $preAttr, $postAttr)
     {
+        if (!trim($attrBuff)) {
+            // data-valを指定しないケース
+            return '';
+        }
+
         $partList = explode('<?php if', $attrBuff);
         if (preg_replace("/\s/", '', $partList[0])) {
             return '';
