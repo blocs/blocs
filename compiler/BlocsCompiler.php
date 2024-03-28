@@ -578,11 +578,6 @@ class BlocsCompiler
             return;
         }
 
-        // data-attributeだけが設定されている時の処理
-        if (isset($attrList[BLOCS_DATA_ATTRIBUTE]) && !isset($attrList[BLOCS_DATA_VAL])) {
-            $attrList[BLOCS_DATA_VAL] = '';
-        }
-
         /* コメント記法のデータ属性処理 */
 
         if (isset($attrList[BLOCS_DATA_PART])) {
@@ -685,6 +680,24 @@ class BlocsCompiler
         }
         if (isset($attrList[BLOCS_DATA_NOTICE])) {
             $htmlBuff = Attribute::notice($attrList, $quotesList, $this->dataAttribute);
+        }
+
+        // data-attributeだけが設定されている時の処理
+        if (isset($attrList[BLOCS_DATA_ATTRIBUTE]) && !isset($attrList[BLOCS_DATA_VAL])) {
+            $condition = Attribute::condition($attrList[BLOCS_DATA_ATTRIBUTE], $attrList, $quotesList);
+            unset($attrList[BLOCS_DATA_EXIST], $attrList[BLOCS_DATA_NONE], $attrList[BLOCS_DATA_IF], $attrList[BLOCS_DATA_UNLESS]);
+
+            if ($condition === $attrList[BLOCS_DATA_ATTRIBUTE]) {
+                $this->dataAttribute[] = [
+                    'name' => $attrList[BLOCS_DATA_ATTRIBUTE],
+                ];
+            } else {
+                $this->dataAttribute[] = [
+                    'name' => $condition.BLOCS_ENDIF_SCRIPT,
+                ];
+            }
+
+            $htmlBuff = '';
         }
 
         if (isset($attrList[BLOCS_DATA_VALIDATE]) && isset($attrList[BLOCS_DATA_FORM])) {
@@ -999,19 +1012,24 @@ class BlocsCompiler
     private function mergeDataAttribute($compiledTag, &$attrList)
     {
         // data-attributeで属性書き換え
-        if (isset($this->dataAttribute)) {
-            $noValue = [];
-            $dataAttribute = [];
-            foreach ($this->dataAttribute as $buff) {
-                isset($dataAttribute[$buff['name']]) || $dataAttribute[$buff['name']] = '';
-                $dataAttribute[$buff['name']] .= $buff['value'];
-                isset($buff['noValue']) && $noValue[$buff['name']] = true;
-            }
-            unset($this->dataAttribute);
+        if (!isset($this->dataAttribute)) {
+            return $compiledTag;
+        }
 
-            foreach ($dataAttribute as $name => $value) {
-                $compiledTag = Common::mergeAttribute($compiledTag, $name, $value, $attrList, true, isset($noValue[$name]));
+        $noValue = [];
+        $dataAttribute = [];
+        foreach ($this->dataAttribute as $buff) {
+            isset($dataAttribute[$buff['name']]) || $dataAttribute[$buff['name']] = '';
+            if (isset($buff['value'])) {
+                $dataAttribute[$buff['name']] .= $buff['value'];
+            } else {
+                $noValue[$buff['name']] = true;
             }
+        }
+        unset($this->dataAttribute);
+
+        foreach ($dataAttribute as $name => $value) {
+            $compiledTag = Common::mergeAttribute($compiledTag, $name, $value, $attrList, true, isset($noValue[$name]));
         }
 
         return $compiledTag;
