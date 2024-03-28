@@ -7,26 +7,21 @@ class Attribute
     // data-valのスクリプトを生成
     public static function val($attrList, $quotesList, &$dataAttribute, $tagName = '', &$tagCounter = null, &$htmlArray = null)
     {
-        if (isset($attrList[BLOCS_DATA_ATTRIBUTE]) && !strlen($attrList[BLOCS_DATA_VAL])) {
-            // data-attributeと空白のdta-valが設定されている時の処理
-            $dataAttribute[] = [
-                'name' => $attrList[BLOCS_DATA_ATTRIBUTE],
-                'value' => '',
-                'noValue' => true,
-            ];
-
-            return '';
-        }
-
         $resultBuff = '';
 
         isset($quotesList[BLOCS_DATA_VAL]) || $quotesList[BLOCS_DATA_VAL] = '';
         $dataVal = $quotesList[BLOCS_DATA_VAL].$attrList[BLOCS_DATA_VAL].$quotesList[BLOCS_DATA_VAL];
 
         if (Common::checkValueName($attrList[BLOCS_DATA_VAL])) {
-            $resultBuff .= "<?php if(isset({$attrList[BLOCS_DATA_VAL]}) && !is_object({$attrList[BLOCS_DATA_VAL]}) && !is_array({$attrList[BLOCS_DATA_VAL]}) && strlen({$attrList[BLOCS_DATA_VAL]})): ?>\n";
+            if (!isset($attrList[BLOCS_DATA_ATTRIBUTE])) {
+                $resultBuff .= "<?php if(isset({$attrList[BLOCS_DATA_VAL]}) && !is_object({$attrList[BLOCS_DATA_VAL]}) && !is_array({$attrList[BLOCS_DATA_VAL]}) && strlen({$attrList[BLOCS_DATA_VAL]})): ?>\n";
+            } else {
+                $resultBuff .= "<?php if(isset({$attrList[BLOCS_DATA_VAL]}) && !is_object({$attrList[BLOCS_DATA_VAL]}) && !is_array({$attrList[BLOCS_DATA_VAL]})): ?>\n";
+            }
         } else {
-            $resultBuff .= "<?php if(strlen({$dataVal})): ?>\n";
+            if (!isset($attrList[BLOCS_DATA_ATTRIBUTE])) {
+                $resultBuff .= "<?php if(strlen({$dataVal})): ?>\n";
+            }
         }
 
         if (!empty($attrList[BLOCS_DATA_QUERY])) {
@@ -71,7 +66,9 @@ class Attribute
             $resultBuff .= "<?php {$attrList[BLOCS_DATA_QUERY]} = \$dataVal; ?>\n";
         }
 
-        $resultBuff .= BLOCS_ENDIF_SCRIPT;
+        if (Common::checkValueName($attrList[BLOCS_DATA_VAL]) || !isset($attrList[BLOCS_DATA_ATTRIBUTE])) {
+            $resultBuff .= BLOCS_ENDIF_SCRIPT;
+        }
 
         if (isset($attrList[BLOCS_DATA_ATTRIBUTE])) {
             // data-attributeが設定されている時の処理
