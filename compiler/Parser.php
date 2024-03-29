@@ -49,9 +49,9 @@ class Parser
                 }
 
                 if (!strlen($tagName) && empty($isQuote) && !$isPhp) {
-                    if (preg_match('/^('.BLOCS_TAG_NAME_REGREX.')/s', $nextHtmlBuff, $matcheList) || preg_match('/^(\/\s*'.BLOCS_TAG_NAME_REGREX.')/s', $nextHtmlBuff, $matcheList)) {
+                    if (preg_match('/^('.BLOCS_TAG_NAME_REGREX.')/s', $nextHtmlBuff, $matchList) || preg_match('/^(\/\s*'.BLOCS_TAG_NAME_REGREX.')/s', $nextHtmlBuff, $matchList)) {
                         // タグ処理に切替
-                        $tagName = strtolower($matcheList[0]);
+                        $tagName = strtolower($matchList[0]);
 
                         // テキストを格納
                         strlen($rawString) && $parsedHtml[] = $rawString;
