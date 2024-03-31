@@ -2,6 +2,8 @@
 
 namespace Blocs\Compiler\Cache;
 
+use Blocs\Compiler\Parser;
+
 class Form
 {
     // フォーム部品に値をつける
@@ -82,7 +84,7 @@ class Form
 
 END_of_HTML;
 
-        $optionArray = \Blocs\Compiler\Parser::parse($optionBuff);
+        $optionArray = Parser::parse($optionBuff);
         $optionArray[] = $compiledTag;
         $htmlArray = array_merge($optionArray, $htmlArray);
     }
