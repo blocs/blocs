@@ -3,6 +3,7 @@
 namespace Blocs\Compiler\Comment;
 
 use Blocs\Compiler\Cache\Condition;
+use Blocs\Compiler\Parser;
 
 trait IncludeTrait
 {
@@ -127,5 +128,41 @@ trait IncludeTrait
             '<!-- '.BLOCS_DATA_INCLUDE."='".str_replace(BLOCS_ROOT_DIR, '', $autoincludeDir).'/'.$autoinclude.".html' -->",
             $htmlBuff,
         ];
+    }
+
+    // ファイルごとにパーシング
+    private function parseTemplate($writeBuff, $realpath, $autoinclude = true)
+    {
+        // ブロックのために元ファイルのパスをセットするタグを追加
+        $chdirBuff = '<!-- '.BLOCS_DATA_CHDIR.'="'.dirname($realpath).'" -->';
+        $htmlArray = Parser::parse($writeBuff);
+        array_unshift($htmlArray, $chdirBuff);
+
+        $resultArray = [];
+        foreach ($htmlArray as $htmlBuff) {
+            $resultArray[] = $htmlBuff;
+
+            if (!is_array($htmlBuff) && !strncmp($htmlBuff, '<!', 2)) {
+                // data-partのロケーションはオリジナルファイルのパスに設定
+                list($includeBuff) = Parser::parse($htmlBuff, true);
+
+                if (isset($includeBuff['attribute'][BLOCS_DATA_PART])) {
+                    $resultArray[] = $chdirBuff;
+                }
+            }
+        }
+
+        if (!$autoinclude) {
+            return $resultArray;
+        }
+
+        // auto inlcudeテンプレートは移動
+        $autoincludeDir = self::getAutoincludeDir();
+        if (false !== $autoincludeDir && !strncmp($realpath, $autoincludeDir, strlen($autoincludeDir))) {
+            array_unshift($resultArray, '{{AUTOINCLUDE_START_FROM}}');
+            $resultArray[] = '{{AUTOINCLUDE_END_TO}}';
+        }
+
+        return $resultArray;
     }
 }
