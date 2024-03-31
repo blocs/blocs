@@ -58,6 +58,7 @@ trait FormTrait
             $this->selectName = '';
 
             $compiledTag = '';
+
             return;
         }
 
