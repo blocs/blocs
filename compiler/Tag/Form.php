@@ -1,7 +1,8 @@
 <?php
 
-namespace Blocs\Compiler\Cache;
+namespace Blocs\Compiler\Tag;
 
+use Blocs\Compiler\Cache\Common;
 use Blocs\Compiler\Parser;
 
 class Form

@@ -165,4 +165,18 @@ trait IncludeTrait
 
         return $resultArray;
     }
+
+    private static function checkEncoding($realpath)
+    {
+        $viewBuff = file_get_contents($realpath);
+
+        if (function_exists('mb_detect_encoding')) {
+            $encoding = mb_detect_encoding($viewBuff, 'UTF-8', true);
+            if ('UTF-8' !== $encoding) {
+                trigger_error('B011: Can not permit this encoding ('.$encoding.') and have to convert to "UTF-8"', E_USER_ERROR);
+            }
+        }
+
+        return $viewBuff;
+    }
 }
