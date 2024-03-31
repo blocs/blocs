@@ -614,10 +614,6 @@ class BlocsCompiler
         }
 
         if (empty($autoincludeDir) || !is_dir($autoincludeDir)) {
-            $autoincludeDir = realpath(__DIR__.'/../../autoinclude');
-        }
-
-        if (empty($autoincludeDir) || !is_dir($autoincludeDir)) {
             return false;
         }
 
