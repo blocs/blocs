@@ -160,4 +160,19 @@ class Common
 
         return $condition."<?php echo(\$postAttr); ?>\n";
     }
+
+    public static function findConvertFunc($convertClass, $convertFunc)
+    {
+        if ($convertClass && method_exists($convertClass, $convertFunc)) {
+            return $convertClass.'::'.$convertFunc;
+        }
+        if (method_exists('\Blocs\Data\Convert', $convertFunc)) {
+            return '\Blocs\Data\Convert::'.$convertFunc;
+        }
+        if (function_exists($convertFunc)) {
+            return $convertFunc;
+        }
+
+        trigger_error('B008: Can not find convert function ('.$convertFunc.')', E_USER_ERROR);
+    }
 }
