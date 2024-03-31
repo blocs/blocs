@@ -2,7 +2,7 @@
 
 namespace Blocs\Compiler\Cache;
 
-class Attribute
+class Val
 {
     // data-valのスクリプトを生成
     public static function val($attrList, $quotesList, &$dataAttribute, $tagName = '', &$tagCounter = null, &$htmlArray = null)
@@ -46,7 +46,7 @@ class Attribute
         }
         if (isset($attrList[BLOCS_DATA_CONVERT])) {
             list($convertClass, $convertFunc, $convertArg) = Common::checkFunc($attrList[BLOCS_DATA_CONVERT]);
-            $convertFunc = self::findConvertFunc($convertClass, $convertFunc);
+            $convertFunc = Common::findConvertFunc($convertClass, $convertFunc);
 
             $resultBuff .= $convertFunc.'('.$dataVal.$convertArg.')';
         } else {
@@ -141,131 +141,6 @@ class Attribute
         return $resultBuff;
     }
 
-    // data-existなどのスクリプトを生成
-    public static function condition($compiledTag, $attrList, $quotesList, $tagName = '', &$tagCounter = null, &$htmlArray = null)
-    {
-        if (isset($attrList[BLOCS_DATA_EXIST])) {
-            if (!Common::checkValueName($attrList[BLOCS_DATA_EXIST])) {
-                trigger_error('B006: Invalid condition "'.BLOCS_DATA_EXIST.'" ('.$attrList[BLOCS_DATA_EXIST].')', E_USER_ERROR);
-            }
-            $compiledTag = "<?php if(!empty({$attrList[BLOCS_DATA_EXIST]})): ?>\n".$compiledTag;
-        } elseif (isset($attrList[BLOCS_DATA_NONE])) {
-            if (!Common::checkValueName($attrList[BLOCS_DATA_NONE])) {
-                trigger_error('B007: Invalid condition "'.BLOCS_DATA_NONE.'" ('.$attrList[BLOCS_DATA_NONE].')', E_USER_ERROR);
-            }
-            $compiledTag = "<?php if(empty({$attrList[BLOCS_DATA_NONE]})): ?>\n".$compiledTag;
-        } elseif (isset($attrList[BLOCS_DATA_IF])) {
-            $compiledTag = "<?php if({$attrList[BLOCS_DATA_IF]}): ?>\n".$compiledTag;
-        } elseif (isset($attrList[BLOCS_DATA_UNLESS])) {
-            $compiledTag = "<?php if(!({$attrList[BLOCS_DATA_UNLESS]})): ?>\n".$compiledTag;
-        }
-
-        if ($tagName) {
-            // タグ記法
-            if ('/>' === substr($compiledTag, -2)) {
-                // はさまないタグの場合
-                array_unshift($htmlArray, BLOCS_ENDIF_SCRIPT);
-            } else {
-                $tagCounter = [
-                    'tag' => $tagName,
-                    'after' => BLOCS_ENDIF_SCRIPT,
-                ];
-            }
-        }
-
-        return $compiledTag;
-    }
-
-    // data-repeatのスクリプトを生成
-    public static function repeat($attrList, $tagCounterNum)
-    {
-        $compiledTag = '';
-
-        if (isset($attrList[BLOCS_DATA_CONVERT])) {
-            list($convertClass, $convertFunc, $convertArg) = Common::checkFunc($attrList[BLOCS_DATA_CONVERT]);
-            $convertFunc = self::findConvertFunc($convertClass, $convertFunc);
-
-            $compiledTag .= "<?php {$attrList[BLOCS_DATA_REPEAT]} = {$convertFunc}({$attrList[BLOCS_DATA_REPEAT]}{$convertArg}); ?>\n";
-        }
-
-        $md5workKey = md5($attrList[BLOCS_DATA_REPEAT]);
-        $compiledTag .= <<< END_of_HTML
-<?php
-    empty({$attrList[BLOCS_DATA_REPEAT]}) && {$attrList[BLOCS_DATA_REPEAT]} = [];
-    foreach({$attrList[BLOCS_DATA_REPEAT]} as \$repeatIndex => \$work_{$md5workKey}):
-        \$repeatIndex{$tagCounterNum} = \$repeatIndex;
-        \$parentItemList = [];
-        foreach(array_keys(\$work_{$md5workKey}) as \$parentItem){
-            isset(\$\$parentItem) && \$parentItemList[] = \$parentItem;
-        }
-        \$parent[] = compact(\$parentItemList);
-        extract(\$work_{$md5workKey});
-?>
-
-END_of_HTML;
-
-        return $compiledTag;
-    }
-
-    // data-endrepeatのスクリプトを生成
-    public static function endrepeat($attrList)
-    {
-        $md5workKey = md5($attrList[BLOCS_DATA_REPEAT]);
-        $compiledTag = <<< END_of_HTML
-<?php
-        foreach(array_keys(\$work_{$md5workKey}) as \$workKey){
-            unset(\$\$workKey);
-        };
-        extract(array_pop(\$parent));
-    endforeach;
-?>
-
-END_of_HTML;
-
-        return $compiledTag;
-    }
-
-    // data-loopのスクリプトを生成
-    public static function loop($attrList, $tagCounterNum)
-    {
-        if (isset($attrList[BLOCS_DATA_REPEAT])) {
-            return self::repeat($attrList, $tagCounterNum);
-        }
-
-        if (empty($attrList[BLOCS_DATA_QUERY])) {
-            $strSingular = substr($attrList[BLOCS_DATA_LOOP], 1);
-            $propertyName = explode('->', $strSingular, 2);
-            if (count($propertyName) > 1) {
-                $strSingular = $propertyName[1];
-            }
-            $strSingular = str_replace('()', '', $strSingular);
-
-            $strSingular = '$'.\Str::singular($strSingular);
-        } else {
-            $strSingular = $attrList[BLOCS_DATA_QUERY];
-        }
-
-        if ('()' === substr($attrList[BLOCS_DATA_LOOP], -2)) {
-            $compiledTag = '';
-        } else {
-            $compiledTag = "@php empty({$attrList[BLOCS_DATA_LOOP]}) && {$attrList[BLOCS_DATA_LOOP]} = []; @endphp\n";
-        }
-        $compiledTag .= "@foreach ({$attrList[BLOCS_DATA_LOOP]} as {$strSingular})\n";
-        $compiledTag .= "@php \$repeatIndex{$tagCounterNum} = \$loop->index; @endphp\n";
-
-        return $compiledTag;
-    }
-
-    // data-endloopのスクリプトを生成
-    public static function endloop($attrList)
-    {
-        if (isset($attrList[BLOCS_DATA_REPEAT]) || isset($attrList[BLOCS_DATA_ENDREPEAT])) {
-            return self::endrepeat($attrList);
-        }
-
-        return "@endforeach\n";
-    }
-
     private static function addFixValue($attrList, $quotesList, $resultBuff, $attrName)
     {
         if (!(isset($attrList[$attrName]))) {
@@ -329,20 +204,5 @@ END_of_HTML;
         }
 
         return '';
-    }
-
-    private static function findConvertFunc($convertClass, $convertFunc)
-    {
-        if ($convertClass && method_exists($convertClass, $convertFunc)) {
-            return $convertClass.'::'.$convertFunc;
-        }
-        if (method_exists('\Blocs\Data\Convert', $convertFunc)) {
-            return '\Blocs\Data\Convert::'.$convertFunc;
-        }
-        if (function_exists($convertFunc)) {
-            return $convertFunc;
-        }
-
-        trigger_error('B008: Can not find convert function ('.$convertFunc.')', E_USER_ERROR);
     }
 }
