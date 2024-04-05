@@ -94,7 +94,7 @@ trait CompileTagTrait
             $this->labelArray['label'] = '';
         }
 
-        if (isset($attrList['class']) || isset($attrList['data-toggle'])) {
+        if (isset($attrList['class']) || isset($attrList['data-bs-toggle'])) {
             $classList = [];
             if (isset($attrList['class'])) {
                 $classNameList = preg_split("/\s/", $attrList['class']);
@@ -106,7 +106,7 @@ trait CompileTagTrait
                 }
             }
 
-            isset($attrList['data-toggle']) && $classList[] = $attrList['data-toggle'];
+            isset($attrList['data-bs-toggle']) && $classList[] = $attrList['data-bs-toggle'];
 
             // auto includeの候補に追加
             $this->autoincludeClass = array_merge($this->autoincludeClass, $classList);
