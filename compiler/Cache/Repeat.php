@@ -21,7 +21,7 @@ class Repeat
 <?php
     empty({$attrList[BLOCS_DATA_REPEAT]}) && {$attrList[BLOCS_DATA_REPEAT]} = [];
     foreach({$attrList[BLOCS_DATA_REPEAT]} as \$repeatIndex => \$work_{$md5workKey}):
-        \$repeatIndex{$tagCounterNum} = \$repeatIndex;
+        \$repeatIndex{$tagCounterNum} = \$repeatIndex; \$repeatIndexList[{$tagCounterNum}] = \$repeatIndex;
         \$parentItemList = [];
         foreach(array_keys(\$work_{$md5workKey}) as \$parentItem){
             isset(\$\$parentItem) && \$parentItemList[] = \$parentItem;
@@ -45,6 +45,7 @@ END_of_HTML;
             unset(\$\$workKey);
         };
         extract(array_pop(\$parent));
+        array_pop(\$repeatIndexList); count(\$repeatIndexList) && \$repeatIndex = end(\$repeatIndexList);
     endforeach;
 ?>
 
@@ -79,7 +80,7 @@ END_of_HTML;
             $compiledTag = "@php empty({$attrList[BLOCS_DATA_LOOP]}) && {$attrList[BLOCS_DATA_LOOP]} = []; @endphp\n";
         }
         $compiledTag .= "@foreach ({$attrList[BLOCS_DATA_LOOP]} as {$strSingular})\n";
-        $compiledTag .= "@php \$repeatIndex{$tagCounterNum} = \$loop->index; @endphp\n";
+        $compiledTag .= "@php \$repeatIndex{$tagCounterNum} = \$loop->index; \$repeatIndexList[{$tagCounterNum}] = \$loop->index; @endphp\n";
 
         return $compiledTag;
     }
