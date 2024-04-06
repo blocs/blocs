@@ -71,7 +71,7 @@ define('BLOCS_DATA_LANG', 'data-lang');
 define('BLOCS_DATA_ASSIGN', 'data-assign');
 
 define('BLOCS_TAG_NAME_REGREX', '[a-zA-Z\_\:\!\$][a-zA-Z0-9\_\:\-\.]*');
-define('BLOCS_ATTR_NAME_REGREX', '[a-zA-Z0-9\-\$\/\_][a-zA-Z0-9\-\_]*');
+define('BLOCS_ATTR_NAME_REGREX', '[a-zA-Z0-9\-\$\/\_\:][a-zA-Z0-9\-\_]*');
 
 define('BLOCS_CLASS_UPLOAD', 'ai-upload');
 
