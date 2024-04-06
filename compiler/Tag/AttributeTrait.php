@@ -4,7 +4,7 @@ namespace Blocs\Compiler\Tag;
 
 use Blocs\Compiler\Cache\Common;
 use Blocs\Compiler\Cache\Condition;
-use Blocs\Compiler\Cache\Repeat;
+use Blocs\Compiler\Cache\Loop;
 use Blocs\Compiler\Cache\Val;
 
 trait AttributeTrait
@@ -43,11 +43,11 @@ trait AttributeTrait
                 trigger_error('B002: Invalid condition "'.BLOCS_DATA_LOOP.'" ('.$attrList[BLOCS_DATA_LOOP].')', E_USER_ERROR);
             }
 
-            $compiledTag = Repeat::loop($attrList, count($this->tagCounter)).$compiledTag;
+            $compiledTag = Loop::loop($attrList, count($this->tagCounter)).$compiledTag;
 
             $this->setTagCounter([
                 'tag' => $tagName,
-                'after' => Repeat::endloop($attrList),
+                'after' => Loop::endloop($attrList),
                 'array_form' => substr($attrList[BLOCS_DATA_LOOP], 1),
             ]);
         }
