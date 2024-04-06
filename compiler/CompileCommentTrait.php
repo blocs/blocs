@@ -4,7 +4,7 @@ namespace Blocs\Compiler;
 
 use Blocs\Compiler\Cache\Common;
 use Blocs\Compiler\Cache\Condition;
-use Blocs\Compiler\Cache\Repeat;
+use Blocs\Compiler\Cache\Loop;
 use Blocs\Compiler\Cache\Val;
 
 trait CompileCommentTrait
@@ -169,7 +169,7 @@ trait CompileCommentTrait
             isset($attrList[BLOCS_DATA_FORM]) && $this->arrayFormName = $attrList[BLOCS_DATA_FORM];
 
             $rawString = '';
-            $htmlBuff = Repeat::loop($attrList, count($this->tagCounter));
+            $htmlBuff = Loop::loop($attrList, count($this->tagCounter));
             $this->endrepeat[] = $attrList;
 
             $this->setTagCounter([
@@ -178,7 +178,7 @@ trait CompileCommentTrait
             ], false);
         }
         if (isset($attrList[BLOCS_DATA_ENDLOOP]) && !empty($this->endrepeat)) {
-            $htmlBuff = Repeat::endloop(array_pop($this->endrepeat));
+            $htmlBuff = Loop::endloop(array_pop($this->endrepeat));
 
             $target = '';
             foreach ($this->tagCounter as $num => $buff) {
