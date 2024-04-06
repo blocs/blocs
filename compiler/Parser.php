@@ -73,7 +73,7 @@ class Parser
 
             if ('>' === $htmlBuff && empty($isQuote)) {
                 $attrString = self::deleteTagName($attrString, $tagName);
-                self::addAttrList($attrList, $attrName, $attrString, $rawString);
+                self::addAttrList($attrList, $quotesList, $rawString, $attrName, $attrString);
 
                 // "", ''で囲われていない属性
                 foreach ($attrList as $attrName => $attrValue) {
@@ -116,7 +116,7 @@ class Parser
 
             if ('=' === $htmlBuff && empty($isQuote)) {
                 $attrString = self::deleteTagName($attrString, $tagName);
-                self::addAttrList($attrList, $attrName, $attrString, $rawString);
+                self::addAttrList($attrList, $quotesList, $rawString, $attrName, $attrString);
 
                 // =の前は次の属性名とする
                 $attrValueList = array_filter(preg_split("/\s/", $attrString), 'strlen');
@@ -155,7 +155,7 @@ class Parser
         return $parsedHtml;
     }
 
-    private static function addAttrList(&$attrList, $attrName, $attrString, &$rawString)
+    private static function addAttrList(&$attrList, &$quotesList, &$rawString, $attrName, $attrString)
     {
         $attrString = self::replaceAliasAttrName($attrString);
         $attrValueList = preg_split("/(\s)/", trim($attrString), -1, PREG_SPLIT_DELIM_CAPTURE);
@@ -180,7 +180,22 @@ class Parser
         if (empty($attrName)) {
             strlen($attrValue) && $attrList[$attrValue] = '';
         } else {
-            $attrList[$attrName] = $attrValue;
+            if (strncmp($attrName, ':', 1)) {
+                $attrList[$attrName] = $attrValue;
+            } else {
+                // data-attributeの省略表記
+                $attrList[BLOCS_DATA_ATTRIBUTE] = '"'.substr($attrName, 1).'"';
+                $attrList[BLOCS_DATA_VAL] = $attrValue;
+                unset($attrList[$attrName]);
+
+                $quotesList[BLOCS_DATA_ATTRIBUTE] = '"';
+                if (isset($quotesList[$attrName])) {
+                    $quotesList[BLOCS_DATA_VAL] = $quotesList[$attrName];
+                    unset($quotesList[$attrName]);
+                }
+
+                $rawString = str_replace($attrName, BLOCS_DATA_ATTRIBUTE.'='.$attrList[BLOCS_DATA_ATTRIBUTE].' '.BLOCS_DATA_VAL, $rawString);
+            }
         }
     }
 
