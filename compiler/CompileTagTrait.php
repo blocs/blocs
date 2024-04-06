@@ -58,9 +58,6 @@ trait CompileTagTrait
             return '';
         }
 
-        // data_attributeをタグに反映
-        $compiledTag = $this->mergeDataAttribute($compiledTag, $attrList);
-
         /* タグ記法のデータ属性処理 */
 
         if (isset($attrList[BLOCS_DATA_PART])) {
@@ -77,6 +74,9 @@ trait CompileTagTrait
         }
 
         $this->compileTagAttribute($htmlBuff, $htmlArray, $attrList, $compiledTag);
+
+        // data_attributeをタグに反映
+        $compiledTag = $this->mergeDataAttribute($compiledTag, $attrList);
 
         // スクリプトの中のタグを無効化
         if ('script' === $tagName || 'style' === $tagName) {

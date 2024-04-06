@@ -8,10 +8,15 @@
 	$title = 'Yahoo!';
 ?>
 <font color='blue'>値の代入</font><br />
-<div data-attribute='href' data-val=$url><a>suzuki</a></div>
+<div><a data-attribute='href' data-val=$url>suzuki</a></div>
 <!-- data-attribute="href" data-val=$url -->
 <a>Google</a>
 <hr />
+
+<!-- :href=$url -->
+<a>Yahoo</a>
+<a data-attribute='href' data-val=$url>Yahoo</a>
+<a :href=$url>Yahoo</a>
 
 <font color='blue'>値の代入</font><br />
 <!-- data-attribute="href" data-val=$url -->
