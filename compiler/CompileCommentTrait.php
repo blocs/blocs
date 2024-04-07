@@ -50,21 +50,21 @@ trait CompileCommentTrait
 
         /* コメント記法のデータ属性処理 */
 
-        if (isset($attrList[BLOCS_DATA_PART])) {
-            // コメント記法でのdata-part開始処理
+        if (isset($attrList[BLOCS_DATA_BLOC])) {
+            // コメント記法でのdata-bloc開始処理
             ++$this->partDepth;
 
             if (1 === $this->partDepth) {
                 // ブロック処理開始
-                $this->partName = $attrList[BLOCS_DATA_PART];
+                $this->partName = $attrList[BLOCS_DATA_BLOC];
                 $this->partInclude[$this->partName] = [];
                 $htmlBuff = '';
             }
 
             return;
         }
-        if (isset($attrList[BLOCS_DATA_ENDPART])) {
-            // コメント記法でのdata-part終了処理
+        if (isset($attrList[BLOCS_DATA_ENDBLOC])) {
+            // コメント記法でのdata-bloc終了処理
             --$this->partDepth;
             $this->partDepth < 0 && $this->partDepth = 0;
 
@@ -159,10 +159,6 @@ trait CompileCommentTrait
         if (isset($attrList[BLOCS_DATA_ENDEXIST]) || isset($attrList[BLOCS_DATA_ENDNONE]) || isset($attrList[BLOCS_DATA_ENDIF]) || isset($attrList[BLOCS_DATA_ENDUNLESS])) {
             $htmlBuff = BLOCS_ENDIF_SCRIPT;
         }
-
-        // data-repeatとdata-loopの処理を共通化
-        isset($attrList[BLOCS_DATA_REPEAT]) && $attrList[BLOCS_DATA_LOOP] = $attrList[BLOCS_DATA_REPEAT];
-        isset($attrList[BLOCS_DATA_ENDREPEAT]) && $attrList[BLOCS_DATA_ENDLOOP] = $attrList[BLOCS_DATA_ENDREPEAT];
 
         if (isset($attrList[BLOCS_DATA_LOOP])) {
             // loop内のform名を置換するか

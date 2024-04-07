@@ -32,9 +32,6 @@ trait AttributeTrait
             count($tagCounter) && $this->setTagCounter($tagCounter);
         }
 
-        // data-repeatとdata-loopの処理を共通化
-        isset($attrList[BLOCS_DATA_REPEAT]) && $attrList[BLOCS_DATA_LOOP] = $attrList[BLOCS_DATA_REPEAT];
-
         if (isset($attrList[BLOCS_DATA_LOOP])) {
             // loop内のform名を置換するか
             isset($attrList[BLOCS_DATA_FORM]) && $this->arrayFormName = $attrList[BLOCS_DATA_FORM];
