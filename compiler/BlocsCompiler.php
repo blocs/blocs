@@ -35,7 +35,7 @@ class BlocsCompiler
     private bool $ignoreFlg;
     private $arrayFormName;
 
-    // 処理中のdata-part
+    // 処理中のdata-bloc
     private $partName;
 
     // ファイル、ブロックごとにタグを保持

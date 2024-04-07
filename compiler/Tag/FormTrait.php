@@ -104,9 +104,9 @@ trait FormTrait
     private function generateArrayFormName($format = 0)
     {
         /*
-            $format = 0(HTML form): matrix[<?php echo($repeatIndex); ?>]
-            $format = 1(HTML id): matrix_<?php echo($repeatIndex); ?>
-            $format = 2(PHP array): ['matrix'][$repeatIndex]
+            $format = 0(HTML form): matrix[<?php echo($loopIndex); ?>]
+            $format = 1(HTML id): matrix_<?php echo($loopIndex); ?>
+            $format = 2(PHP array): ['matrix'][$loopIndex]
             $format = 3(Laravel validate): matrix.*.
         */
 
@@ -139,11 +139,11 @@ trait FormTrait
             }
 
             if (1 === $format) {
-                $formName .= "_<?php echo(\$repeatIndex{$num}); ?>";
+                $formName .= "_<?php echo(\$loopIndex{$num}); ?>";
             } elseif (2 === $format) {
-                $formName .= '[$repeatIndex'.$num.']';
+                $formName .= '[$loopIndex'.$num.']';
             } else {
-                $formName .= "[<?php echo(\$repeatIndex{$num}); ?>]";
+                $formName .= "[<?php echo(\$loopIndex{$num}); ?>]";
             }
         }
 

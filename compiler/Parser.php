@@ -6,10 +6,10 @@ class Parser
 {
     // データ属性名のエイリアス
     private static array $aliasAttrName = [
-        BLOCS_DATA_BLOC => BLOCS_DATA_PART,
-        BLOCS_DATA_ENDBLOC => BLOCS_DATA_ENDPART,
         BLOCS_DATA_LANG => BLOCS_DATA_NOTICE,
         BLOCS_DATA_ASSIGN => BLOCS_DATA_QUERY,
+        BLOCS_DATA_REPEAT => BLOCS_DATA_LOOP,
+        BLOCS_DATA_ENDREPEAT => BLOCS_DATA_ENDLOOP,
     ];
 
     private static array $escapeOperatorList = [

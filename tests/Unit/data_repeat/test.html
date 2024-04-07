@@ -104,11 +104,11 @@
 <!-- data-repeat=$list -->
 	<tr>
 		<td>
-			<!-- data-attribute='color' data-val='red' data-unless="$repeatIndex % 2" -->
+			<!-- data-attribute='color' data-val='red' data-unless="$loopIndex % 2" -->
 			<font data-val=$name>田中太郎</font>
 		</td>
 		<td>
-			<!-- data-attribute='color' data-val='red' data-unless="$repeatIndex % 2" -->
+			<!-- data-attribute='color' data-val='red' data-unless="$loopIndex % 2" -->
 			<font data-val=$age>99</font>
 		</td>
 	</tr>
@@ -143,7 +143,7 @@
 		<td data-val=$age>99</td>
 		<td>
 <!-- data-repeat=$child -->
-<!-- data-val=', ' data-exist=$repeatIndex --><!-- data-val=$name -->
+<!-- data-val=', ' data-exist=$loopIndex --><!-- data-val=$name -->
 <!-- data-endrepeat -->
 		</td>
 	</tr>

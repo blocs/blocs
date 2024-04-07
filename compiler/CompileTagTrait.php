@@ -40,7 +40,7 @@ trait CompileTagTrait
             'ignore' === $endTagCounter['type'] && $this->ignoreFlg = false;
 
             if ('part' === $endTagCounter['type'] && $this->isPart()) {
-                // タグ記法でのdata-part終了処理
+                // タグ記法でのdata-bloc終了処理
                 $this->partInclude[$this->partName][] = $compiledTag;
                 $this->partName = '';
                 $compiledTag = '';
@@ -60,9 +60,9 @@ trait CompileTagTrait
 
         /* タグ記法のデータ属性処理 */
 
-        if (isset($attrList[BLOCS_DATA_PART])) {
-            // タグ記法でのdata-part開始処理
-            $this->partName = $attrList[BLOCS_DATA_PART];
+        if (isset($attrList[BLOCS_DATA_BLOC])) {
+            // タグ記法でのdata-bloc開始処理
+            $this->partName = $attrList[BLOCS_DATA_BLOC];
             $this->partInclude[$this->partName] = [$compiledTag];
 
             $this->setTagCounter([

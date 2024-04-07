@@ -32,8 +32,8 @@ define('BLOCS_ENDIF_SCRIPT', "<?php endif; ?>\n");
 
 // データ属性
 define('BLOCS_DATA_INCLUDE', 'data-include');
-define('BLOCS_DATA_PART', 'data-part');
-define('BLOCS_DATA_ENDPART', 'data-endpart');
+define('BLOCS_DATA_BLOC', 'data-bloc');
+define('BLOCS_DATA_ENDBLOC', 'data-endbloc');
 
 define('BLOCS_DATA_VAL', 'data-val');
 define('BLOCS_DATA_ATTRIBUTE', 'data-attribute');
@@ -53,9 +53,7 @@ define('BLOCS_DATA_ENDNONE', 'data-endnone');
 define('BLOCS_DATA_ENDIF', 'data-endif');
 define('BLOCS_DATA_ENDUNLESS', 'data-endunless');
 
-define('BLOCS_DATA_REPEAT', 'data-repeat');
 define('BLOCS_DATA_LOOP', 'data-loop');
-define('BLOCS_DATA_ENDREPEAT', 'data-endrepeat');
 define('BLOCS_DATA_ENDLOOP', 'data-endloop');
 
 define('BLOCS_DATA_FORM', 'data-form');
@@ -65,10 +63,10 @@ define('BLOCS_DATA_FILTER', 'data-filter');
 define('BLOCS_DATA_CHDIR', 'data-chdir');
 
 // データ属性のエイリアス
-define('BLOCS_DATA_BLOC', 'data-bloc');
-define('BLOCS_DATA_ENDBLOC', 'data-endbloc');
 define('BLOCS_DATA_LANG', 'data-lang');
 define('BLOCS_DATA_ASSIGN', 'data-assign');
+define('BLOCS_DATA_REPEAT', 'data-repeat');
+define('BLOCS_DATA_ENDREPEAT', 'data-endrepeat');
 
 define('BLOCS_TAG_NAME_REGREX', '[a-zA-Z\_\:\!\$][a-zA-Z0-9\_\:\-\.]*');
 define('BLOCS_ATTR_NAME_REGREX', '[a-zA-Z0-9\-\$\/\_\:][a-zA-Z0-9\-\_]*');
