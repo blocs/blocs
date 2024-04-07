@@ -143,10 +143,10 @@ trait IncludeTrait
             $resultArray[] = $htmlBuff;
 
             if (!is_array($htmlBuff) && !strncmp($htmlBuff, '<!', 2)) {
-                // data-partのロケーションはオリジナルファイルのパスに設定
+                // data-blocのロケーションはオリジナルファイルのパスに設定
                 list($includeBuff) = Parser::parse($htmlBuff, true);
 
-                if (isset($includeBuff['attribute'][BLOCS_DATA_PART])) {
+                if (isset($includeBuff['attribute'][BLOCS_DATA_BLOC])) {
                     $resultArray[] = $chdirBuff;
                 }
             }
