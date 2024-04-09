@@ -69,13 +69,11 @@ class Form
     <!-- data-endif -->
 
     <!-- data-if="isset(\$optgroup) && \$optgroup != \$preGroup" -->
-        <!-- data-attribute="label" data-val=\$optgroup -->
-        <optgroup>
+        <optgroup :label=\$optgroup>
         <!-- \$preGroup=\$optgroup -->
     <!-- data-endif -->
 
-    <!-- data-attribute="value" data-val=\$value -->
-    <option data-val=\$label></option>
+    <option :value=\$value><!-- data-val=\$label --></option>
 
 <!-- data-endrepeat -->
 
