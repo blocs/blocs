@@ -55,7 +55,6 @@ trait FormTrait
         } elseif ('/select' === $tagName && strlen($this->selectName)) {
             // メニューのグループタグを追加
             Form::select($compiledTag, $htmlArray, $this->selectName);
-            $this->selectName = '';
 
             $compiledTag = '';
 
