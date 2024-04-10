@@ -37,11 +37,11 @@ END_of_HTML;
         isset(\$loopIndex) && \$index_{$strSingular} = \$loopIndex; \$loopIndex = \$loopIndex{$tagCounterNum};
 
         \$parentItemList = [];
-        foreach(array_keys(\$work_{$strSingular}) as \$parentItem){
+        foreach(array_keys(\$loop_{$strSingular}) as \$parentItem){
             isset(\$\$parentItem) && \$parentItemList[] = \$parentItem;
         }
         \$parent[] = compact(\$parentItemList);
-        extract(\$work_{$strSingular});
+        extract(\$loop_{$strSingular});
 
         endif;
 ?>
@@ -59,12 +59,12 @@ END_of_HTML;
         // 配列を変数として使えるように展開
         $compiledTag = <<< END_of_HTML
 <?php
-        if(isset(\$work_{$strSingular})):
-        foreach(array_keys(\$work_{$strSingular}) as \$workKey){
+        if(isset(\$loop_{$strSingular})):
+        foreach(array_keys(\$loop_{$strSingular}) as \$workKey){
             unset(\$\$workKey);
         };
         extract(array_pop(\$parent));
-        unset(\$work_{$strSingular});
+        unset(\$loop_{$strSingular});
         endif;
 
         isset(\$index_{$strSingular}) && \$loopIndex = \$index_{$strSingular};
@@ -113,7 +113,7 @@ END_of_HTML;
     @foreach({$attrList[BLOCS_DATA_LOOP]} as \$loopIndex{$tagCounterNum} => \${$strSingular})
 <?php
         if(!is_string(\${$strSingular})):
-        \$work_{$strSingular} = is_array(\${$strSingular}) ? \${$strSingular} : \${$strSingular}->toArray();
+        \$loop_{$strSingular} = is_array(\${$strSingular}) ? \${$strSingular} : \${$strSingular}->toArray();
 ?>
 
 END_of_HTML;
@@ -124,7 +124,7 @@ END_of_HTML;
 <?php
     foreach({$attrList[BLOCS_DATA_LOOP]} as \$loopIndex{$tagCounterNum} => \${$strSingular}):
         if(!is_string(\${$strSingular})):
-        \$work_{$strSingular} = \${$strSingular};
+        \$loop_{$strSingular} = \${$strSingular};
 ?>
 
 END_of_HTML;

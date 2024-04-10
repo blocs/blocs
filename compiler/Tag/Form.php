@@ -35,8 +35,8 @@ class Form
     public static function check($compiledTag, $attrName, $attrValue, $checkFlg, $attrChecked)
     {
         if (isset($attrValue) && !strncmp($attrValue, '<?', 2)) {
-            $valueBuff = '(isset($work_'.$attrName.') ? $work_'.$attrName.' : null)';
-            $checkTag = str_replace('echo(', '$work_'.$attrName.' = (', $attrValue);
+            $valueBuff = '(isset($check_'.$attrName.') ? $check_'.$attrName.' : null)';
+            $checkTag = str_replace('echo(', '$check_'.$attrName.' = (', $attrValue);
         } else {
             $valueBuff = (isset($attrValue) ? Common::escapeDoubleQuote($attrValue) : 'null');
             $checkTag = '';
@@ -73,7 +73,7 @@ class Form
         <!-- \$preGroup=\$optgroup -->
     <!-- data-endif -->
 
-    <option :value=\$value><!-- data-val=\$label --></option>
+    <option :value=\$value><!-- \$label --></option>
 
 <!-- data-endrepeat -->
 
