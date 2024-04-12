@@ -24,17 +24,23 @@ END_of_HTML;
                 list($convertClass, $convertFunc, $convertArg) = Common::checkFunc($attrList[BLOCS_DATA_CONVERT]);
                 $convertFunc = Common::findConvertFunc($convertClass, $convertFunc);
 
-                $compiledTag .= "<?php {$attrList[BLOCS_DATA_LOOP]} = {$convertFunc}({$attrList[BLOCS_DATA_LOOP]}{$convertArg}); ?>\n";
+                $compiledTag .= <<< END_of_HTML
+<?php
+    {$attrList[BLOCS_DATA_LOOP]} = {$convertFunc}({$attrList[BLOCS_DATA_LOOP]}{$convertArg});
+?>
+
+END_of_HTML;
             }
         }
 
-        // テーブルフォームのためにloopIndexをつける
-        $compiledTag .= self::generateLoopIndex($attrList, $tagCounterNum, $strSingular);
+        // foreachをつける
+        $compiledTag .= self::generateForeach($attrList, $tagCounterNum, $strSingular);
 
         // 配列を変数として使えるように展開
         $compiledTag .= <<< END_of_HTML
 <?php
-        isset(\$loopIndex) && \$index_{$strSingular} = \$loopIndex; \$loopIndex = \$loopIndex{$tagCounterNum};
+        isset(\$loopIndex) && \$index_{$strSingular} = \$loopIndex;
+        \$loopIndex = \$loopIndex{$tagCounterNum};
 
         \$parentItemList = [];
         foreach(array_keys(\$loop_{$strSingular}) as \$parentItem){
@@ -42,8 +48,7 @@ END_of_HTML;
         }
         \$parent[] = compact(\$parentItemList);
         extract(\$loop_{$strSingular});
-
-        endif;
+    endif;
 ?>
 
 END_of_HTML;
@@ -59,20 +64,65 @@ END_of_HTML;
         // 配列を変数として使えるように展開
         $compiledTag = <<< END_of_HTML
 <?php
-        if(isset(\$loop_{$strSingular})):
+    if(isset(\$loop_{$strSingular})):
+        isset(\$index_{$strSingular}) && \$loopIndex = \$index_{$strSingular};
+
         foreach(array_keys(\$loop_{$strSingular}) as \$workKey){
             unset(\$\$workKey);
         };
         extract(array_pop(\$parent));
         unset(\$loop_{$strSingular});
-        endif;
-
-        isset(\$index_{$strSingular}) && \$loopIndex = \$index_{$strSingular};
+    endif;
 ?>
 
 END_of_HTML;
 
         return $compiledTag.self::generateEndForeach();
+    }
+
+    // テーブルフォームのためにloopIndexをつける
+    private static function generateForeach($attrList, $tagCounterNum, $strSingular)
+    {
+        if (method_exists('Str', 'singular')) {
+            // Laravelあり
+            return <<< END_of_HTML
+    @foreach({$attrList[BLOCS_DATA_LOOP]} as \$loopIndex{$tagCounterNum} => \${$strSingular})
+<?php
+    if(is_array(\${$strSingular}) || (is_object(\${$strSingular}) && method_exists(\${$strSingular}, 'toArray'))):
+        \$loop_{$strSingular} = is_array(\${$strSingular}) ? \${$strSingular} : \${$strSingular}->toArray();
+?>
+
+END_of_HTML;
+        }
+
+        // Laravelなし
+        return <<< END_of_HTML
+<?php
+    foreach({$attrList[BLOCS_DATA_LOOP]} as \$loopIndex{$tagCounterNum} => \${$strSingular}):
+    if(is_array(\${$strSingular})):
+        \$loop_{$strSingular} = \${$strSingular};
+?>
+
+END_of_HTML;
+    }
+
+    private static function generateEndForeach()
+    {
+        if (method_exists('Str', 'singular')) {
+            // Laravelあり
+            return <<< END_of_HTML
+    @endforeach
+
+END_of_HTML;
+        }
+
+        // Laravelなし
+        return <<< END_of_HTML
+<?php
+    endforeach;
+?>
+
+END_of_HTML;
     }
 
     // ループで使うために自動で単数型を取得する
@@ -103,49 +153,5 @@ END_of_HTML;
         }
 
         return $strSingular;
-    }
-
-    private static function generateLoopIndex($attrList, $tagCounterNum, $strSingular)
-    {
-        if (method_exists('Str', 'singular')) {
-            // Laravelあり
-            return <<< END_of_HTML
-    @foreach({$attrList[BLOCS_DATA_LOOP]} as \$loopIndex{$tagCounterNum} => \${$strSingular})
-<?php
-        if(!is_string(\${$strSingular})):
-        \$loop_{$strSingular} = is_array(\${$strSingular}) ? \${$strSingular} : \${$strSingular}->toArray();
-?>
-
-END_of_HTML;
-        }
-
-        // Laravelなし
-        return <<< END_of_HTML
-<?php
-    foreach({$attrList[BLOCS_DATA_LOOP]} as \$loopIndex{$tagCounterNum} => \${$strSingular}):
-        if(!is_string(\${$strSingular})):
-        \$loop_{$strSingular} = \${$strSingular};
-?>
-
-END_of_HTML;
-    }
-
-    private static function generateEndForeach()
-    {
-        if (method_exists('Str', 'singular')) {
-            // Laravelあり
-            return <<< END_of_HTML
-    @endforeach
-
-END_of_HTML;
-        }
-
-        // Laravelなし
-        return <<< END_of_HTML
-<?php
-    endforeach;
-?>
-
-END_of_HTML;
     }
 }
