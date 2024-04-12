@@ -165,7 +165,7 @@ class Parser
 
         foreach (array_reverse($attrValueList) as $attrBuff) {
             if (preg_match('/^'.BLOCS_ATTR_NAME_REGREX.'$/s', $attrBuff)) {
-                // 論理属性
+                // 値のない属性
                 $attrList[$attrBuff] = '';
 
                 array_pop($attrValueList);
@@ -180,9 +180,7 @@ class Parser
         if (empty($attrName)) {
             strlen($attrValue) && $attrList[$attrValue] = '';
         } else {
-            if (strncmp($attrName, ':', 1)) {
-                $attrList[$attrName] = $attrValue;
-            } else {
+            if (!strncmp($attrName, ':', 1)) {
                 // data-attributeの省略表記
                 $attrList[BLOCS_DATA_ATTRIBUTE] = '"'.substr($attrName, 1).'"';
                 $attrList[BLOCS_DATA_VAL] = $attrValue;
@@ -195,6 +193,8 @@ class Parser
                 }
 
                 $rawString = str_replace($attrName, BLOCS_DATA_ATTRIBUTE.'='.$attrList[BLOCS_DATA_ATTRIBUTE].' '.BLOCS_DATA_VAL, $rawString);
+            } else {
+                $attrList[$attrName] = $attrValue;
             }
         }
     }
