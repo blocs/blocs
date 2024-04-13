@@ -189,7 +189,7 @@ trait CompileTagTrait
         unset($this->dataAttribute);
 
         foreach ($dataAttribute as $name => $value) {
-            $compiledTag = Common::mergeAttribute($compiledTag, $name, $value, $attrList, true, isset($noValue[$name]));
+            $compiledTag = Common::mergeAttribute($compiledTag, $name, $value, $attrList, isset($noValue[$name]));
         }
 
         return $compiledTag;
