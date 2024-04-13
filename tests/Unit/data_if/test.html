@@ -14,6 +14,10 @@
 <!-- data-if=$exist data-val="{$name} さん" -->
 <hr />
 
+<font color='blue'>省略表記</font><br />
+<!-- data-if=$exist $name -->
+<!-- $name data-if=$exist -->
+
 <?php $zero = 0; ?>
 <font color='blue'>0表示</font><br />
 <div data-if="$exist && isset($zero)" data-val=$name>suzuki</div>
