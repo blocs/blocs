@@ -29,16 +29,14 @@ trait CompileCommentTrait
         foreach ($attrList as $key => $value) {
             if (!Common::checkValueName($key) && '--' !== $key) {
                 $isAssignValue = false;
-                break;
             }
 
-            if (2 == count($attrList) && Common::checkValueName($key) && !strlen($value) && empty($quotesList[$key])) {
+            if (Common::checkValueName($key) && !strlen($value) && empty($quotesList[$key])) {
                 // data-valの省略表記
                 $attrList[BLOCS_DATA_VAL] = $key;
                 unset($attrList[$key]);
 
                 $isAssignValue = false;
-                break;
             }
         }
 

@@ -69,7 +69,7 @@ define('BLOCS_DATA_REPEAT', 'data-repeat');
 define('BLOCS_DATA_ENDREPEAT', 'data-endrepeat');
 
 define('BLOCS_TAG_NAME_REGREX', '[a-zA-Z\_\:\!\$][a-zA-Z0-9\_\:\-\.]*');
-define('BLOCS_ATTR_NAME_REGREX', '[a-zA-Z0-9\-\$\/\_\:][a-zA-Z0-9\-\_]*');
+define('BLOCS_ATTR_NAME_REGREX', '[a-zA-Z0-9\-\$\/\_\:][a-zA-Z0-9\-\_\>]*');
 
 define('BLOCS_CLASS_UPLOAD', 'ai-upload');
 
