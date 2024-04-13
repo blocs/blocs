@@ -206,6 +206,24 @@ class Parser
             return;
         }
 
+        if (!strncmp($attrName, '!', 1)) {
+            // data-validateの省略表記
+            $attrList[BLOCS_DATA_FORM] = '"'.substr($attrName, 1).'"';
+            $attrList[BLOCS_DATA_VALIDATE] = $attrValue;
+            unset($attrList[$attrName]);
+
+            $quotesList[BLOCS_DATA_FORM] = '"';
+            if (isset($quotesList[$attrName])) {
+                $quotesList[BLOCS_DATA_VALIDATE] = $quotesList[$attrName];
+                unset($quotesList[$attrName]);
+            }
+
+            // 属性名を置換して削除
+            $rawString = str_replace($attrName, BLOCS_DATA_VALIDATE, $rawString);
+
+            return;
+        }
+
         $attrList[$attrName] = $attrValue;
     }
 
