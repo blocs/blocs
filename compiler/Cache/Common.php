@@ -5,9 +5,9 @@ namespace Blocs\Compiler\Cache;
 class Common
 {
     // attributeの置き換え
-    public static function mergeAttribute($compiledTag, $attrName, $attrBuff, &$attrList, $replace = true, $noValue = false)
+    public static function mergeAttribute($compiledTag, $attrName, $attrBuff, &$attrList, $noValue = false)
     {
-        // data-attributeと空白のdta-valが設定されている時の処理
+        // data-attributeと空白のdata-val時（値のない属性）の処理
         if ($noValue) {
             $preAttr = '';
             $postAttr = '';
@@ -36,7 +36,7 @@ class Common
             }
         }
 
-        $replace && $attrList[$attrName] = $attrBuff;
+        $attrList[$attrName] = $attrBuff;
 
         return $compiledTag;
     }
