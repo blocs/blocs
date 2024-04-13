@@ -31,7 +31,14 @@ trait CompileCommentTrait
                 $isAssignValue = false;
             }
 
-            if (Common::checkValueName($key) && !strlen($value) && empty($quotesList[$key])) {
+            if (')' === substr($key, -1)) {
+                // 関数も省略表記ができるようにする
+                list($keyFunc) = explode('(', $key, 2);
+            } else {
+                $keyFunc = $key;
+            }
+
+            if ((Common::checkValueName($key) || Common::checkValueName($keyFunc)) && !strlen($value) && empty($quotesList[$key])) {
                 // data-valの省略表記
                 $attrList[BLOCS_DATA_VAL] = $key;
                 unset($attrList[$key]);

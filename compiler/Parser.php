@@ -72,26 +72,26 @@ class Parser
             }
 
             if ('>' === $htmlBuff && empty($isQuote)) {
-                $attrString = self::deleteTagName($attrString, $tagName);
-                self::addAttrList($attrList, $quotesList, $rawString, $attrName, $attrString);
-
-                // "", ''で囲われていない属性
-                foreach ($attrList as $attrName => $attrValue) {
-                    if (empty($quotesList[$attrName])) {
-                        continue;
-                    }
-                    if (substr($attrValue, 0, 1) !== $quotesList[$attrName] || substr($attrValue, -1) !== $quotesList[$attrName]) {
-                        unset($quotesList[$attrName]);
-                        continue;
-                    }
-
-                    $attrList[$attrName] = substr($attrValue, 1, -1);
-                }
-
                 if ('!--' === $tagName && !$commentParse) {
                     // コメントをパースしない
                     strlen($rawString) && $parsedHtml[] = $rawString;
                 } else {
+                    $attrString = self::deleteTagName($attrString, $tagName);
+                    self::addAttrList($attrList, $quotesList, $rawString, $attrName, $attrString);
+
+                    // "", ''で囲われていない属性
+                    foreach ($attrList as $attrName => $attrValue) {
+                        if (empty($quotesList[$attrName])) {
+                            continue;
+                        }
+                        if (substr($attrValue, 0, 1) !== $quotesList[$attrName] || substr($attrValue, -1) !== $quotesList[$attrName]) {
+                            unset($quotesList[$attrName]);
+                            continue;
+                        }
+
+                        $attrList[$attrName] = substr($attrValue, 1, -1);
+                    }
+
                     array_push($parsedHtml, [
                         'raw' => self::replaceAliasAttrName($rawString),
                         'tag' => $tagName,
@@ -114,7 +114,7 @@ class Parser
                 continue;
             }
 
-            if ('=' === $htmlBuff && empty($isQuote)) {
+            if ('=' === $htmlBuff && empty($isQuote) && !('!--' === $tagName && !$commentParse)) {
                 $attrString = self::deleteTagName($attrString, $tagName);
                 self::addAttrList($attrList, $quotesList, $rawString, $attrName, $attrString);
 
@@ -160,8 +160,11 @@ class Parser
         $attrString = self::replaceAliasAttrName($attrString);
         $attrValueList = preg_split("/(\s)/", trim($attrString), -1, PREG_SPLIT_DELIM_CAPTURE);
 
+        // 引数を取得
+        $attrValue = '';
+
         // 一つ目は必ず引数とする
-        $attrValue = count($attrValueList) ? array_shift($attrValueList) : '';
+        !empty($attrName) && count($attrValueList) && $attrValue = array_shift($attrValueList);
 
         foreach (array_reverse($attrValueList) as $attrBuff) {
             if (preg_match('/^'.BLOCS_ATTR_NAME_REGREX.'$/s', $attrBuff)) {
@@ -177,26 +180,33 @@ class Parser
         }
 
         $attrValue .= implode('', $attrValueList);
+
         if (empty($attrName)) {
+            // 値のない属性
             strlen($attrValue) && $attrList[$attrValue] = '';
-        } else {
-            if (!strncmp($attrName, ':', 1)) {
-                // data-attributeの省略表記
-                $attrList[BLOCS_DATA_ATTRIBUTE] = '"'.substr($attrName, 1).'"';
-                $attrList[BLOCS_DATA_VAL] = $attrValue;
-                unset($attrList[$attrName]);
 
-                $quotesList[BLOCS_DATA_ATTRIBUTE] = '"';
-                if (isset($quotesList[$attrName])) {
-                    $quotesList[BLOCS_DATA_VAL] = $quotesList[$attrName];
-                    unset($quotesList[$attrName]);
-                }
-
-                $rawString = str_replace($attrName, BLOCS_DATA_ATTRIBUTE.'='.$attrList[BLOCS_DATA_ATTRIBUTE].' '.BLOCS_DATA_VAL, $rawString);
-            } else {
-                $attrList[$attrName] = $attrValue;
-            }
+            return;
         }
+
+        if (!strncmp($attrName, ':', 1)) {
+            // data-attributeの省略表記
+            $attrList[BLOCS_DATA_ATTRIBUTE] = '"'.substr($attrName, 1).'"';
+            $attrList[BLOCS_DATA_VAL] = $attrValue;
+            unset($attrList[$attrName]);
+
+            $quotesList[BLOCS_DATA_ATTRIBUTE] = '"';
+            if (isset($quotesList[$attrName])) {
+                $quotesList[BLOCS_DATA_VAL] = $quotesList[$attrName];
+                unset($quotesList[$attrName]);
+            }
+
+            // 属性名を置換して削除
+            $rawString = str_replace($attrName, BLOCS_DATA_VAL, $rawString);
+
+            return;
+        }
+
+        $attrList[$attrName] = $attrValue;
     }
 
     private static function replaceAliasAttrName($rawString)
