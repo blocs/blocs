@@ -109,7 +109,7 @@ trait FormTrait
             $format = 3(Laravel validate): matrix.*.
         */
 
-        if (empty($this->tagCounter) || (isset($this->arrayFormName) && !$this->arrayFormName)) {
+        if (empty($this->tagCounter) || !empty($this->arrayFormName)) {
             return '';
         }
 

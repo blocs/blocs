@@ -6,6 +6,96 @@ use Blocs\Compiler\Cache\Common;
 
 trait BlocsCompilerTrait
 {
+    private array $include;
+    private array $filter;
+    private array $option;
+
+    // バリデーション変数
+    private array $validate;
+    private array $validateMessage;
+    private array $validateUpload;
+
+    private array $dataAttribute;
+    private array $endrepeat;
+
+    // タグ記法のための変数
+    private array $tagCounter;
+    private bool $ignoreFlg;
+    private $arrayFormName;
+
+    // 処理中のdata-bloc
+    private $partName;
+
+    // ファイル、ブロックごとにタグを保持
+    private array $partInclude;
+
+    // partDepth=0の時に$compiledTemplateに書き出す
+    private int $partDepth;
+
+    // classでincludeするテンプレート
+    private array $autoincludeClass;
+    private array $autoincluded;
+
+    // autoincludeのコンパイル後の文字列
+    private $autoincludeDepth;
+    private $autoincludeTemplate;
+
+    private array $assignedValue;
+
+    // オプション変数
+    private array $label;
+    private array $optionArray;
+    private array $labelArray;
+
+    // dummyを付与済フラグ
+    private array $dummyArray;
+
+    private $scriptCounter;
+    private $selectName;
+
+    // コンパイル後の文字列
+    private $compiledTemplate;
+
+    public function init()
+    {
+        $this->include = [];
+        $this->filter = [];
+        $this->option = [];
+
+        $this->validate = [];
+        $this->validateMessage = [];
+        $this->validateUpload = [];
+
+        $this->dataAttribute = [];
+        $this->endrepeat = [];
+
+        $this->tagCounter = [];
+        $this->ignoreFlg = false;
+        $this->arrayFormName = '';
+
+        $this->partName = '';
+        $this->partInclude = [];
+        $this->partDepth = 0;
+
+        $this->autoincludeClass = [];
+        $this->autoincluded = [];
+
+        $this->autoincludeDepth = 0;
+        $this->autoincludeTemplate = '';
+
+        $this->assignedValue = [];
+
+        $this->label = [];
+        $this->optionArray = [];
+        $this->labelArray = [];
+        $this->dummyArray = [];
+
+        $this->scriptCounter = 0;
+        $this->selectName = '';
+
+        $this->compiledTemplate = '';
+    }
+
     private function isPart()
     {
         if (strlen($this->partName)) {

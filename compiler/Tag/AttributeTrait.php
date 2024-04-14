@@ -34,7 +34,11 @@ trait AttributeTrait
 
         if (isset($attrList[BLOCS_DATA_LOOP])) {
             // loop内のform名を置換するか
-            isset($attrList[BLOCS_DATA_FORM]) && $this->arrayFormName = $attrList[BLOCS_DATA_FORM];
+            if (isset($attrList[BLOCS_DATA_FORM])) {
+                $this->arrayFormName = $attrList[BLOCS_DATA_FORM];
+            } else {
+                $this->arrayFormName = '';
+            }
 
             if (!Common::checkValueName($attrList[BLOCS_DATA_LOOP])) {
                 trigger_error('B002: Invalid condition "'.BLOCS_DATA_LOOP.'" ('.$attrList[BLOCS_DATA_LOOP].')', E_USER_ERROR);

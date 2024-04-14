@@ -18,107 +18,25 @@ class BlocsCompiler
     use CompileCommentTrait;
     use CompileTagTrait;
 
-    private $include;
-    private array $filter;
-    private $option;
-
-    // バリデーション変数
-    private array $validate;
-    private array $validateMessage;
-    private array $validateUpload;
-
-    private $dataAttribute;
-    private $endrepeat;
-
-    // タグ記法のための変数
-    private $tagCounter;
-    private bool $ignoreFlg;
-    private $arrayFormName;
-
-    // 処理中のdata-bloc
-    private $partName;
-
-    // ファイル、ブロックごとにタグを保持
-    private array $partInclude;
-
-    // partDepth=0の時に$compiledTemplateに書き出す
-    private int $partDepth;
-
-    // classでincludeするテンプレート
-    private array $autoincludeClass;
-    private array $autoincluded;
-
-    // autoincludeのコンパイル後の文字列
-    private $autoincludeDepth;
-    private $autoincludeTemplate;
-
-    private static $allAttrName;
-    private static array $assignedValue;
-
-    private array $optionArray;
-    private array $labelArray;
-
-    // dummyを付与済フラグ
-    private array $dummyArray;
-
-    private $scriptCounter;
-    private $selectName;
-
-    // コンパイル後の文字列
-    private $compiledTemplate;
-
-    public function __construct()
-    {
-        $this->filter = [];
-        $this->option = [];
-        $this->validate = [];
-        $this->validateMessage = [];
-        $this->validateUpload = [];
-        $this->label = [];
-
-        $this->tagCounter = [];
-        $this->ignoreFlg = false;
-
-        $this->partName = '';
-        $this->partInclude = [];
-        $this->partDepth = 0;
-
-        $this->autoincludeClass = [];
-        $this->autoincluded = [];
-
-        $this->autoincludeDepth = 0;
-        $this->autoincludeTemplate = '';
-
-        if (!isset(self::$allAttrName)) {
-            $allConstant = get_defined_constants();
-            foreach ($allConstant as $key => $value) {
-                strncmp($key, 'BLOCS_DATA_', 11) || self::$allAttrName[] = $value;
-            }
-        }
-
-        self::$assignedValue = [];
-
-        $this->optionArray = [];
-        $this->labelArray = [];
-        $this->dummyArray = [];
-
-        $this->scriptCounter = 0;
-        $this->selectName = '';
-
-        $this->compiledTemplate = '';
-    }
-
-    // Bladeを参照
+    // コンパイル
     public function compile($templatePath)
     {
+        $this->init();
         $this->include = [$templatePath];
+
         $this->compileTemplate(self::checkEncoding($templatePath), $templatePath);
 
         return $this->compiledTemplate;
     }
 
-    public function template($writeBuff, $val = [])
+    // コンパイルしてレンダリング
+    public function render($writeBuff, $val = [])
     {
+        $this->init();
+
+        // Bladeディレクティブを使わない
+        defined('BLOCS_BLADE_OFF') || define('BLOCS_BLADE_OFF', true);
+
         $this->compileTemplate($writeBuff, __FILE__);
 
         // 引数をセット
