@@ -48,7 +48,7 @@ trait CompileCommentTrait
         }
 
         if ($isAssignValue) {
-            $htmlBuff = self::assignValue($attrList, $quotesList);
+            $htmlBuff = $this->assignValue($attrList, $quotesList);
 
             return;
         }
@@ -91,7 +91,7 @@ trait CompileCommentTrait
             $htmlBuff = '';
 
             // 引数継承のために属性値を保持
-            isset($attrList[BLOCS_DATA_QUERY]) && array_pop(self::$assignedValue);
+            isset($attrList[BLOCS_DATA_QUERY]) && array_pop($this->assignedValue);
 
             return;
         }
@@ -167,7 +167,11 @@ trait CompileCommentTrait
 
         if (isset($attrList[BLOCS_DATA_LOOP])) {
             // loop内のform名を置換するか
-            isset($attrList[BLOCS_DATA_FORM]) && $this->arrayFormName = $attrList[BLOCS_DATA_FORM];
+            if (isset($attrList[BLOCS_DATA_FORM])) {
+                $this->arrayFormName = $attrList[BLOCS_DATA_FORM];
+            } else {
+                $this->arrayFormName = '';
+            }
 
             $rawString = '';
             $htmlBuff = Loop::loop($attrList, count($this->tagCounter));
@@ -196,11 +200,11 @@ trait CompileCommentTrait
     }
 
     // 変数を定義
-    private static function assignValue($attrList, $quotesList, $assigned = false)
+    private function assignValue($attrList, $quotesList, $assigned = false)
     {
         $htmlBuff = '';
         $assignedValue = [];
-        $assigned && $assignedValue = count(self::$assignedValue) ? end(self::$assignedValue) : [];
+        $assigned && $assignedValue = count($this->assignedValue) ? end($this->assignedValue) : [];
 
         foreach ($attrList as $key => $value) {
             if (!Common::checkValueName($key)) {
@@ -224,7 +228,7 @@ trait CompileCommentTrait
         }
 
         // 引数継承のために属性値を保持
-        $assigned && self::$assignedValue[] = $assignedValue;
+        $assigned && $this->assignedValue[] = $assignedValue;
 
         return $htmlBuff;
     }

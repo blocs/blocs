@@ -10,6 +10,8 @@ trait CompileTagTrait
     use Tag\FormTrait;
     use Tag\LabelTrait;
 
+    private static $allAttrName;
+
     // コメントタグをパーシングしてコメント記法を処理
     private function compileTag($htmlBuff, &$htmlArray)
     {
@@ -120,6 +122,13 @@ trait CompileTagTrait
 
     private static function deleteDataAttribute($rawString, $attrList)
     {
+        if (!isset(self::$allAttrName)) {
+            $allConstant = get_defined_constants();
+            foreach ($allConstant as $key => $value) {
+                strncmp($key, 'BLOCS_DATA_', 11) || self::$allAttrName[] = $value;
+            }
+        }
+
         foreach (self::$allAttrName as $attrName) {
             if (!isset($attrList[$attrName])) {
                 continue;
@@ -172,7 +181,7 @@ trait CompileTagTrait
     private function mergeDataAttribute($compiledTag, &$attrList)
     {
         // data-attributeで属性書き換え
-        if (!isset($this->dataAttribute)) {
+        if (empty($this->dataAttribute)) {
             return $compiledTag;
         }
 
@@ -186,7 +195,7 @@ trait CompileTagTrait
                 $noValue[$buff['name']] = true;
             }
         }
-        unset($this->dataAttribute);
+        $this->dataAttribute = [];
 
         foreach ($dataAttribute as $name => $value) {
             $compiledTag = Common::mergeAttribute($compiledTag, $name, $value, $attrList, isset($noValue[$name]));
