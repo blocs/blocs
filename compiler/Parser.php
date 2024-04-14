@@ -79,7 +79,7 @@ class Parser
                     strlen($rawString) && $parsedHtml[] = $rawString;
                 } else {
                     $attrString = self::deleteTagName($attrString, $tagName);
-                    self::addAttrList($attrList, $quotesList, $rawString, $attrName, $attrString);
+                    self::addAttrList($attrList, $quotesList, $rawString, $parsedHtml, $attrName, $attrString, $commentParse);
 
                     // "", ''で囲われていない属性
                     foreach ($attrList as $attrName => $attrValue) {
@@ -93,6 +93,12 @@ class Parser
 
                         $attrList[$attrName] = substr($attrValue, 1, -1);
                     }
+
+                    // 省略記法のデータ属性を削除
+                    foreach (self::$deleteAttribute as $attrName => $attrValue) {
+                        $rawString = preg_replace('/\s+'.$attrName.'\s*=\s*'.preg_quote($attrValue).'([\s>\/]+)/si', '${1}', $rawString);
+                    }
+                    self::$deleteAttribute = [];
 
                     array_push($parsedHtml, [
                         'raw' => self::replaceAliasAttrName($rawString),
@@ -118,7 +124,7 @@ class Parser
 
             if ('=' === $htmlBuff && empty($isQuote) && !('!--' === $tagName && !$commentParse)) {
                 $attrString = self::deleteTagName($attrString, $tagName);
-                self::addAttrList($attrList, $quotesList, $rawString, $attrName, $attrString);
+                self::addAttrList($attrList, $quotesList, $rawString, $parsedHtml, $attrName, $attrString, $commentParse);
 
                 // =の前は次の属性名とする
                 $attrValueList = array_filter(preg_split("/\s/", $attrString), 'strlen');

@@ -4,7 +4,9 @@ namespace Blocs\Compiler;
 
 trait ParserTrait
 {
-    private static function addAttrList(&$attrList, &$quotesList, &$rawString, $attrName, $attrString)
+    private static $deleteAttribute = [];
+
+    private static function addAttrList(&$attrList, &$quotesList, &$rawString, &$parsedHtml, $attrName, $attrString, $commentParse)
     {
         $attrString = self::replaceAliasAttrName($attrString);
         $attrValueList = preg_split("/(\s)/", trim($attrString), -1, PREG_SPLIT_DELIM_CAPTURE);
@@ -37,8 +39,8 @@ trait ParserTrait
             return;
         }
 
-        if (!strncmp($attrName, ':', 1)) {
-            // data-attributeの省略表記
+        if (!strncmp($attrName, ':', 1) && $commentParse) {
+            // data-attributeの省略表記（コメント記法）
             $attrList[BLOCS_DATA_ATTRIBUTE] = '"'.substr($attrName, 1).'"';
             $attrList[BLOCS_DATA_VAL] = $attrValue;
             unset($attrList[$attrName]);
@@ -49,14 +51,32 @@ trait ParserTrait
                 unset($quotesList[$attrName]);
             }
 
-            // 属性名を置換して削除
-            $rawString = str_replace($attrName, BLOCS_DATA_VAL, $rawString);
+            // データ属性を削除
+            self::$deleteAttribute[$attrName] = $attrValue;
+
+            return;
+        }
+
+        if (!strncmp($attrName, ':', 1) && !$commentParse) {
+            // data-attributeの省略表記（タグ記法）
+            $commentAttribute = BLOCS_DATA_ATTRIBUTE.'="'.substr($attrName, 1).'"';
+            $commentVal = BLOCS_DATA_VAL.'='.$attrValue;
+
+            // コメントとして代入
+            array_push($parsedHtml, '<!-- '.$commentAttribute.' '.$commentVal.' -->');
+
+            // 属性値をクリア
+            unset($attrList[$attrName]);
+            unset($quotesList[$attrName]);
+
+            // データ属性を削除
+            self::$deleteAttribute[$attrName] = $attrValue;
 
             return;
         }
 
         if (!strncmp($attrName, '!', 1)) {
-            // data-validateの省略表記
+            // data-validateの省略表記（コメント記法のみ）
             $attrList[BLOCS_DATA_FORM] = '"'.substr($attrName, 1).'"';
             $attrList[BLOCS_DATA_VALIDATE] = $attrValue;
             unset($attrList[$attrName]);
@@ -67,8 +87,8 @@ trait ParserTrait
                 unset($quotesList[$attrName]);
             }
 
-            // 属性名を置換して削除
-            $rawString = str_replace($attrName, BLOCS_DATA_VALIDATE, $rawString);
+            // データ属性を削除
+            self::$deleteAttribute[$attrName] = $attrValue;
 
             return;
         }
