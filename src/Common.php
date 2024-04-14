@@ -59,7 +59,7 @@ class Common
                     $query .= $menuLabel[$buff];
                 } else {
                     isset($blocsCompiler) || $blocsCompiler = new \Blocs\Compiler\BlocsCompiler();
-                    $query .= $blocsCompiler->template($menuLabel[$buff]);
+                    $query .= $blocsCompiler->render($menuLabel[$buff]);
                 }
             }
 

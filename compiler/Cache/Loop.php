@@ -83,7 +83,7 @@ END_of_HTML;
     // テーブルフォームのためにloopIndexをつける
     private static function generateForeach($attrList, $tagCounterNum, $strSingular)
     {
-        if (method_exists('Str', 'singular')) {
+        if (method_exists('Str', 'singular') && !defined('BLOCS_BLADE_OFF')) {
             // Laravelあり
             return <<< END_of_HTML
     @foreach({$attrList[BLOCS_DATA_LOOP]} as \$loopIndex{$tagCounterNum} => \${$strSingular})
@@ -108,7 +108,7 @@ END_of_HTML;
 
     private static function generateEndForeach()
     {
-        if (method_exists('Str', 'singular')) {
+        if (method_exists('Str', 'singular') && !defined('BLOCS_BLADE_OFF')) {
             // Laravelあり
             return <<< END_of_HTML
     @endforeach
