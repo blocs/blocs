@@ -37,7 +37,7 @@ define('BLOCS_DATA_ENDBLOC', 'data-endbloc');
 
 define('BLOCS_DATA_VAL', 'data-val');
 define('BLOCS_DATA_ATTRIBUTE', 'data-attribute');
-define('BLOCS_DATA_QUERY', 'data-query');
+define('BLOCS_DATA_ASSIGN', 'data-assign');
 define('BLOCS_DATA_PREFIX', 'data-prefix');
 define('BLOCS_DATA_POSTFIX', 'data-postfix');
 define('BLOCS_DATA_CONVERT', 'data-convert');
@@ -64,7 +64,6 @@ define('BLOCS_DATA_CHDIR', 'data-chdir');
 
 // データ属性のエイリアス
 define('BLOCS_DATA_LANG', 'data-lang');
-define('BLOCS_DATA_ASSIGN', 'data-assign');
 define('BLOCS_DATA_REPEAT', 'data-repeat');
 define('BLOCS_DATA_ENDREPEAT', 'data-endrepeat');
 

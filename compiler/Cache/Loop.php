@@ -128,9 +128,9 @@ END_of_HTML;
     // ループで使うために自動で単数型を取得する
     private static function getSingular($attrList)
     {
-        if (!empty($attrList[BLOCS_DATA_QUERY])) {
-            // data-assignでマニュアルで指定できる
-            return $attrList[BLOCS_DATA_QUERY];
+        if (!empty($attrList[BLOCS_DATA_ASSIGN]) && Common::checkValueName($attrList[BLOCS_DATA_ASSIGN])) {
+            // data-assignで指定できる
+            return substr($attrList[BLOCS_DATA_ASSIGN], 1);
         }
 
         if (!method_exists('Str', 'singular')) {

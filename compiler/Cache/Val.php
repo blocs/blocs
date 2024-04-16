@@ -24,15 +24,15 @@ class Val
             }
         }
 
-        if (!empty($attrList[BLOCS_DATA_QUERY])) {
-            Common::checkValueName($attrList[BLOCS_DATA_QUERY]) || trigger_error('B012: Invalid condition "'.BLOCS_DATA_QUERY.'" ('.$attrList[BLOCS_DATA_QUERY].')', E_USER_ERROR);
+        if (!empty($attrList[BLOCS_DATA_ASSIGN])) {
+            Common::checkValueName($attrList[BLOCS_DATA_ASSIGN]) || trigger_error('B012: Invalid condition "'.BLOCS_DATA_ASSIGN.'" ('.$attrList[BLOCS_DATA_ASSIGN].')', E_USER_ERROR);
 
             $resultBuff .= "<?php \$dataVal = ''; ?>\n";
         }
 
         $resultBuff = self::addFixValue($attrList, $quotesList, $resultBuff, BLOCS_DATA_PREFIX);
 
-        if (empty($attrList[BLOCS_DATA_QUERY])) {
+        if (empty($attrList[BLOCS_DATA_ASSIGN])) {
             $resultBuff .= '<?php echo(';
         } else {
             $resultBuff .= '<?php $dataVal .= ';
@@ -40,7 +40,7 @@ class Val
 
         if (isset($attrList[BLOCS_DATA_CONVERT]) && 'raw' === $attrList[BLOCS_DATA_CONVERT]) {
             unset($attrList[BLOCS_DATA_CONVERT]);
-        } elseif (empty($attrList[BLOCS_DATA_QUERY]) && (!isset($attrList[BLOCS_DATA_CONVERT]) || (strncmp($attrList[BLOCS_DATA_CONVERT], 'raw_', 4) && false === strpos($attrList[BLOCS_DATA_CONVERT], '::raw_')))) {
+        } elseif (empty($attrList[BLOCS_DATA_ASSIGN]) && (!isset($attrList[BLOCS_DATA_CONVERT]) || (strncmp($attrList[BLOCS_DATA_CONVERT], 'raw_', 4) && false === strpos($attrList[BLOCS_DATA_CONVERT], '::raw_')))) {
             $resultBuff .= '\Blocs\Common::convertDefault(';
             $postConvert = self::getMenuName($attrList[BLOCS_DATA_VAL]).')';
         }
@@ -54,7 +54,7 @@ class Val
         }
         isset($postConvert) && $resultBuff .= $postConvert;
 
-        if (empty($attrList[BLOCS_DATA_QUERY])) {
+        if (empty($attrList[BLOCS_DATA_ASSIGN])) {
             $resultBuff .= "); ?>\n";
         } else {
             $resultBuff .= "; ?>\n";
@@ -62,8 +62,8 @@ class Val
 
         $resultBuff = self::addFixValue($attrList, $quotesList, $resultBuff, BLOCS_DATA_POSTFIX);
 
-        if (!empty($attrList[BLOCS_DATA_QUERY])) {
-            $resultBuff .= "<?php {$attrList[BLOCS_DATA_QUERY]} = \$dataVal; ?>\n";
+        if (!empty($attrList[BLOCS_DATA_ASSIGN])) {
+            $resultBuff .= "<?php {$attrList[BLOCS_DATA_ASSIGN]} = \$dataVal; ?>\n";
         }
 
         if (Common::checkValueName($attrList[BLOCS_DATA_VAL]) || !isset($attrList[BLOCS_DATA_ATTRIBUTE])) {
@@ -102,22 +102,22 @@ class Val
         }
 
         $resultBuff = '';
-        if (empty($attrList[BLOCS_DATA_QUERY])) {
+        if (empty($attrList[BLOCS_DATA_ASSIGN])) {
             $resultBuff .= '<?php echo(';
             if (!(isset($attrList[BLOCS_DATA_CONVERT]) && 'raw' === $attrList[BLOCS_DATA_CONVERT])) {
                 $resultBuff .= '\Blocs\Common::convertDefault(';
             }
         } else {
-            if (!Common::checkValueName($attrList[BLOCS_DATA_QUERY])) {
-                trigger_error('B012: Invalid condition "'.BLOCS_DATA_QUERY.'" ('.$attrList[BLOCS_DATA_QUERY].')', E_USER_ERROR);
+            if (!Common::checkValueName($attrList[BLOCS_DATA_ASSIGN])) {
+                trigger_error('B012: Invalid condition "'.BLOCS_DATA_ASSIGN.'" ('.$attrList[BLOCS_DATA_ASSIGN].')', E_USER_ERROR);
             }
 
-            $resultBuff .= "<?php {$attrList[BLOCS_DATA_QUERY]} = ";
+            $resultBuff .= "<?php {$attrList[BLOCS_DATA_ASSIGN]} = ";
         }
 
         $resultBuff .= '\Blocs\Lang::get("'.$attrList[BLOCS_DATA_NOTICE].'")';
 
-        if (empty($attrList[BLOCS_DATA_QUERY])) {
+        if (empty($attrList[BLOCS_DATA_ASSIGN])) {
             if (!(isset($attrList[BLOCS_DATA_CONVERT]) && 'raw' === $attrList[BLOCS_DATA_CONVERT])) {
                 $resultBuff .= ')';
             }
@@ -147,7 +147,7 @@ class Val
             return $resultBuff;
         }
 
-        if (empty($attrList[BLOCS_DATA_QUERY])) {
+        if (empty($attrList[BLOCS_DATA_ASSIGN])) {
             if (empty($quotesList[$attrName])) {
                 // 変数の場合
                 return $resultBuff."<?php echo({$attrList[$attrName]}); ?>\n";
