@@ -79,7 +79,7 @@ class Parser
                     strlen($rawString) && $parsedHtml[] = $rawString;
                 } else {
                     $attrString = self::deleteTagName($attrString, $tagName);
-                    self::addAttrList($attrList, $quotesList, $rawString, $parsedHtml, $attrName, $attrString, $commentParse);
+                    self::addAttrList($attrList, $quotesList, $rawString, $parsedHtml, $attrName, $attrString, $commentParse, $htmlBuff);
 
                     // "", ''で囲われていない属性
                     foreach ($attrList as $attrName => $attrValue) {
@@ -124,12 +124,12 @@ class Parser
 
             if ('=' === $htmlBuff && empty($isQuote) && !('!--' === $tagName && !$commentParse)) {
                 $attrString = self::deleteTagName($attrString, $tagName);
-                self::addAttrList($attrList, $quotesList, $rawString, $parsedHtml, $attrName, $attrString, $commentParse);
+                self::addAttrList($attrList, $quotesList, $rawString, $parsedHtml, $attrName, $attrString, $commentParse, $htmlBuff);
 
                 // =の前は次の属性名とする
                 $attrValueList = array_filter(preg_split("/\s/", $attrString), 'strlen');
                 $nextAttrName = end($attrValueList);
-                if (count($attrValueList) && preg_match('/^'.BLOCS_ATTR_NAME_REGREX.'$/s', $nextAttrName)) {
+                if (count($attrValueList) && (self::checkAttrName($nextAttrName) || self::checkAttrValue($nextAttrName))) {
                     $attrName = self::replaceAliasAttrName($nextAttrName);
                 } else {
                     $attrName = '';
