@@ -45,7 +45,7 @@ trait IncludeTrait
             return;
         }
 
-        $resultArray[] = '<!-- '.BLOCS_DATA_CHDIR.'="'.getcwd().'" '.BLOCS_DATA_QUERY.' -->';
+        $resultArray[] = '<!-- '.BLOCS_DATA_CHDIR.'="'.getcwd().'" '.BLOCS_DATA_ASSIGN.' -->';
 
         // conditionで挟み込み
         $condition = Condition::condition('', $attrList, $quotesList);

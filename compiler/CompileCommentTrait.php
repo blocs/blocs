@@ -76,7 +76,7 @@ trait CompileCommentTrait
             $htmlBuff = '';
 
             // 引数継承のために属性値を保持
-            isset($attrList[BLOCS_DATA_QUERY]) && array_pop($this->assignedValue);
+            isset($attrList[BLOCS_DATA_ASSIGN]) && array_pop($this->assignedValue);
 
             return;
         }
