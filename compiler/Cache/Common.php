@@ -98,10 +98,10 @@ class Common
             return false;
         }
 
-        list($valueName) = explode('[', $valueName, 2);
+        $valueName = preg_replace('/\[[^\]]+\]/', '', $valueName);
         $valueName = str_replace('->', '', $valueName);
 
-        if (is_numeric(substr($valueName, 1, 1)) || preg_match('/[^a-zA-Z0-9_]/', substr($valueName, 1))) {
+        if (is_numeric(substr($valueName, 1, 1)) || preg_match('/[^a-zA-Z0-9\_]/', substr($valueName, 1))) {
             return false;
         }
 
@@ -114,7 +114,7 @@ class Common
     {
         '[]' === substr($valueName, -2) && $valueName = substr($valueName, 0, -2);
 
-        if (is_numeric(substr($valueName, 0, 1)) || preg_match('/[^a-zA-Z0-9_]/', $valueName)) {
+        if (is_numeric(substr($valueName, 0, 1)) || preg_match('/[^a-zA-Z0-9\_]/', $valueName)) {
             return false;
         }
 
