@@ -61,7 +61,7 @@ class Form
     {
         $optionBuff = <<< END_of_HTML
 <!-- \$preGroup=null -->
-<!-- data-repeat=\$option_{$selectName} -->
+<!-- data-loop=\$option_{$selectName} -->
 
     <!-- data-if="!empty(\$preGroup) && (!isset(\$optgroup) || \$optgroup != \$preGroup)" -->
         </optgroup>
@@ -75,7 +75,7 @@ class Form
 
     <option :value=\$value><!-- \$label --></option>
 
-<!-- data-endrepeat -->
+<!-- data-endloop -->
 
 <!-- data-exist=\$preGroup -->
 </optgroup>

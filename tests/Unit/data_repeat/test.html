@@ -1,11 +1,11 @@
 <html>
 
-<font color='red'>data-repeat</font>
+<font color='red'>data-loop</font>
 <hr />
 
 <font color='blue'>未定義リスト表示</font><br />
 <ul>
-	<li data-repeat=$list>
+	<li data-loop=$list>
 		<div data-val=$name>田中太郎</div>
 		<div data-val=$age>99</div>
 	</li>
@@ -15,7 +15,7 @@
 <font color='blue'>テーブル表示</font><br />
 <table data-exist=$list>
 	<tbody>
-	<tr data-repeat=$list>
+	<tr data-loop=$list>
 		<td data-val=$name>田中太郎</td>
 		<td data-val=$age>99</td>
 	</tr>
@@ -43,7 +43,7 @@
 ?>
 <font color='blue'>リスト表示</font><br />
 <ul>
-	<li data-repeat=$list>
+	<li data-loop=$list>
 		<span data-val=$name>田中太郎</span>
 		<span data-val=$age>99</span>
 	</li>
@@ -53,7 +53,7 @@
 <font color='blue'>テーブル表示</font><br />
 <table data-exist=$list>
 	<tbody>
-	<tr data-repeat=$list>
+	<tr data-loop=$list>
 		<td data-val=$name>田中太郎</td>
 		<td data-val=$age>99</td>
 	</tr>
@@ -64,12 +64,12 @@
 <font color='blue'>コメントでテーブル表示</font><br />
 <table data-exist=$list>
 	<tbody>
-<!-- data-repeat=$list -->
+<!-- data-loop=$list -->
 	<tr>
 		<td data-val=$name>田中太郎</td>
 		<td data-val=$age>99</td>
 	</tr>
-<!-- data-endrepeat -->
+<!-- data-endloop -->
 	</tbody>
 </table>
 <hr />
@@ -77,7 +77,7 @@
 <font color='blue'>条件付きテーブル表示</font><br />
 <table data-exist=$list>
 	<tbody>
-	<tr data-repeat=$list data-exist=$display>
+	<tr data-loop=$list data-exist=$display>
 		<td data-val=$name>田中太郎</td>
 		<td data-val=$age>99</td>
 	</tr>
@@ -88,12 +88,12 @@
 <font color='blue'>コメントで条件付きテーブル表示</font><br />
 <table data-exist=$list>
 	<tbody>
-<!-- data-repeat=$list -->
+<!-- data-loop=$list -->
 	<tr data-exist=$display>
 		<td data-val=$name>田中太郎</td>
 		<td data-val=$age>99</td>
 	</tr>
-<!-- data-endrepeat -->
+<!-- data-endloop -->
 	</tbody>
 </table>
 <hr />
@@ -101,18 +101,18 @@
 <font color='blue'>コメントで条件付きテーブル表示</font><br />
 <table data-exist=$list>
 	<tbody>
-<!-- data-repeat=$list -->
+<!-- data-loop=$list -->
 	<tr>
 		<td>
-			<!-- data-attribute='color' data-val='red' data-unless="$loopIndex % 2" -->
+			<!-- :color='red' data-unless="$loopIndex % 2" -->
 			<font data-val=$name>田中太郎</font>
 		</td>
 		<td>
-			<!-- data-attribute='color' data-val='red' data-unless="$loopIndex % 2" -->
+			<!-- :color='red' data-unless="$loopIndex % 2" -->
 			<font data-val=$age>99</font>
 		</td>
 	</tr>
-<!-- data-endrepeat -->
+<!-- data-endloop -->
 	</tbody>
 </table>
 <hr />
@@ -138,13 +138,13 @@
 <font color='blue'>複数テーブル表示</font><br />
 <table data-exist=$list>
 	<tbody>
-	<tr data-repeat=$list>
+	<tr data-loop=$list>
 		<td data-val=$name>田中太郎</td>
 		<td data-val=$age>99</td>
 		<td>
-<!-- data-repeat=$child -->
+<!-- data-loop=$child -->
 <!-- data-val=', ' data-exist=$loopIndex --><!-- data-val=$name -->
-<!-- data-endrepeat -->
+<!-- data-endloop -->
 		</td>
 	</tr>
 	</tbody>

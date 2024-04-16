@@ -2,11 +2,13 @@
 
 namespace Blocs\Compiler;
 
+use Blocs\Compiler\Cache\Common;
+
 trait ParserTrait
 {
     private static $deleteAttribute = [];
 
-    private static function addAttrList(&$attrList, &$quotesList, &$rawString, &$parsedHtml, $attrName, $attrString, $commentParse)
+    private static function addAttrList(&$attrList, &$quotesList, &$rawString, &$parsedHtml, $attrName, $attrString, $commentParse, $htmlBuff)
     {
         $attrString = self::replaceAliasAttrName($attrString);
         $attrValueList = preg_split("/(\s)/", trim($attrString), -1, PREG_SPLIT_DELIM_CAPTURE);
@@ -14,16 +16,25 @@ trait ParserTrait
         // 引数を取得
         $attrValue = '';
 
+        // =の時、一番最後は属性名
+        '=' === $htmlBuff && array_pop($attrValueList);
+
         // 一つ目は必ず引数とする
         !empty($attrName) && count($attrValueList) && $attrValue = array_shift($attrValueList);
 
         foreach (array_reverse($attrValueList) as $attrBuff) {
-            if (preg_match('/^'.BLOCS_ATTR_NAME_REGREX.'$/s', $attrBuff)) {
+            if (!strlen(trim($attrBuff))) {
+                // 空白
+                array_pop($attrValueList);
+            } elseif (self::checkAttrName($attrBuff)) {
                 // 値のない属性
                 $attrList[$attrBuff] = '';
 
                 array_pop($attrValueList);
-            } elseif (!strlen(trim($attrBuff))) {
+            } elseif (self::checkAttrValue($attrBuff)) {
+                // data-valの省略表記
+                $attrList[BLOCS_DATA_VAL] = $attrBuff;
+
                 array_pop($attrValueList);
             } else {
                 break;
@@ -33,8 +44,15 @@ trait ParserTrait
         $attrValue .= implode('', $attrValueList);
 
         if (empty($attrName)) {
-            // 値のない属性
-            strlen($attrValue) && $attrList[$attrValue] = '';
+            if (strlen($attrValue)) {
+                if (self::checkAttrValue($attrValue)) {
+                    // data-valの省略表記
+                    $attrList[BLOCS_DATA_VAL] = $attrValue;
+                } else {
+                    // 値のない属性
+                    $attrList[$attrValue] = '';
+                }
+            }
 
             return;
         }
@@ -52,7 +70,7 @@ trait ParserTrait
             }
 
             // データ属性を削除
-            self::$deleteAttribute[$attrName] = $attrValue;
+            $rawString = '';
 
             return;
         }
@@ -88,7 +106,7 @@ trait ParserTrait
             }
 
             // データ属性を削除
-            self::$deleteAttribute[$attrName] = $attrValue;
+            $rawString = '';
 
             return;
         }
@@ -133,5 +151,24 @@ trait ParserTrait
         strncmp($attrString, '<'.$tagName, strlen('<'.$tagName)) || $attrString = substr($attrString, strlen('<'.$tagName));
 
         return $attrString;
+    }
+
+    // 属性値かをチェック
+    private static function checkAttrName($attrName)
+    {
+        if (preg_match('/^'.BLOCS_ATTR_NAME_REGREX.'$/s', $attrName)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    // 変数かをチェック
+    private static function checkAttrValue($attrName)
+    {
+        // $object->method()
+        '()' === substr($attrName, -2) && $attrName = substr($attrName, 0, -2);
+
+        return Common::checkValueName($attrName);
     }
 }

@@ -21,7 +21,7 @@ trait IncludeTrait
             }
 
             // 引数を渡せるように
-            $htmlBuff = self::assignValue($attrList, $quotesList);
+            $htmlBuff = $this->assignValue($attrList, $quotesList);
 
             $htmlBuff .= '{{REPLACE_TO_AUTOINCLUDE}}';
 
@@ -57,7 +57,7 @@ trait IncludeTrait
         $htmlArray = array_merge($resultArray, $htmlArray);
 
         // 引数を渡せるように
-        $htmlBuff = self::assignValue($attrList, $quotesList, true);
+        $htmlBuff = $this->assignValue($attrList, $quotesList, true);
     }
 
     private function addDataInclude($attrList, $htmlBuff)
