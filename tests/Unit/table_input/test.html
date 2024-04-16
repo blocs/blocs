@@ -5,7 +5,7 @@
 
 <form action='./' method='post'>
 
-<!-- data-repeat=$matrix2 -->
+<!-- data-loop=$matrix2 -->
 
 <input type='text' name="text" />
 <hr />
@@ -14,8 +14,7 @@
 <option value="company">法人のお客様</option>
 <option value="private">個人のお客様</option>
 <option value="other">その他</option>
-<!-- data-attribute="value" data-val=$value -->
-<option data-repeat=$option_type data-val=$label></option>
+<option data-loop=$option_type :value=$value> <!-- $label --></option>
 </select>
 <hr />
 
@@ -31,7 +30,7 @@
 <textarea name='area' /></textarea>
 <hr />
 
-<!-- data-endrepeat -->
+<!-- data-endloop -->
 
 <input type='submit' />
 
@@ -39,7 +38,7 @@
 
 <form action='./' method='post'>
 
-<div data-repeat=$matrix>
+<div data-loop=$matrix>
 
 <input type='text' name="text" />
 <hr />
@@ -48,8 +47,7 @@
 <option value="company">法人のお客様</option>
 <option value="private">個人のお客様</option>
 <option value="other">その他</option>
-<!-- data-attribute="value" data-val=$value -->
-<option data-repeat=$option_type data-val=$label></option>
+<option data-loop=$option_type :value=$value> <!-- $label --></option>
 </select>
 <hr />
 

@@ -15,9 +15,8 @@
 <label><input type="checkbox" name="size[]" value="s" /> S</label>
 <label><input type="checkbox" name="size[]" value="m" /> M</label>
 <label><input type="checkbox" name="size[]" value="l" /> L</label>
-<label data-repeat=$option_size>
-<!-- data-attribute="value" data-val=$value -->
-<input type="checkbox" name="size[]" /> <!-- data-val=$label -->
+<label data-loop=$option_size>
+<input type="checkbox" name="size[]" :value=$value /> <!-- $label -->
 </label>
 <hr />
 
@@ -25,9 +24,8 @@
 <label><input type="radio" name="sex" value="f" /> 女</label>
 <hr />
 
-<label data-repeat=$option_sex2>
-<!-- data-attribute="value" data-val=$value -->
-<input type="radio" name='sex2' /> <!-- data-val=$label -->
+<label data-loop=$option_sex2>
+<input type="radio" name='sex2' :value=$value /> <!-- $label -->
 </label>
 <hr />
 
