@@ -8,18 +8,12 @@ trait ParserTrait
 {
     private static $deleteAttribute = [];
 
-    private static function addAttrList(&$attrList, &$quotesList, &$rawString, &$parsedHtml, $attrName, $attrString, $commentParse, $htmlBuff)
+    private static function addAttrList(&$attrList, &$quotesList, &$rawString, &$parsedHtml, $attrName, $attrValueList, $commentParse)
     {
-        $attrString = self::replaceAliasAttrName($attrString);
-        $attrValueList = preg_split("/(\s)/", trim($attrString), -1, PREG_SPLIT_DELIM_CAPTURE);
-
-        // 引数を取得
+        // 属性値を取得
         $attrValue = '';
 
-        // =の時、一番最後は属性名
-        '=' === $htmlBuff && array_pop($attrValueList);
-
-        // 一つ目は必ず引数とする
+        // 一つ目は必ず属性値とする
         !empty($attrName) && count($attrValueList) && $attrValue = array_shift($attrValueList);
 
         foreach (array_reverse($attrValueList) as $attrBuff) {
@@ -41,17 +35,28 @@ trait ParserTrait
             }
         }
 
+        // 属性値をセット
         $attrValue .= implode('', $attrValueList);
 
+        if (isset($quotesList[$attrName]) && substr($attrValue, 0, 1) === $quotesList[$attrName] && substr($attrValue, -1) === $quotesList[$attrName]) {
+            // "", ''で囲われている属性
+            $attrValue = substr($attrValue, 1, -1);
+        } else {
+            // "", ''で囲われていない属性
+            unset($quotesList[$attrName]);
+        }
+
         if (empty($attrName)) {
-            if (strlen($attrValue)) {
-                if (self::checkAttrValue($attrValue)) {
-                    // data-valの省略表記
-                    $attrList[BLOCS_DATA_VAL] = $attrValue;
-                } else {
-                    // 値のない属性
-                    $attrList[$attrValue] = '';
-                }
+            if (!strlen($attrValue)) {
+                return;
+            }
+
+            if (self::checkAttrValue($attrValue)) {
+                // data-valの省略表記
+                $attrList[BLOCS_DATA_VAL] = $attrValue;
+            } else {
+                // 値のない属性
+                $attrList[$attrValue] = '';
             }
 
             return;
@@ -59,7 +64,7 @@ trait ParserTrait
 
         if (!strncmp($attrName, ':', 1) && $commentParse) {
             // data-attributeの省略表記（コメント記法）
-            $attrList[BLOCS_DATA_ATTRIBUTE] = '"'.substr($attrName, 1).'"';
+            $attrList[BLOCS_DATA_ATTRIBUTE] = substr($attrName, 1);
             $attrList[BLOCS_DATA_VAL] = $attrValue;
             unset($attrList[$attrName]);
 
@@ -88,14 +93,14 @@ trait ParserTrait
             unset($quotesList[$attrName]);
 
             // データ属性を削除
-            self::$deleteAttribute[$attrName] = $attrValue;
+            $rawString = self::deleteDataAttribute($attrName, $attrValue, $rawString);
 
             return;
         }
 
-        if (!strncmp($attrName, '!', 1)) {
+        if (!strncmp($attrName, '!', 1) && $commentParse) {
             // data-validateの省略表記（コメント記法のみ）
-            $attrList[BLOCS_DATA_FORM] = '"'.substr($attrName, 1).'"';
+            $attrList[BLOCS_DATA_FORM] = substr($attrName, 1);
             $attrList[BLOCS_DATA_VALIDATE] = $attrValue;
             unset($attrList[$attrName]);
 
@@ -112,45 +117,6 @@ trait ParserTrait
         }
 
         $attrList[$attrName] = $attrValue;
-    }
-
-    private static function replaceAliasAttrName($rawString)
-    {
-        // エイリアス名を変換
-        foreach (self::$aliasAttrName as $aliasName => $attrName) {
-            $rawString = str_replace($aliasName, $attrName, $rawString);
-        }
-
-        return $rawString;
-    }
-
-    private static function escepeOperator($htmlString)
-    {
-        $htmlString = str_replace('-->', 'REPLACE_TO_COMMENT_OPERATOR', $htmlString);
-
-        foreach (self::$escapeOperatorList as $num => $escapeOperator) {
-            $htmlString = str_replace($escapeOperator, "REPLACE_TO_OPERATOR_{$num}", $htmlString);
-        }
-
-        $htmlString = str_replace('REPLACE_TO_COMMENT_OPERATOR', '-->', $htmlString);
-
-        return $htmlString;
-    }
-
-    private static function backOperator($htmlString)
-    {
-        foreach (self::$escapeOperatorList as $num => $escapeOperator) {
-            $htmlString = str_replace("REPLACE_TO_OPERATOR_{$num}", $escapeOperator, $htmlString);
-        }
-
-        return $htmlString;
-    }
-
-    private static function deleteTagName($attrString, $tagName)
-    {
-        strncmp($attrString, '<'.$tagName, strlen('<'.$tagName)) || $attrString = substr($attrString, strlen('<'.$tagName));
-
-        return $attrString;
     }
 
     // 属性値かをチェック
@@ -170,5 +136,10 @@ trait ParserTrait
         '()' === substr($attrName, -2) && $attrName = substr($attrName, 0, -2);
 
         return Common::checkValueName($attrName);
+    }
+
+    private static function deleteDataAttribute($attrName, $attrValue, $rawString)
+    {
+        return preg_replace('/\s+'.$attrName.'\s*=\s*'.preg_quote($attrValue).'([\s>\/]+)/si', '${1}', $rawString);
     }
 }
