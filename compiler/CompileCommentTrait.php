@@ -160,15 +160,15 @@ trait CompileCommentTrait
 
             $rawString = '';
             $htmlBuff = Loop::loop($attrList, count($this->tagCounter));
-            $this->endrepeat[] = $attrList;
+            $this->endloop[] = $attrList;
 
             $this->setTagCounter([
                 'tag' => BLOCS_DATA_LOOP,
                 'array_form' => substr($attrList[BLOCS_DATA_LOOP], 1),
             ], false);
         }
-        if (isset($attrList[BLOCS_DATA_ENDLOOP]) && !empty($this->endrepeat)) {
-            $htmlBuff = Loop::endloop(array_pop($this->endrepeat));
+        if (isset($attrList[BLOCS_DATA_ENDLOOP]) && !empty($this->endloop)) {
+            $htmlBuff = Loop::endloop(array_pop($this->endloop));
 
             $target = '';
             foreach ($this->tagCounter as $num => $buff) {

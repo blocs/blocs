@@ -1,6 +1,6 @@
 <?php
 
-namespace data_assign;
+namespace data_loop_comment;
 
 use PHPUnit\Framework\TestCase;
 
