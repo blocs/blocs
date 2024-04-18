@@ -1,6 +1,6 @@
 <?php
 
-namespace data_repeat;
+namespace data_validate;
 
 use PHPUnit\Framework\TestCase;
 
@@ -27,6 +27,10 @@ class BlocsTest extends TestCase
     {
         $blocs = new \Blocs\View($this->testDir.'/test.html');
         $this->actual = $blocs->generate(null, true);
+
+        list($rules, $messages) = \Blocs\Validate::get($this->testDir.'/test.html');
+        $this->actual .= json_encode($rules).'<br />';
+        $this->actual .= json_encode($messages).'<br />';
 
         isset($this->expected) || $this->expected = $this->actual;
         $this->assertSame($this->expected, $this->actual);
