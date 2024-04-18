@@ -1,0 +1,20 @@
+<html>
+
+<font color='red'>data-validate</font>
+<hr />
+
+<!-- !email='required' -->
+<!-- data-form='email' data-validate="softUnique:users" data-lang="このユーザーIDはすでに登録されています。" -->
+@error('email') <div class='text-danger'>{{ $message }}</div> @enderror
+
+<!-- !email2="softUnique:users" data-lang="このユーザーIDはすでに登録されています。" -->
+@error('email2') <div class='text-danger'>{{ $message }}</div> @enderror
+
+<!-- !repassword='required' data-lang='必須入力です。' -->
+<!-- !repassword="same:password" data-lang="パスワードが違います。" -->
+@error('repassword') <div class='text-danger'>{{ $message }}</div> @enderror
+
+<!-- data-form="repassword2" data-validate = "same:password" data-lang="パスワードが違います。" -->
+@error('repassword2') <div class='text-danger'>{{ $message }}</div> @enderror
+
+</html>

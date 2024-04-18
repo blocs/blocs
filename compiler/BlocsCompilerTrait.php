@@ -16,7 +16,7 @@ trait BlocsCompilerTrait
     private array $validateUpload;
 
     private array $dataAttribute;
-    private array $endrepeat;
+    private array $endloop;
 
     // タグ記法のための変数
     private array $tagCounter;
@@ -67,7 +67,7 @@ trait BlocsCompilerTrait
         $this->validateUpload = [];
 
         $this->dataAttribute = [];
-        $this->endrepeat = [];
+        $this->endloop = [];
 
         $this->tagCounter = [];
         $this->ignoreFlg = false;

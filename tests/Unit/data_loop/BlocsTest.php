@@ -1,6 +1,6 @@
 <?php
 
-namespace data_repeat_comment;
+namespace data_loop;
 
 use PHPUnit\Framework\TestCase;
 
