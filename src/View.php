@@ -69,7 +69,7 @@ class View
             $updateCache = true;
         } elseif (isset($this->config['include'][$path]) && is_array($this->config['include'][$path])) {
             foreach ($this->config['include'][$path] as $includeFile) {
-                if (filemtime($includeFile) > $this->config['timestamp'][$path]) {
+                if (!file_exists($includeFile) || filemtime($includeFile) > $this->config['timestamp'][$path]) {
                     $updateCache = true;
                     break;
                 }
