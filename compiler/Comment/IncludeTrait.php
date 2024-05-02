@@ -32,7 +32,7 @@ trait IncludeTrait
         if (isset($this->partInclude[$attrList[BLOCS_DATA_INCLUDE]])) {
             $resultArray = $this->partInclude[$attrList[BLOCS_DATA_INCLUDE]];
         } else {
-            $resultArray = $this->addDataInclude($attrList, $htmlBuff);
+            $resultArray = $this->addDataInclude($attrList, $htmlBuff, $quotesList);
         }
 
         if (empty($attrList[BLOCS_DATA_EXIST])) {
@@ -60,7 +60,7 @@ trait IncludeTrait
         $htmlBuff = $this->assignValue($attrList, $quotesList, true);
     }
 
-    private function addDataInclude($attrList, $htmlBuff)
+    private function addDataInclude($attrList, $htmlBuff, $quotesList)
     {
         $_ = fn ($s) => $s;
         eval("\$attrList[BLOCS_DATA_INCLUDE] = <<<EOS\n{$attrList[BLOCS_DATA_INCLUDE]}\nEOS;\n");
@@ -68,6 +68,8 @@ trait IncludeTrait
         if (!strncmp($attrList[BLOCS_DATA_INCLUDE], '/', 1) && !is_file($attrList[BLOCS_DATA_INCLUDE])) {
             // ルートディレクトリのパスを変換
             $attrList[BLOCS_DATA_INCLUDE] = BLOCS_ROOT_DIR.$attrList[BLOCS_DATA_INCLUDE];
+        } elseif (empty($quotesList[BLOCS_DATA_INCLUDE])) {
+            eval('$attrList[BLOCS_DATA_INCLUDE] = '.$attrList[BLOCS_DATA_INCLUDE].';');
         }
 
         if (!strlen($realpath = str_replace(DIRECTORY_SEPARATOR, '/', realpath($attrList[BLOCS_DATA_INCLUDE])))) {
