@@ -28,7 +28,7 @@ class Compiler extends ViewCompiler implements CompilerInterface
         // includeファイルの更新を確認
         if (isset($config['include'][$path]) && is_array($config['include'][$path])) {
             foreach ($config['include'][$path] as $includeFile) {
-                if (filemtime($includeFile) > $config['timestamp'][$path]) {
+                if (!file_exists($includeFile) || filemtime($includeFile) > $config['timestamp'][$path]) {
                     return true;
                 }
             }
