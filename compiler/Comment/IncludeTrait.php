@@ -91,14 +91,14 @@ trait IncludeTrait
         $this->include[] = $realpath;
 
         $autoincludeDir = self::getAutoincludeDir();
+        $autoinclude = pathinfo($realpath, PATHINFO_FILENAME);
         if (false !== $autoincludeDir && !strncmp($realpath, $autoincludeDir, strlen($autoincludeDir))) {
-            $autoinclude = pathinfo($realpath, PATHINFO_FILENAME);
             if (isset($this->autoincluded[$autoinclude])) {
                 // auto includeは一回だけしかincludeしない
                 return [];
             }
-            $this->autoincluded[$autoinclude] = true;
         }
+        $this->autoincluded[$autoinclude] = true;
 
         if (!isset($this->partInclude[$realpath])) {
             // ファイルごとにタグを保持
