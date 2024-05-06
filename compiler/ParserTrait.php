@@ -83,7 +83,11 @@ trait ParserTrait
         if (!strncmp($attrName, ':', 1) && !$commentParse) {
             // data-attributeの省略表記（タグ記法）
             $commentAttribute = BLOCS_DATA_ATTRIBUTE.'="'.substr($attrName, 1).'"';
-            $commentVal = BLOCS_DATA_VAL.'='.$attrValue;
+            if (isset($quotesList[$attrName])) {
+                $commentVal = BLOCS_DATA_VAL.'='.$quotesList[$attrName].$attrValue.$quotesList[$attrName];
+            } else {
+                $commentVal = BLOCS_DATA_VAL.'='.$attrValue;
+            }
 
             // コメントとして代入
             array_push($parsedHtml, '<!-- '.$commentAttribute.' '.$commentVal.' -->');
