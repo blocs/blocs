@@ -25,14 +25,17 @@ trait CompileCommentTrait
         $quotesList = $includeBuff['quotes'];
 
         // 変数の代入だけの時は簡単に記述できるように
-        $isAssignValue = true;
-        foreach ($attrList as $key => $value) {
-            if (!Common::checkValueName($key) && '--' !== $key) {
-                $isAssignValue = false;
+        $isAssignValue = $attrList;
+        unset($isAssignValue['--'], $isAssignValue[BLOCS_DATA_NONE]);
+
+        foreach ($isAssignValue as $key => $value) {
+            if (!Common::checkValueName($key)) {
+                $isAssignValue = [];
+                break;
             }
         }
 
-        if ($isAssignValue) {
+        if (count($isAssignValue)) {
             $htmlBuff = $this->assignValue($attrList, $quotesList);
 
             return;
@@ -207,6 +210,10 @@ trait CompileCommentTrait
                     // 変数を継承する
                     $assignedValue[$key] = "<?php {$key} = {$value}; ?>\n";
                 }
+            }
+
+            if (isset($attrList[BLOCS_DATA_NONE])) {
+                $assignedValue[$key] = "<?php if(empty({$key})): ?>\n".$assignedValue[$key].BLOCS_ENDIF_SCRIPT;
             }
 
             $htmlBuff .= $assignedValue[$key];
