@@ -8,14 +8,8 @@ class Condition
     public static function condition($compiledTag, $attrList, $quotesList, $tagName = '', &$tagCounter = null, &$htmlArray = null)
     {
         if (isset($attrList[BLOCS_DATA_EXIST])) {
-            if (!Common::checkValueName($attrList[BLOCS_DATA_EXIST])) {
-                trigger_error('B006: Invalid condition "'.BLOCS_DATA_EXIST.'" ('.$attrList[BLOCS_DATA_EXIST].')', E_USER_ERROR);
-            }
             $compiledTag = "<?php if(!empty({$attrList[BLOCS_DATA_EXIST]})): ?>\n".$compiledTag;
         } elseif (isset($attrList[BLOCS_DATA_NONE])) {
-            if (!Common::checkValueName($attrList[BLOCS_DATA_NONE])) {
-                trigger_error('B007: Invalid condition "'.BLOCS_DATA_NONE.'" ('.$attrList[BLOCS_DATA_NONE].')', E_USER_ERROR);
-            }
             $compiledTag = "<?php if(empty({$attrList[BLOCS_DATA_NONE]})): ?>\n".$compiledTag;
         } elseif (isset($attrList[BLOCS_DATA_IF])) {
             $compiledTag = "<?php if({$attrList[BLOCS_DATA_IF]}): ?>\n".$compiledTag;
