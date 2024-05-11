@@ -92,12 +92,16 @@ trait ParserTrait
             // コメントとして代入
             array_push($parsedHtml, '<!-- '.$commentAttribute.' '.$commentVal.' -->');
 
+            // データ属性を削除
+            if (isset($quotesList[$attrName])) {
+                $rawString = self::deleteDataAttribute($attrName, $quotesList[$attrName].$attrValue.$quotesList[$attrName], $rawString);
+            } else {
+                $rawString = self::deleteDataAttribute($attrName, $attrValue, $rawString);
+            }
+
             // 属性値をクリア
             unset($attrList[$attrName]);
             unset($quotesList[$attrName]);
-
-            // データ属性を削除
-            $rawString = self::deleteDataAttribute($attrName, $attrValue, $rawString);
 
             return;
         }
