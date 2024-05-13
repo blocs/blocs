@@ -114,13 +114,6 @@ class Common
 
         $configPath = self::getConfigPath(dirname($path));
         if (!is_file($configPath)) {
-            // autoincludeの指定
-            if (class_exists('\Route') && isset($GLOBALS[\Route::currentRouteAction()])) {
-                foreach ($GLOBALS[\Route::currentRouteAction()] as $key => $value) {
-                    $GLOBALS[$key] = $value;
-                }
-            }
-
             // 設定ファイルが見つからない
             $blocsCompiler = new Compiler\BlocsCompiler();
             $contents = $blocsCompiler->compile($path);
