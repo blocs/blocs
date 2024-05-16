@@ -12,5 +12,5 @@ function raw_original($str)
 
 function raw_original2($str)
 {
-    return \Blocs\Common::convertDefault('OK:'.$str);
+    return Blocs\Common::convertDefault('OK:'.$str);
 }
