@@ -47,7 +47,7 @@ class Validate
         $validateMessage = [];
         foreach ($configMessage as $formName => $messageList) {
             foreach ($messageList as $dataValidate => $message) {
-                $validateMessage[$formName.'.'.$dataValidate] = \Blocs\Lang::get($message);
+                $validateMessage[$formName.'.'.$dataValidate] = Lang::get($message);
             }
         }
 
@@ -123,7 +123,7 @@ class Validate
         if (isset($config['upload'][$formName]['message'])) {
             $messageList = $config['upload'][$formName]['message'];
             foreach ($messageList as $dataValidate => $message) {
-                $uploadMessage['upload.'.$dataValidate] = \Blocs\Lang::get($message);
+                $uploadMessage['upload.'.$dataValidate] = Lang::get($message);
             }
         }
 

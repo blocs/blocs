@@ -58,7 +58,7 @@ class Common
                 if (false === strpos($menuLabel[$buff], 'data-')) {
                     $query .= $menuLabel[$buff];
                 } else {
-                    isset($blocsCompiler) || $blocsCompiler = new \Blocs\Compiler\BlocsCompiler();
+                    isset($blocsCompiler) || $blocsCompiler = new Compiler\BlocsCompiler();
                     $query .= $blocsCompiler->render($menuLabel[$buff]);
                 }
             }
@@ -127,7 +127,7 @@ class Common
         self::$config = json_decode(file_get_contents($configPath), true);
 
         // 動的メニューの取り込み
-        $appendOption = \Blocs\Option::append();
+        $appendOption = Option::append();
         foreach ($appendOption as $menuName => $menu) {
             isset(self::$config['menu'][$menuName]) || self::$config['menu'][$menuName] = [];
             self::$config['menu'][$menuName] = array_merge(self::$config['menu'][$menuName], $menu);
