@@ -212,7 +212,7 @@ trait CompileCommentTrait
                 }
             }
 
-            if (isset($attrList[BLOCS_DATA_NONE])) {
+            if (isset($attrList[BLOCS_DATA_NONE]) && !isset($attrList[BLOCS_DATA_INCLUDE])) {
                 $assignedValue[$key] = "<?php if(empty({$key})): ?>\n".$assignedValue[$key].BLOCS_ENDIF_SCRIPT;
             }
 
