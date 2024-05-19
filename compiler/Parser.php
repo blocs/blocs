@@ -122,11 +122,11 @@ class Parser
                 continue;
             }
 
-            if (('"' === $htmlBuff || "'" === $htmlBuff) && strlen($attrName)) {
+            if ('"' === $htmlBuff || "'" === $htmlBuff) {
                 if (!empty($isQuote)) {
                     if ($isQuote === $htmlBuff) {
                         // quoteを無効にする
-                        $quotesList[$attrName] = $isQuote;
+                        strlen($attrName) && $quotesList[$attrName] = $isQuote;
                         $isQuote = '';
                     }
                 } else {
