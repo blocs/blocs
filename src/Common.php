@@ -155,10 +155,20 @@ class Common
             if (isset($blocsConfig->validate[$formName])) {
                 $validateUpload[$formName]['validate'] = $blocsConfig->validate[$formName];
                 unset($blocsConfig->validate[$formName]);
+
+                // requiredだけはhidden側をチェック
+                if (in_array('required', $validateUpload[$formName]['validate'])) {
+                    $blocsConfig->validate[$formName] = ['required'];
+                }
             }
             if (isset($blocsConfig->message[$formName])) {
                 $validateUpload[$formName]['message'] = $blocsConfig->message[$formName];
                 unset($blocsConfig->message[$formName]);
+
+                // requiredだけはhidden側をチェック
+                if (isset($validateUpload[$formName]['message']['required'])) {
+                    $blocsConfig->message[$formName]['required'] = $validateUpload[$formName]['message']['required'];
+                }
             }
         }
         isset($config['upload']) || $config['upload'] = [];
