@@ -29,7 +29,7 @@ trait FormTrait
                 if (in_array($type, ['text', 'hidden', 'search', 'tel', 'url', 'email', 'datetime', 'date', 'month', 'week', 'time', 'datetime-local', 'number', 'range', 'color'])) {
                     $compiledTag = Form::value($compiledTag, $attrList);
                 }
-                if ('text' === $type && isset($attrList['class'])) {
+                if ('hidden' === $type && isset($attrList['class'])) {
                     $classList = preg_split("/\s/", $attrList['class']);
                     in_array(BLOCS_CLASS_UPLOAD, $classList) && $this->validateUpload[] = $attrList['name'];
                 }

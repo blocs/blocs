@@ -56,7 +56,7 @@ class Convert
         return round($str, 1).' '.$label[$i];
     }
 
-    // サムネイル表示
+    // リンク表示
     public static function raw_upload($str)
     {
         $json = json_decode($str, true);
