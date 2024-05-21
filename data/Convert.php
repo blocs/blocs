@@ -57,7 +57,7 @@ class Convert
     }
 
     // リンク表示
-    public static function raw_upload($str)
+    public static function raw_download($str, $class = '', $prefix = null)
     {
         $json = json_decode($str, true);
         if (empty($json)) {
@@ -65,12 +65,30 @@ class Convert
         }
 
         $file = $json[0];
-        $downloadUrl = route(prefix().'.download', ['filename' => $file['filename']]).'?'.time();
+        $prefix || $prefix = prefix();
+        $class && $class = 'class="'.$class.'" ';
+        $downloadUrl = route($prefix.'.download', ['filename' => $file['filename']]).'?'.time();
         if (!empty($file['thumbnail'])) {
-            $file['name'] = "<img src='{$downloadUrl}' width=100% />";
+            $file['name'] = "<img src='{$downloadUrl}' {$class}/>";
         }
 
         return "<a href='{$downloadUrl}'>{$file['name']}</a>";
+    }
+
+    // サムネイル表示
+    public static function raw_thumbnail($str, $class = '', $prefix = null)
+    {
+        $json = json_decode($str, true);
+        if (empty($json)) {
+            return '';
+        }
+
+        $file = $json[0];
+        $prefix || $prefix = prefix();
+        $class && $class = 'class="'.$class.'" ';
+        $thumbnailUrl = route($prefix.'.thumbnail', ['filename' => $file['filename'], 'size' => 'thumbnail']);
+
+        return "<img src='{$thumbnailUrl}' {$class}/>";
     }
 
     // 省略表記
