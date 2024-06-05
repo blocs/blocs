@@ -2,6 +2,8 @@
 
 namespace data_include;
 
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 class BlocsTest extends TestCase
@@ -20,9 +22,7 @@ class BlocsTest extends TestCase
         }
     }
 
-    /**
-     * @runInSeparateProcess
-     */
+    #[Test, RunInSeparateProcess]
     public function test(): void
     {
         define('BLOCS_ROOT_DIR', __DIR__);
