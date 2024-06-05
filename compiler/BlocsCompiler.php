@@ -10,6 +10,7 @@ class BlocsConfig
     public $validate;
     public $message;
     public $upload;
+    public $label;
 }
 
 class BlocsCompiler
