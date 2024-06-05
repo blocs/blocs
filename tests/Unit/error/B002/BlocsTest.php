@@ -2,6 +2,8 @@
 
 namespace B002;
 
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 class BlocsTest extends TestCase
@@ -19,9 +21,7 @@ class BlocsTest extends TestCase
         });
     }
 
-    /**
-     * @runInSeparateProcess
-     */
+    #[Test, RunInSeparateProcess]
     public function test(): void
     {
         try {
