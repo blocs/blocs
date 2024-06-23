@@ -1,7 +1,7 @@
 <div align="center"><img src="logo.svg" width="400" /></div>
 
-# The PHP Template engine for Laravel
-Laravelのためのテンプレートエンジン
+# Laravel template engine
+Laravelのテンプレートエンジン
 
 [![Latest stable version](https://img.shields.io/packagist/v/blocs/blocs)](https://packagist.org/packages/blocs/blocs)
 [![Total downloads](https://img.shields.io/packagist/dt/blocs/blocs)](https://packagist.org/packages/blocs/blocs)
