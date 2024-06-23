@@ -1,7 +1,7 @@
 {
     "name": "blocs\/blocs",
     "type": "library",
-    "description": "The PHP Template engine for Laravel",
+    "description": "Laravel template engine",
     "keywords": [
         "PHP",
         "Template engine",
