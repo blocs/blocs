@@ -62,12 +62,13 @@ class Common
 
         if (false === strpos($funcQuery, ':')) {
             $func = $funcQuery;
-            $arg = '';
+            $arguments = '';
         } else {
-            list($func, $arg) = explode(':', $funcQuery, 2);
+            list($func, $arguments) = explode(':', $funcQuery, 2);
 
-            $argArray = preg_split('/([:"\'])/s', $arg, -1, PREG_SPLIT_DELIM_CAPTURE);
-            $quotesBuff = $resultBuff = '';
+            $argArray = preg_split('/([:"\'])/s', $arguments, -1, PREG_SPLIT_DELIM_CAPTURE);
+            $quotesBuff = '';
+            $resultBuff = '';
             foreach ($argArray as $buff) {
                 if ("'" == $buff || '"' == $buff) {
                     if (!strlen($quotesBuff)) {
@@ -84,10 +85,10 @@ class Common
                 }
             }
 
-            $arg = ', '.$resultBuff;
+            $arguments = ', '.$resultBuff;
         }
 
-        return [$class, $func, $arg];
+        return [$class, $func, $arguments];
     }
 
     // 変数として使用できる文字列かチェック
