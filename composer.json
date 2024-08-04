@@ -4,8 +4,8 @@
     "description": "Laravel template engine",
     "keywords": [
         "PHP",
-        "Template engine",
-        "Laravel"
+        "Laravel",
+        "Template engine"
     ],
     "license": "MIT",
     "authors": [
