@@ -26,7 +26,7 @@ trait CompileCommentTrait
 
         // 変数の代入だけの時は簡単に記述できるように
         $isAssignValue = $attrList;
-        unset($isAssignValue['--'], $isAssignValue[BLOCS_DATA_NONE]);
+        unset($isAssignValue['--'], $isAssignValue[BLOCS_DATA_EXIST], $isAssignValue[BLOCS_DATA_NONE], $isAssignValue[BLOCS_DATA_IF], $isAssignValue[BLOCS_DATA_UNLESS]);
 
         foreach ($isAssignValue as $key => $value) {
             if (!Common::checkValueName($key)) {
@@ -212,7 +212,8 @@ trait CompileCommentTrait
                 }
             }
 
-            if (isset($attrList[BLOCS_DATA_NONE]) && !isset($attrList[BLOCS_DATA_INCLUDE])) {
+            if (isset($attrList[BLOCS_DATA_NONE]) && !strlen($attrList[BLOCS_DATA_NONE]) && !isset($attrList[BLOCS_DATA_INCLUDE])) {
+                // 値の上書き禁止
                 $assignedValue[$key] = "<?php if(empty({$key})): ?>\n".$assignedValue[$key].BLOCS_ENDIF_SCRIPT;
             }
 
@@ -221,6 +222,11 @@ trait CompileCommentTrait
 
         // 引数継承のために属性値を保持
         $assigned && $this->assignedValue[] = $assignedValue;
+
+        if (!(isset($attrList[BLOCS_DATA_NONE]) && !strlen($attrList[BLOCS_DATA_NONE])) && $condition = Condition::condition('', $attrList, $quotesList)) {
+            // 値をセットする条件
+            $htmlBuff = $condition.$htmlBuff.BLOCS_ENDIF_SCRIPT;
+        }
 
         return $htmlBuff;
     }
