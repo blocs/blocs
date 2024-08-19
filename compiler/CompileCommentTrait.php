@@ -49,8 +49,13 @@ trait CompileCommentTrait
 
             if (1 === $this->partDepth) {
                 // ブロック処理開始
-                $this->partName = $attrList[BLOCS_DATA_BLOC];
-                $this->partInclude[$this->partName] = [];
+                if (strncmp($attrList[BLOCS_DATA_BLOC], '+', 1)) {
+                    $this->partName = $attrList[BLOCS_DATA_BLOC];
+                    $this->partInclude[$this->partName] = [];
+                } else {
+                    // append
+                    $this->partName = substr($attrList[BLOCS_DATA_BLOC], 1);
+                }
                 $htmlBuff = '';
             }
 

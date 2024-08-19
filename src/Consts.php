@@ -25,7 +25,7 @@ if (!defined('BLOCS_ROOT_DIR')) {
 defined('BLOCS_OPTION_SEPARATOR') || define('BLOCS_OPTION_SEPARATOR', ', ');
 
 // includeの上限設定
-defined('BLOCS_INCLUDE_MAX') || define('BLOCS_INCLUDE_MAX', 20);
+defined('BLOCS_INCLUDE_MAX') || define('BLOCS_INCLUDE_MAX', 50);
 
 // compilerで使う定数
 define('BLOCS_ENDIF_SCRIPT', "<?php endif; ?>\n");
