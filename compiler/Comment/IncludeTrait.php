@@ -126,6 +126,12 @@ trait IncludeTrait
         }
 
         // auto includeの対象に追加（無限ループにならないよう注意）
+        if ($autoinclude === $attrList[BLOCS_DATA_INCLUDE]) {
+            return [
+                '<!-- '.BLOCS_DATA_INCLUDE."='".str_replace(BLOCS_ROOT_DIR, '', $autoincludeDir).'/'.$autoinclude.".html' -->",
+            ];
+        }
+
         return [
             '<!-- '.BLOCS_DATA_INCLUDE."='".str_replace(BLOCS_ROOT_DIR, '', $autoincludeDir).'/'.$autoinclude.".html' -->",
             $htmlBuff,
