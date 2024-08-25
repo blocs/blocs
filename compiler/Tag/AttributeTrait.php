@@ -28,6 +28,7 @@ trait AttributeTrait
 
         if (isset($attrList[BLOCS_DATA_EXIST]) || isset($attrList[BLOCS_DATA_NONE]) || isset($attrList[BLOCS_DATA_IF]) || isset($attrList[BLOCS_DATA_UNLESS])) {
             $tagCounter = [];
+            Condition::partInclude($this->partInclude);
             $compiledTag = Condition::condition($compiledTag, $attrList, $quotesList, $tagName, $tagCounter, $htmlArray);
             count($tagCounter) && $this->setTagCounter($tagCounter);
         }
