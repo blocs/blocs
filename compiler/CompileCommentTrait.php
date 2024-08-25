@@ -144,6 +144,7 @@ trait CompileCommentTrait
                 $rawString = '';
             }
 
+            Condition::partInclude($this->partInclude);
             $htmlBuff = Condition::condition($rawString, $attrList, $quotesList);
 
             if (isset($attrList[BLOCS_DATA_VAL]) || isset($attrList[BLOCS_DATA_NOTICE])) {

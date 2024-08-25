@@ -4,11 +4,27 @@ namespace Blocs\Compiler\Cache;
 
 class Condition
 {
+    private static $partInclude;
+
+    public static function partInclude($partInclude)
+    {
+        self::$partInclude = $partInclude;
+    }
+
     // data-existなどのスクリプトを生成
     public static function condition($compiledTag, $attrList, $quotesList, $tagName = '', &$tagCounter = null, &$htmlArray = null)
     {
         if (isset($attrList[BLOCS_DATA_EXIST])) {
-            $compiledTag = "<?php if(!empty({$attrList[BLOCS_DATA_EXIST]})): ?>\n".$compiledTag;
+            if (isset($quotesList[BLOCS_DATA_EXIST])) {
+                // data-includeのチェック
+                if (empty(self::$partInclude[$attrList[BLOCS_DATA_EXIST]])) {
+                    $compiledTag = "<?php if(false): ?>\n".$compiledTag;
+                } else {
+                    $compiledTag = "<?php if(true): ?>\n".$compiledTag;
+                }
+            } else {
+                $compiledTag = "<?php if(!empty({$attrList[BLOCS_DATA_EXIST]})): ?>\n".$compiledTag;
+            }
         } elseif (isset($attrList[BLOCS_DATA_NONE])) {
             $compiledTag = "<?php if(empty({$attrList[BLOCS_DATA_NONE]})): ?>\n".$compiledTag;
         } elseif (isset($attrList[BLOCS_DATA_IF])) {
