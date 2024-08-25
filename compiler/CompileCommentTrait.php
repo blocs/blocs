@@ -229,6 +229,7 @@ trait CompileCommentTrait
         // 引数継承のために属性値を保持
         $assigned && $this->assignedValue[] = $assignedValue;
 
+        Condition::partInclude($this->partInclude);
         if (!(isset($attrList[BLOCS_DATA_NONE]) && !strlen($attrList[BLOCS_DATA_NONE])) && $condition = Condition::condition('', $attrList, $quotesList)) {
             // 値をセットする条件
             $htmlBuff = $condition.$htmlBuff.BLOCS_ENDIF_SCRIPT;
