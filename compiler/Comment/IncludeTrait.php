@@ -78,7 +78,7 @@ trait IncludeTrait
                 return $resultBuff;
             }
 
-            if (isset($attrList[BLOCS_DATA_EXIST])) {
+            if (isset($attrList[BLOCS_DATA_EXIST]) && !strlen($attrList[BLOCS_DATA_EXIST])) {
                 return [];
             }
 
