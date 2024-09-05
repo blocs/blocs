@@ -51,22 +51,7 @@ class Validate
             }
         }
 
-        foreach ($configValidate as $formName => $validateList) {
-            foreach ($validateList as $validateNum => $validate) {
-                $msgArgList = explode(':', $validate);
-                $className = $msgArgList[0];
-                $msgArgList = array_slice($msgArgList, 1);
-
-                if (class_exists('\App\Rules\\'.$className)) {
-                    if (isset($validateMessage[$formName.'.'.$className])) {
-                        array_push($msgArgList, $validateMessage[$formName.'.'.$className]);
-                    }
-
-                    $reflClass = new \ReflectionClass('\App\Rules\\'.$className);
-                    $configValidate[$formName][$validateNum] = call_user_func_array([$reflClass, 'newInstance'], $msgArgList);
-                }
-            }
-        }
+        $configValidate = self::checkRules($configValidate, $validateMessage);
 
         return [$configValidate, $validateMessage];
     }
@@ -127,6 +112,8 @@ class Validate
             }
         }
 
+        $uploadValidate = self::checkRules($uploadValidate, $uploadMessage);
+
         return [$uploadValidate, $uploadMessage];
     }
 
@@ -170,5 +157,29 @@ class Validate
         }
 
         return $requestArray;
+    }
+
+    private static function checkRules($configValidate, $validateMessage)
+    {
+        foreach ($configValidate as $formName => $validateList) {
+            foreach ($validateList as $validateNum => $validate) {
+                $msgArgList = explode(':', $validate);
+                $className = $msgArgList[0];
+                $msgArgList = array_slice($msgArgList, 1);
+
+                if (!class_exists('\App\Rules\\'.$className)) {
+                    continue;
+                }
+
+                if (isset($validateMessage[$formName.'.'.$className])) {
+                    array_push($msgArgList, $validateMessage[$formName.'.'.$className]);
+                }
+
+                $reflClass = new \ReflectionClass('\App\Rules\\'.$className);
+                $configValidate[$formName][$validateNum] = call_user_func_array([$reflClass, 'newInstance'], $msgArgList);
+            }
+        }
+
+        return $configValidate;
     }
 }
