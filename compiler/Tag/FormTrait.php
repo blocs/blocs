@@ -179,32 +179,33 @@ trait FormTrait
 
         if (isset($attrList['required'])) {
             $dataValidate[$attrList['name']][] = 'required';
+            $required = true;
         }
-        if (isset($attrList['maxlength'])) {
+
+        if (isset($attrList['minlength']) || isset($attrList['maxlength'])) {
+            isset($required) || $dataValidate[$attrList['name']][] = 'nullable';
             $dataValidate[$attrList['name']][] = 'string';
-            $dataValidate[$attrList['name']][] = 'max:'.$attrList['maxlength'];
+
+            isset($attrList['minlength']) && $dataValidate[$attrList['name']][] = 'min:'.$attrList['minlength'];
+            isset($attrList['maxlength']) && $dataValidate[$attrList['name']][] = 'max:'.$attrList['maxlength'];
         }
-        if (isset($attrList['minlength'])) {
-            $dataValidate[$attrList['name']][] = 'string';
-            $dataValidate[$attrList['name']][] = 'min:'.$attrList['minlength'];
-        }
-        if (isset($attrList['max'])) {
-            if (isset($attrList['step'])) {
-                $dataValidate[$attrList['name']][] = 'numeric';
-            } else {
-                $dataValidate[$attrList['name']][] = 'integer';
+
+        if (isset($attrList['type']) && 'number' === $attrList['type']) {
+            if (isset($attrList['min']) && isset($attrList['max'])) {
+                isset($required) || $dataValidate[$attrList['name']][] = 'nullable';
+                if (isset($attrList['step'])) {
+                    $dataValidate[$attrList['name']][] = 'numeric';
+                } else {
+                    $dataValidate[$attrList['name']][] = 'integer';
+                }
+
+                isset($attrList['min']) && $dataValidate[$attrList['name']][] = 'min:'.$attrList['min'];
+                isset($attrList['max']) && $dataValidate[$attrList['name']][] = 'max:'.$attrList['max'];
             }
-            $dataValidate[$attrList['name']][] = 'max:'.$attrList['max'];
         }
-        if (isset($attrList['min'])) {
-            if (isset($attrList['step'])) {
-                $dataValidate[$attrList['name']][] = 'numeric';
-            } else {
-                $dataValidate[$attrList['name']][] = 'integer';
-            }
-            $dataValidate[$attrList['name']][] = 'min:'.$attrList['min'];
-        }
+
         if (isset($attrList['pattern'])) {
+            isset($required) || $dataValidate[$attrList['name']][] = 'nullable';
             $dataValidate[$attrList['name']][] = 'regex:/'.$attrList['pattern'].'/';
         }
     }
