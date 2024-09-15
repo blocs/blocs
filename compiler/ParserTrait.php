@@ -142,6 +142,7 @@ trait ParserTrait
     {
         // $object->method()
         '()' === substr($attrName, -2) && $attrName = substr($attrName, 0, -2);
+        $attrName = str_replace('()->', '', $attrName);
 
         return Common::checkValueName($attrName);
     }
