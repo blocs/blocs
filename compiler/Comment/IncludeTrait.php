@@ -82,6 +82,11 @@ trait IncludeTrait
                 return [];
             }
 
+            if (isset($this->autoincluded[$attrList[BLOCS_DATA_INCLUDE]])) {
+                // すでにincludeされている
+                return [];
+            }
+
             trigger_error('B003: Can not find template ('.getcwd().'/'.$attrList[BLOCS_DATA_INCLUDE].')', E_USER_ERROR);
         }
 
@@ -127,9 +132,8 @@ trait IncludeTrait
 
         // auto includeの対象に追加（無限ループにならないよう注意）
         if ($autoinclude === $attrList[BLOCS_DATA_INCLUDE]) {
-            return [
-                '<!-- '.BLOCS_DATA_INCLUDE."='".str_replace(BLOCS_ROOT_DIR, '', $autoincludeDir).'/'.$autoinclude.".html' -->",
-            ];
+            // data-include="button"に対応（auto includeのファイル名と一致するケース）
+            $htmlBuff = str_replace(BLOCS_DATA_INCLUDE, BLOCS_DATA_EXIST.' '.BLOCS_DATA_INCLUDE, $htmlBuff);
         }
 
         return [
