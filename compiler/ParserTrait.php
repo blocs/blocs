@@ -149,6 +149,9 @@ trait ParserTrait
 
     private static function deleteDataAttribute($attrName, $attrValue, $rawString)
     {
-        return preg_replace('/\s+'.$attrName.'\s*=\s*'.preg_quote($attrValue).'([\s>\/]+)/si', '${1}', $rawString);
+        $attrValue = preg_quote($attrValue);
+        $attrValue = str_replace('/', '\/', $attrValue);
+
+        return preg_replace('/\s+'.$attrName.'\s*=\s*'.$attrValue.'([\s>\/]+)/si', '${1}', $rawString);
     }
 }
