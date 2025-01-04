@@ -8,8 +8,8 @@ Laravelのテンプレートエンジン
 [![GitHub code size](https://img.shields.io/github/languages/code-size/blocs/blocs)](https://github.com/blocs/blocs)
 [![GitHub license](https://img.shields.io/github/license/blocs/blocs)](https://github.com/blocs/blocs)
 [![Laravel awesome](https://img.shields.io/badge/Awesome-Laravel-green)](https://github.com/blocs/blocs)
-[![Laravel version](https://img.shields.io/badge/laravel-%3E%3D7-green)](https://github.com/blocs/blocs)
-[![PHP version](https://img.shields.io/badge/php-%3E%3D7.4-blue)](https://github.com/blocs/blocs)
+[![Laravel version](https://img.shields.io/badge/laravel-%3E%3D10-green)](https://github.com/blocs/blocs)
+[![PHP version](https://img.shields.io/badge/php-%3E%3D8.3-blue)](https://github.com/blocs/blocs)
 
 [**Website**](https://blocs.jp/)
 | [**Document**](https://blocs.jp/reference/)
