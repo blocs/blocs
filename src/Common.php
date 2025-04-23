@@ -11,19 +11,19 @@ class Common
     public static function getPath($name)
     {
         if (!function_exists('config')) {
-            return realpath($name);
+            return str_replace(DIRECTORY_SEPARATOR, '/', realpath($name));
         }
 
         $viewPaths = config('view.paths');
         foreach ($viewPaths as $path) {
             $realPath = realpath($path.'/'.str_replace('.', '/', $name).'.blocs.html');
             if ($realPath && is_file($realPath)) {
-                return $realPath;
+                return str_replace(DIRECTORY_SEPARATOR, '/', $realPath);
             }
 
             $realPath = realpath($path.'/'.str_replace('.', '/', $name));
             if ($realPath && is_dir($realPath)) {
-                return $realPath;
+                return str_replace(DIRECTORY_SEPARATOR, '/', $realPath);
             }
         }
 
@@ -111,6 +111,7 @@ class Common
         if (empty(self::$path)) {
             return [];
         }
+        $path = str_replace(DIRECTORY_SEPARATOR, '/', realpath($path));
 
         $configPath = self::getConfigPath(dirname($path));
         if (!is_file($configPath)) {
@@ -139,6 +140,7 @@ class Common
     // 設定ファイルを書き込み
     public static function writeConfig($path, $blocsConfig)
     {
+        $path = str_replace(DIRECTORY_SEPARATOR, '/', realpath($path));
         $configPath = self::getConfigPath(dirname($path));
         if (is_file($configPath)) {
             $config = json_decode(file_get_contents($configPath), true);

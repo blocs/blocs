@@ -23,7 +23,7 @@ class BlocsCompiler
     public function compile($templatePath)
     {
         $this->init();
-        $this->include = [$templatePath];
+        $this->include = [str_replace(DIRECTORY_SEPARATOR, '/', $templatePath)];
 
         $this->compileTemplate(self::checkEncoding($templatePath), $templatePath);
 
