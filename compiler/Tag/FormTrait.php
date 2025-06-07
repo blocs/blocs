@@ -30,8 +30,18 @@ trait FormTrait
                     $compiledTag = Form::value($compiledTag, $attrList);
                 }
                 if ('hidden' === $type && isset($attrList['class'])) {
-                    $classList = preg_split("/\s/", $attrList['class']);
-                    in_array(BLOCS_CLASS_UPLOAD, $classList) && $this->validateUpload[] = $attrList['name'];
+                    $classList = [];
+                    if (isset($attrList['class'])) {
+                        $classNameList = preg_split("/\s/", $attrList['class']);
+                        foreach ($classNameList as $className) {
+                            list($className) = preg_split("/\<\?php/", $className, 2);
+                            if (!strncmp($className, 'ai-', 3)) {
+                                $classList[] = substr($className, 3);
+                            }
+                        }
+                    }
+
+                    in_array(substr(BLOCS_CLASS_UPLOAD, 3), $classList) && $this->validateUpload[] = $attrList['name'];
                 }
             }
         }
