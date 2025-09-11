@@ -122,11 +122,13 @@ trait CompileCommentTrait
         }
 
         if (isset($attrList[BLOCS_DATA_VALIDATE]) && isset($attrList[BLOCS_DATA_FORM])) {
-            self::checkDataValidate($this->validate, $attrList[BLOCS_DATA_FORM], $attrList[BLOCS_DATA_VALIDATE]) && $this->validate[$attrList[BLOCS_DATA_FORM]][] = $attrList[BLOCS_DATA_VALIDATE];
+            foreach (explode('|', $attrList[BLOCS_DATA_VALIDATE]) as $validate) {
+                self::checkDataValidate($this->validate, $attrList[BLOCS_DATA_FORM], $validate) && $this->validate[$attrList[BLOCS_DATA_FORM]][] = $validate;
 
-            if (isset($attrList[BLOCS_DATA_NOTICE])) {
-                $validateMethod = self::getValidateMethod($attrList[BLOCS_DATA_VALIDATE]);
-                $this->validateMessage[$attrList[BLOCS_DATA_FORM]][$validateMethod] = $attrList[BLOCS_DATA_NOTICE];
+                if (isset($attrList[BLOCS_DATA_NOTICE])) {
+                    $validateMethod = self::getValidateMethod($validate);
+                    $this->validateMessage[$attrList[BLOCS_DATA_FORM]][$validateMethod] = $attrList[BLOCS_DATA_NOTICE];
+                }
             }
             $htmlBuff = '';
 
