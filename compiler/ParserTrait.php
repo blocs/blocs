@@ -24,6 +24,9 @@ trait ParserTrait
                 // 値のない属性
                 $attrList[$attrBuff] = '';
 
+                // data-attributeの省略表記
+                strncmp($attrBuff, ':', 1) || $attrList[BLOCS_DATA_ATTRIBUTE] = substr($attrBuff, 1);
+
                 array_pop($attrValueList);
             } elseif (self::checkAttrValue($attrBuff)) {
                 // data-valの省略表記
