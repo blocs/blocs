@@ -24,12 +24,12 @@ trait ParserTrait
                 // 値のない属性
                 $attrList[$attrBuff] = '';
 
-                // data-attributeの省略表記
+                // data-attributeの省略記法
                 strncmp($attrBuff, ':', 1) || $attrList[BLOCS_DATA_ATTRIBUTE] = substr($attrBuff, 1);
 
                 array_pop($attrValueList);
             } elseif (self::checkAttrValue($attrBuff)) {
-                // data-valの省略表記
+                // data-valの省略記法
                 $attrList[BLOCS_DATA_VAL] = $attrBuff;
 
                 array_pop($attrValueList);
@@ -55,7 +55,7 @@ trait ParserTrait
             }
 
             if (self::checkAttrValue($attrValue)) {
-                // data-valの省略表記
+                // data-valの省略記法
                 $attrList[BLOCS_DATA_VAL] = $attrValue;
             } else {
                 // 値のない属性
@@ -66,7 +66,7 @@ trait ParserTrait
         }
 
         if (!strncmp($attrName, ':', 1) && $commentParse) {
-            // data-attributeの省略表記（コメント記法）
+            // data-attributeの省略記法（コメント記法）
             $attrList[BLOCS_DATA_ATTRIBUTE] = substr($attrName, 1);
             $attrList[BLOCS_DATA_VAL] = $attrValue;
             unset($attrList[$attrName]);
@@ -84,7 +84,7 @@ trait ParserTrait
         }
 
         if (!strncmp($attrName, ':', 1) && !$commentParse) {
-            // data-attributeの省略表記（タグ記法）
+            // data-attributeの省略記法（タグ記法）
             $commentAttribute = BLOCS_DATA_ATTRIBUTE.'="'.substr($attrName, 1).'"';
             if (isset($quotesList[$attrName])) {
                 $commentVal = BLOCS_DATA_VAL.'='.$quotesList[$attrName].$attrValue.$quotesList[$attrName];
@@ -110,7 +110,7 @@ trait ParserTrait
         }
 
         if (!strncmp($attrName, '!', 1) && $commentParse) {
-            // data-validateの省略表記（コメント記法のみ）
+            // data-validateの省略記法（コメント記法のみ）
             $attrList[BLOCS_DATA_FORM] = substr($attrName, 1);
             $attrList[BLOCS_DATA_VALIDATE] = $attrValue;
             unset($attrList[$attrName]);
