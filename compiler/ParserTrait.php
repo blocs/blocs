@@ -24,13 +24,14 @@ trait ParserTrait
                 // 値のない属性
                 $attrList[$attrBuff] = '';
 
-                // data-attributeの省略記法
+                // data-attributeの省略記法（:readonly）
                 strncmp($attrBuff, ':', 1) || $attrList[BLOCS_DATA_ATTRIBUTE] = substr($attrBuff, 1);
 
                 array_pop($attrValueList);
             } elseif (self::checkAttrValue($attrBuff)) {
                 // data-valの省略記法
                 $attrList[BLOCS_DATA_VAL] = $attrBuff;
+                $rawString = preg_replace('/\s+\\'.$attrBuff.'([\s>\/]+)/si', '${1}', $rawString);
 
                 array_pop($attrValueList);
             } else {
