@@ -1,0 +1,55 @@
+# オリジナルのバリデーションルールを作成する方法
+Laravelでは、`required` や `max` などの標準バリデーションルールが豊富に用意されています。しかし、プロジェクトによっては独自のバリデーションルールが必要になることもあります。ここでは、Laravelでオリジナルのバリデーションルールを作成し、BLOCSで活用する方法をご紹介します。
+
+## 1. ルールクラスの作成
+まずは、Laravelの Artisan コマンドを使って、独自のバリデーションルールクラスを作成します。
+
+```sh
+php artisan make:rule myRule
+```
+
+このコマンドを実行すると、`app/Rules` ディレクトリに `myRule.php` というファイルが生成されます。
+
+## 2. ルールの実装
+作成したルールクラスを編集して、倍数チェックを行うオリジナルのバリデーションルールを実装します。
+
+### コンストラクタの定義
+まず、検証対象の倍数を指定できるように、コンストラクタで数値とエラーメッセージを受け取るようにします。BLOCSテンプレートの `data-lang` 属性で指定されたメッセージは、`$message` に自動でセットされます。
+
+```php
+    private $num;
+    private $message;
+    
+    public function __construct(string $num, string $message)
+    {
+        $this->num = intval($num);
+        $this->message = $message;
+    }
+```
+
+### バリデーションロジックの定義
+次に、`validate` メソッド内で、入力値が指定された数値の倍数かどうかを判定します。入力値は `$value` に渡されるので、以下のように条件を記述します。
+
+```php
+    public function validate(string $attribute, mixed $value, Closure $fail): void
+    {
+        if (intval($value) % $this->num === 0) {
+            return;
+        }
+
+        $fail($this->message);
+    }
+```
+
+## 3. テンプレートでルールを設定
+作成したオリジナルのバリデーションルールは、BLOCSのテンプレート内で設定できます。Laravelの標準バリデーションルールと併用することも可能です。エラーメッセージは、`data-lang` で設定します。
+
+```html
+<input type="number" name="multiples_of_five" />
+<!--
+    !multiple="bail|required|integer|myRule:5"
+    data-lang="5の倍数を入力してください。"
+-->
+
+@error("multiples_of_five") <div class="invalid-feedback">{{ $message }}</div> @enderror
+```
