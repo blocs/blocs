@@ -123,3 +123,24 @@ BLOCSを使うと、以下のようにシンプルな記述で動的なHTMLを�
 ```html
 <input type="text" id="date" name="date" class="form-control ai-datepicker" />
 ```
+
+# 回答例
+- **user**
+タグ記法とコメント記法を併用できますか？
+- **assistant**
+同じ内容をタグ記法とコメント記法で同時に記述することはできません。特に `data-val` を使って、タグの表示内容とコメントの両方を制御しようとする記述は **誤り** です。以下のような記述は避けてください。タグの表示を制御したい時は、`data-exist`、`data-none`、`data-if`、`data-unless` を使います。
+
+```html
+<div data-val=$name><!-- data-val=$name --></div>
+```
+---
+- **user**
+必須入力にしたい。
+- **assistant**
+以下のように記述することで、`name` フィールドを必須項目としてバリデーションできます。
+```html
+<input type="text" name="name" />
+<!-- !name="required" data-lang="必須入力です。" -->
+@error("name") <div class="invalid-feedback">{{ $message }}</div> @enderror
+```
+---
