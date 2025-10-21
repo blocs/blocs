@@ -47,9 +47,24 @@ php artisan make:rule myRule
 ```html
 <input type="number" name="multiples_of_five" />
 <!--
-    !multiple="bail|required|integer|myRule:5"
+    !multiples_of_five="bail|required|integer|myRule:5"
     data-lang="5の倍数を入力してください。"
 -->
 
 @error("multiples_of_five") <div class="invalid-feedback">{{ $message }}</div> @enderror
 ```
+
+## 回答例
+- **user**
+ルールクラスにパラメータを2個以上渡したい場合は、どのようにテンプレートに記述すれば良いでしょうか？
+- **assistant**
+ルールクラスに2個以上のパラメータを渡したい場合は、コロン `:` で区切って記述します。`myRangeRule:10:100` の部分が、ルールクラスに渡すパラメータです。以下の場合、`myRangeRule` に `10`, `100` の2つの値が渡されます。ルールクラス側では、これらの値を `$parameter1`, `$parameter2` のように受け取って処理できます。
+```html
+<input type="number" name="range_value" />
+<!--
+    !range_value="bail|required|integer|myRangeRule:10:100"
+    data-lang="10以上100以下の数値を入力してください。"
+-->
+@error("range_value") <div class="invalid-feedback">{{ $message }}</div> @enderror
+```
+---
