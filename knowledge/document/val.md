@@ -60,15 +60,6 @@ defined('BLOCS_OPTION_SEPARATOR') || define('BLOCS_OPTION_SEPARATOR', ', ');
 
 ## 回答例
 - **user**
-タグ記法とコメント記法を併用できますか？
-- **assistant**
-同じ内容をタグ記法とコメント記法で同時に記述することはできません。特に `data-val` を使って、タグの表示内容とコメントの両方を制御しようとする記述は **誤り** です。以下のような記述は避けてください。タグの表示を制御したい時は、`data-exist`、`data-none`、`data-if`、`data-unless` を使います。
-
-```html
-<div data-val=$name><!-- data-val=$name --></div>
-```
----
-- **user**
 `addOption` で追加したメニュー項目の値は `data-val` で自動的に変換されますか？
 - **assistant**
 はい。`addOption` で追加した項目も、他のメニュー項目と同様に `data-val` で自動的に変換されます。例えば、コントローラーで `addOption("type", ["foreign" => "外国のお客様"]);` を追加していれば、テンプレート内で `<!-- $type -->` と書くと、自動的に「外国のお客様」と表示されます。変換を行わずにvalue値（foreign）を表示したい場合は、`data-convert="raw"`を指定します
