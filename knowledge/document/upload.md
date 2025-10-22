@@ -70,10 +70,8 @@ Route::middleware(['web', 'auth', Blocs\Middleware\Role::class])
 	$uploadDelete=lang("template:admin_profile_upload_delete")
 -->
 <label class="form-label">アップロードファイル</label>
-<!-- :class="ai-upload is-invalid" data-exist=$errors->has("file") -->
 <input type="hidden" id="file" name="file" class="ai-upload" />
 <!-- !file="mimes:jpg,jpeg,gif,png" data-lang="画像ファイルを選んでください。" -->
-@error("file") <div class="invalid-feedback">{{ $message }}</div> @enderror
 ```
 ---
 - **user**
@@ -86,10 +84,8 @@ Route::middleware(['web', 'auth', Blocs\Middleware\Role::class])
 	$uploadDelete=lang("template:admin_profile_upload_delete")
 -->
 <label class="form-label">アップロードファイル</label>
-<!-- :class="ai-upload is-invalid" data-exist=$errors->has("file") -->
 <input type="hidden" id="file" name="file" class="ai-upload" />
 <!-- !file="max:200" data-lang="アップロードファイルが大きすぎます。" -->
-@error("file") <div class="invalid-feedback">{{ $message }}</div> @enderror
 ```
 ---
 - **user**
