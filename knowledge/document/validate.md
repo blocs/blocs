@@ -18,9 +18,10 @@
 @error("name") <div class="invalid-feedback">{{ $message }}</div> @enderror
 ```
 
-## バリデーション機能一覧
+## 利用可能なバリデーション機能一覧
 ### 必須・形式チェック
-`data-validate` 属性に指定できる主なバリデーションルールは以下の通りです。
+`data-validate` 属性に指定できる主なバリデーションルールは以下の通りです。独自のバリデーション関数を作成して、`data-validate` に指定することも可能です。
+
 |data-validateの値|チェック内容|
 |:-----------|:-----------|
 |required|入力が必須であることを確認します。|
