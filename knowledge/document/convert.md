@@ -27,3 +27,21 @@
 |raw_download|アップロードファイルへのリンク表示|
 |raw_thumbnail|アップロードファイルのサムネイル表示|
 |raw_autolink|URLを自動的にリンク化|
+
+## 回答例
+- **user**
+`data-convert` 属性で独自の変換ロジックを追加したい場合、どのような手順で独自コンバート関数を定義し、テンプレートから呼び出せるようにすればよいでしょうか？
+- **assistant**
+テンプレート内で `data-convert` 属性を使って独自の変換処理を行いたい場合、以下の手順で実装できます。まず、`public` かつ `static` なメソッドを定義します。必要に応じて引数も受け取れます。
+```php
+public static function unit($str, $parameter1)
+{
+    return $str.$parameter1;
+}
+```
+- **assistant**
+テンプレート内で `data-convert` 属性を使い、クラスとメソッドを指定して呼び出します。コロン `:` で区切って引数も渡せます。
+```html
+<!-- $price data-convert="App\Http\Controllers\Admin\UserController::unit:'円'" -->
+```
+---
