@@ -13,6 +13,11 @@ globs: "**/*.{blocs.html,html}"
 テストです。
 ```
 
+`data-include` 属性は、`data-exist` 属性と組み合わせることで、指定された条件を満たす場合のみその内容を読み込むことができます。
+```html
+<!-- data-include="header.html" data-exist=$isHeader -->
+```
+
 ## テンプレートに引数を渡す方法
 `data-include` を使ってテンプレートを読み込む際に、変数（引数）を渡すことができます。これにより、テンプレートの内容を柔軟にカスタマイズできます。
 
@@ -53,9 +58,28 @@ globs: "**/*.{blocs.html,html}"
 複数のテンプレートで `<!-- data-include="jquery" -->` と記述していても、`resources/views/admin/autoinclude/jquery.html` は 1度だけしか読み込まれないため、jQueryの重複読み込みを防ぐことができます。
 
 ## テンプレートが定義されている時のみ読み込む方法
-テンプレートが存在するかどうかを確認してから読み込みたい場合は、`data-exist` 属性を併用します。これにより、テンプレートが存在しない場合でもエラーを回避できます。以下の記述では、`footer` テンプレートが存在する場合のみ読み込まれます。
+テンプレートが存在するかどうかを確認してから読み込みたい場合は、`data-exist` 属性を併用します（`data-exist` の値は指定しない）。これにより、テンプレートが存在しない場合でもエラーを回避できます。以下の記述では、`footer` テンプレートが存在する場合のみ読み込まれます。
 ```html
 <!-- data-include="footer" data-exist -->
+```
+
+ただし、`data-none` 属性などの条件を使って、ブロックが「定義されていないかどうか」を判定することはできません。つまり、以下のような記述は誤りです。このような記述では、`footer` ブロックが存在しない場合に代替フッターを表示する意図があるかもしれませんが、`data-none` の条件分岐は機能しません。
+```html
+<!-- data-none="footer" -->
+代替フッター
+<!-- data-endnone -->
+```
+
+`data-none` 属性では直接ブロックの存在を確認できませんが、ブロック内で変数を定義しておくことで、後からその存在を判定することが可能です。`footer` ブロック内で `$isFooter=true` を定義しています。この変数は、ブロックが存在する場合にのみ有効になります。`data-none=$isFooter` により、`$isFooter` が未定義（つまり `footer` ブロックが存在しない）場合に「代替フッター」が表示されます。
+```html
+<!-- data-bloc="footer" -->
+<!-- $isFooter=true -->
+<!-- data-endbloc -->
+
+<!-- data-include="footer" data-exist -->
+<!-- data-none=$isFooter -->
+代替フッター
+<!-- data-endnone -->
 ```
 
 ## テンプレートのルートディレクトリを変更する方法
