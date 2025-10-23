@@ -1,11 +1,11 @@
 {
     "name": "blocs\/blocs",
     "type": "library",
-    "description": "Laravel template engine",
+    "description": "Laravel Template Engine",
     "keywords": [
         "PHP",
         "Laravel",
-        "Template engine"
+        "Template Engine"
     ],
     "license": "MIT",
     "authors": [
