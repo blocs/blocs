@@ -15,14 +15,14 @@ Laravel Blade をもっと便利にするテンプレートエンジン
 | [**iknow**](https://linear.iknow.dev/?category=2)
 
 ## 導入方法
-1. PHP / Composer をセットアップ
+1. PHP と Composer をセットアップ
 2. Composer で Laravel をインストール
 ```sh
 composer create-project laravel/laravel laravel-blocs
 cd laravel-blocs
 ```
 
-3. Composer で BLOCSをインストール
+3. Composer で BLOCS をインストール
 ```sh
 laravel-blocs % composer require blocs/blocs    
 ```
