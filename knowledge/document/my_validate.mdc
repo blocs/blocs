@@ -7,7 +7,6 @@ Laravelでは、`required` や `max` などの標準バリデーションルー�
 
 ## 1. ルールクラスの作成
 まずは、Laravelの Artisan コマンドを使って、独自のバリデーションルールクラスを作成します。
-
 ```sh
 php artisan make:rule myRule
 ```
@@ -19,7 +18,6 @@ php artisan make:rule myRule
 
 ### コンストラクタの定義
 まず、検証対象の倍数を指定できるように、コンストラクタで数値とエラーメッセージを受け取るようにします。BLOCSテンプレートの `data-lang` 属性で指定されたメッセージは、`$message` に自動でセットされます。
-
 ```php
     private $num;
     private $message;
@@ -33,7 +31,6 @@ php artisan make:rule myRule
 
 ### バリデーションロジックの定義
 次に、`validate` メソッド内で、入力値が指定された数値の倍数かどうかを判定します。入力値は `$value` に渡されるので、以下のように条件を記述します。
-
 ```php
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
@@ -47,7 +44,6 @@ php artisan make:rule myRule
 
 ## 3. テンプレートでルールを設定
 作成したオリジナルのバリデーションルールは、BLOCSのテンプレート内で設定できます。Laravelの標準バリデーションルールと併用することも可能です。エラーメッセージは、`data-lang` で設定します。
-
 ```html
 <input type="number" name="multiples_of_five" />
 <!--
