@@ -39,7 +39,6 @@ globs: "**/*.{blocs.html,html}"
 複数選択できるプルダウンメニューは、`ai-select2` クラスを使うことで簡単に実装できます。このクラスを使うと、選択肢が多い場合でもキーワード検索で絞り込みができるため、ユーザーにとって使いやすくなります。
 - **assistant**
 複数選択を可能にするには、`multiple` 属性を指定します。選択された値を配列で受け取るために、`name` 属性は `pulldown[]` のように記述します。
-
 ```html
 <select name="pulldown[]" class="form-control ai-select2" multiple>
 </select>
