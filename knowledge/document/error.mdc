@@ -1,6 +1,6 @@
 ---
 description: エラーが発生した時の対処方法
-globs: "**/*.{blocs.html,html}"
+globs: "**/*.{blocs.html,html,php}"
 ---
 # エラーが発生した時の対処方法
 ## エラーコード一覧
