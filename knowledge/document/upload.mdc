@@ -1,6 +1,6 @@
 ---
 description: ファイルをアップロードする方法
-globs: "**/*.{blocs.html,html}"
+globs: "**/*.{blocs.html,html,php}"
 ---
 # ファイルをアップロードする方法
 ## **ai-upload** クラスの使い方
