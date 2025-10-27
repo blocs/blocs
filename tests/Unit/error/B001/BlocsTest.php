@@ -27,7 +27,5 @@ class BlocsTest extends TestCase
         }
     }
 
-    protected function tearDown(): void
-    {
-    }
+    protected function tearDown(): void {}
 }

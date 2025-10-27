@@ -14,10 +14,10 @@ trait ParserTrait
         $attrValue = '';
 
         // 一つ目は必ず属性値とする
-        !empty($attrName) && count($attrValueList) && $attrValue = array_shift($attrValueList);
+        ! empty($attrName) && count($attrValueList) && $attrValue = array_shift($attrValueList);
 
         foreach (array_reverse($attrValueList) as $attrBuff) {
-            if (!strlen(trim($attrBuff))) {
+            if (! strlen(trim($attrBuff))) {
                 // 空白
                 array_pop($attrValueList);
             } elseif (self::checkAttrName($attrBuff)) {
@@ -51,7 +51,7 @@ trait ParserTrait
         }
 
         if (empty($attrName)) {
-            if (!strlen($attrValue)) {
+            if (! strlen($attrValue)) {
                 return;
             }
 
@@ -66,7 +66,7 @@ trait ParserTrait
             return;
         }
 
-        if (!strncmp($attrName, ':', 1) && $commentParse) {
+        if (! strncmp($attrName, ':', 1) && $commentParse) {
             // data-attributeの省略記法（コメント記法）
             $attrList[BLOCS_DATA_ATTRIBUTE] = substr($attrName, 1);
             $attrList[BLOCS_DATA_VAL] = $attrValue;
@@ -84,7 +84,7 @@ trait ParserTrait
             return;
         }
 
-        if (!strncmp($attrName, ':', 1) && !$commentParse) {
+        if (! strncmp($attrName, ':', 1) && ! $commentParse) {
             // data-attributeの省略記法（タグ記法）
             $commentAttribute = BLOCS_DATA_ATTRIBUTE.'="'.substr($attrName, 1).'"';
             if (isset($quotesList[$attrName])) {
@@ -110,7 +110,7 @@ trait ParserTrait
             return;
         }
 
-        if (!strncmp($attrName, '!', 1) && $commentParse) {
+        if (! strncmp($attrName, '!', 1) && $commentParse) {
             // data-validateの省略記法（コメント記法のみ）
             $attrList[BLOCS_DATA_FORM] = substr($attrName, 1);
             $attrList[BLOCS_DATA_VALIDATE] = $attrValue;
@@ -145,7 +145,7 @@ trait ParserTrait
     private static function checkAttrValue($attrName)
     {
         // $object->method()
-        '()' === substr($attrName, -2) && $attrName = substr($attrName, 0, -2);
+        substr($attrName, -2) === '()' && $attrName = substr($attrName, 0, -2);
         $attrName = str_replace('()->', '', $attrName);
 
         return Common::checkValueName($attrName);

@@ -19,7 +19,7 @@ class Lang
         if (defined('BLOCS_ROOT_DIR') && is_file(BLOCS_ROOT_DIR.'/lang.json')) {
             $message = json_decode(file_get_contents(BLOCS_ROOT_DIR.'/lang.json'), true);
 
-            if (!isset($message[$category.':'.$code])) {
+            if (! isset($message[$category.':'.$code])) {
                 return $messageCode;
             }
             $message = $message[$category.':'.$code];

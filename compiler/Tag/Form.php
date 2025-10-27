@@ -34,7 +34,7 @@ class Form
     // selectなどのフォーム部品にchecked、selectedをつける
     public static function check($compiledTag, $attrName, $attrValue, $checkFlg, $attrChecked)
     {
-        if (isset($attrValue) && !strncmp($attrValue, '<?', 2)) {
+        if (isset($attrValue) && ! strncmp($attrValue, '<?', 2)) {
             $valueBuff = '(isset($check_'.$attrName.') ? $check_'.$attrName.' : null)';
             $checkTag = str_replace('echo(', '$check_'.$attrName.' = (', $attrValue);
         } else {
@@ -47,7 +47,7 @@ class Form
         $compiledTag = preg_replace('/\s+'.$checkFlg.'\s*=\s*["\']{0,1}'.$checkFlg.'["\']{0,1}([\s>\/]+)/i', '${1}', $compiledTag);
         $compiledTag = preg_replace('/\s+'.$checkFlg.'\s*=\s*["\']{0,1}true["\']{0,1}([\s>\/]+)/i', '${1}', $compiledTag);
 
-        if ('/>' === substr($compiledTag, -2)) {
+        if (substr($compiledTag, -2) === '/>') {
             $compiledTag = rtrim(substr($compiledTag, 0, -2)).$checkTag.' />';
         } else {
             $compiledTag = rtrim(substr($compiledTag, 0, -1)).$checkTag.'>';

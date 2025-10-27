@@ -43,14 +43,14 @@ class Parser
         foreach ($htmlList as $htmlNum => $htmlBuff) {
             $htmlBuff = self::backOperator($htmlBuff);
 
-            if ('<' === $htmlBuff && isset($htmlList[$htmlNum + 1])) {
+            if ($htmlBuff === '<' && isset($htmlList[$htmlNum + 1])) {
                 $nextHtmlBuff = $htmlList[$htmlNum + 1];
 
-                if (!strncmp($nextHtmlBuff, '?', 1)) {
+                if (! strncmp($nextHtmlBuff, '?', 1)) {
                     $isPhp = true;
                 }
 
-                if (!strlen($tagName) && empty($isQuote) && !$isPhp) {
+                if (! strlen($tagName) && empty($isQuote) && ! $isPhp) {
                     if (preg_match('/^('.BLOCS_TAG_NAME_REGREX.')/s', $nextHtmlBuff, $matchList) || preg_match('/^(\/\s*'.BLOCS_TAG_NAME_REGREX.')/s', $nextHtmlBuff, $matchList)) {
                         // タグ処理を開始
                         $tagName = strtolower($matchList[0]);
@@ -62,19 +62,19 @@ class Parser
                 }
             }
 
-            if ('>' === $htmlBuff && isset($htmlList[$htmlNum - 1]) && '?' === substr($htmlList[$htmlNum - 1], -1)) {
+            if ($htmlBuff === '>' && isset($htmlList[$htmlNum - 1]) && substr($htmlList[$htmlNum - 1], -1) === '?') {
                 $isPhp = false;
             }
 
             strlen($htmlBuff) && $rawString .= $htmlBuff;
 
-            if (!strlen($tagName) || $isPhp) {
+            if (! strlen($tagName) || $isPhp) {
                 // タグ処理でない
                 continue;
             }
 
-            if ('>' === $htmlBuff && empty($isQuote)) {
-                if ('!--' === $tagName && !$commentParse) {
+            if ($htmlBuff === '>' && empty($isQuote)) {
+                if ($tagName === '!--' && ! $commentParse) {
                     // コメントをパースしない
                     strlen($rawString) && $parsedHtml[] = $rawString;
                 } else {
@@ -106,7 +106,7 @@ class Parser
                 continue;
             }
 
-            if ('=' === $htmlBuff && empty($isQuote) && !('!--' === $tagName && !$commentParse)) {
+            if ($htmlBuff === '=' && empty($isQuote) && ! ($tagName === '!--' && ! $commentParse)) {
                 $attrString = self::deleteTagName($attrString, $tagName);
                 $attrString = self::replaceAliasAttrName($attrString);
                 $attrValueList = preg_split("/(\s)/", trim($attrString), -1, PREG_SPLIT_DELIM_CAPTURE);
@@ -122,15 +122,15 @@ class Parser
                 continue;
             }
 
-            if ('"' === $htmlBuff || "'" === $htmlBuff) {
-                if (!empty($isQuote)) {
+            if ($htmlBuff === '"' || $htmlBuff === "'") {
+                if (! empty($isQuote)) {
                     if ($isQuote === $htmlBuff) {
                         // quoteを無効にする
                         strlen($attrName) && $quotesList[$attrName] = $isQuote;
                         $isQuote = '';
                     }
                 } else {
-                    if (isset($htmlList[$htmlNum - 1]) && !trim($htmlList[$htmlNum - 1]) && isset($htmlList[$htmlNum - 2]) && '=' === $htmlList[$htmlNum - 2]) {
+                    if (isset($htmlList[$htmlNum - 1]) && ! trim($htmlList[$htmlNum - 1]) && isset($htmlList[$htmlNum - 2]) && $htmlList[$htmlNum - 2] === '=') {
                         // quoteを有効にする
                         $isQuote = $htmlBuff;
                     }

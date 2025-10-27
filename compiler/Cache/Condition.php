@@ -35,7 +35,7 @@ class Condition
 
         if ($tagName) {
             // タグ記法
-            if ('/>' === substr($compiledTag, -2)) {
+            if (substr($compiledTag, -2) === '/>') {
                 // はさまないタグの場合
                 array_unshift($htmlArray, BLOCS_ENDIF_SCRIPT);
             } else {

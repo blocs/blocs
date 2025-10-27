@@ -15,8 +15,8 @@ trait CompileCommentTrait
     private function compileComment(&$htmlBuff, &$htmlArray)
     {
         // コメントタグをパース
-        list($includeBuff) = Parser::parse($htmlBuff, true);
-        if (!isset($includeBuff['attribute'])) {
+        [$includeBuff] = Parser::parse($htmlBuff, true);
+        if (! isset($includeBuff['attribute'])) {
             return;
         }
 
@@ -29,7 +29,7 @@ trait CompileCommentTrait
         unset($isAssignValue['--'], $isAssignValue[BLOCS_DATA_EXIST], $isAssignValue[BLOCS_DATA_NONE], $isAssignValue[BLOCS_DATA_IF], $isAssignValue[BLOCS_DATA_UNLESS]);
 
         foreach ($isAssignValue as $key => $value) {
-            if (!Common::checkValueName($key)) {
+            if (! Common::checkValueName($key)) {
                 $isAssignValue = [];
                 break;
             }
@@ -45,9 +45,9 @@ trait CompileCommentTrait
 
         if (isset($attrList[BLOCS_DATA_BLOC])) {
             // コメント記法でのdata-bloc開始処理
-            ++$this->partDepth;
+            $this->partDepth++;
 
-            if (1 === $this->partDepth) {
+            if ($this->partDepth === 1) {
                 // ブロック処理開始
                 if (strncmp($attrList[BLOCS_DATA_BLOC], '+', 1)) {
                     $this->partName = $attrList[BLOCS_DATA_BLOC];
@@ -63,10 +63,10 @@ trait CompileCommentTrait
         }
         if (isset($attrList[BLOCS_DATA_ENDBLOC])) {
             // コメント記法でのdata-bloc終了処理
-            --$this->partDepth;
+            $this->partDepth--;
             $this->partDepth < 0 && $this->partDepth = 0;
 
-            if (0 === $this->partDepth) {
+            if ($this->partDepth === 0) {
                 // ブロック処理終了
                 $this->partName = '';
                 $htmlBuff = '';
@@ -104,7 +104,7 @@ trait CompileCommentTrait
         }
 
         // data-attributeだけが設定されている時の処理
-        if (isset($attrList[BLOCS_DATA_ATTRIBUTE]) && !isset($attrList[BLOCS_DATA_VAL])) {
+        if (isset($attrList[BLOCS_DATA_ATTRIBUTE]) && ! isset($attrList[BLOCS_DATA_VAL])) {
             $condition = Condition::condition($attrList[BLOCS_DATA_ATTRIBUTE], $attrList, $quotesList);
             unset($attrList[BLOCS_DATA_EXIST], $attrList[BLOCS_DATA_NONE], $attrList[BLOCS_DATA_IF], $attrList[BLOCS_DATA_UNLESS]);
 
@@ -178,12 +178,12 @@ trait CompileCommentTrait
                 'array_form' => substr($attrList[BLOCS_DATA_LOOP], 1),
             ], false);
         }
-        if (isset($attrList[BLOCS_DATA_ENDLOOP]) && !empty($this->endloop)) {
+        if (isset($attrList[BLOCS_DATA_ENDLOOP]) && ! empty($this->endloop)) {
             $htmlBuff = Loop::endloop(array_pop($this->endloop));
 
             $target = '';
             foreach ($this->tagCounter as $num => $buff) {
-                if (!isset($buff['array_form']) || BLOCS_DATA_LOOP !== $buff['tag']) {
+                if (! isset($buff['array_form']) || $buff['tag'] !== BLOCS_DATA_LOOP) {
                     continue;
                 }
                 $target = $num;
@@ -203,7 +203,7 @@ trait CompileCommentTrait
         $assigned && $assignedValue = count($this->assignedValue) ? end($this->assignedValue) : [];
 
         foreach ($attrList as $key => $value) {
-            if (!Common::checkValueName($key)) {
+            if (! Common::checkValueName($key)) {
                 continue;
             }
 
@@ -214,13 +214,13 @@ trait CompileCommentTrait
                 // 変数代入は継承しない
                 $assignedValue[$key] = "<?php isset({$value}) && {$key} = {$value}; ?>\n";
             } else {
-                if (!isset($assignedValue[$key])) {
+                if (! isset($assignedValue[$key])) {
                     // 変数を継承する
                     $assignedValue[$key] = "<?php {$key} = {$value}; ?>\n";
                 }
             }
 
-            if (isset($attrList[BLOCS_DATA_NONE]) && !strlen($attrList[BLOCS_DATA_NONE]) && !isset($attrList[BLOCS_DATA_INCLUDE])) {
+            if (isset($attrList[BLOCS_DATA_NONE]) && ! strlen($attrList[BLOCS_DATA_NONE]) && ! isset($attrList[BLOCS_DATA_INCLUDE])) {
                 // 値の上書き禁止
                 $assignedValue[$key] = "<?php if(empty({$key})): ?>\n".$assignedValue[$key].BLOCS_ENDIF_SCRIPT;
             }
@@ -232,7 +232,7 @@ trait CompileCommentTrait
         $assigned && $this->assignedValue[] = $assignedValue;
 
         Condition::partInclude($this->partInclude);
-        if (!(isset($attrList[BLOCS_DATA_NONE]) && !strlen($attrList[BLOCS_DATA_NONE])) && $condition = Condition::condition('', $attrList, $quotesList)) {
+        if (! (isset($attrList[BLOCS_DATA_NONE]) && ! strlen($attrList[BLOCS_DATA_NONE])) && $condition = Condition::condition('', $attrList, $quotesList)) {
             // 値をセットする条件
             $htmlBuff = $condition.$htmlBuff.BLOCS_ENDIF_SCRIPT;
         }
@@ -260,9 +260,9 @@ trait CompileCommentTrait
     // バリデーションから引数を除く
     private static function getValidateMethod($dataValidate)
     {
-        list($validateMethod) = explode(':', $dataValidate, 2);
-        'maxlength' === $validateMethod && $validateMethod = 'max';
-        'minlength' === $validateMethod && $validateMethod = 'min';
+        [$validateMethod] = explode(':', $dataValidate, 2);
+        $validateMethod === 'maxlength' && $validateMethod = 'max';
+        $validateMethod === 'minlength' && $validateMethod = 'min';
 
         return $validateMethod;
     }

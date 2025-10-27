@@ -55,7 +55,7 @@ class Filter
     {
         $str = mb_convert_kana($str, 'ras');
         $str = str_replace(['ー', '―', '‐'], '-', $str);
-        if (7 == strlen($str) || preg_match('/^[0-9]+$/', $str)) {
+        if (strlen($str) == 7 || preg_match('/^[0-9]+$/', $str)) {
             $str = substr($str, 0, 3).'-'.substr($str, 3);
         }
 
@@ -67,7 +67,7 @@ class Filter
     {
         $str = mb_convert_kana($str, 'ras');
         $str = str_replace('/', '-', $str);
-        if (preg_match('/^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}$/', $str) && 10 != strlen($str)) {
+        if (preg_match('/^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}$/', $str) && strlen($str) != 10) {
             $tmp = explode('-', $str);
 
             return vsprintf('%4d-%02d-%02d', $tmp); // 月日の箇所をゼロ詰めに整形

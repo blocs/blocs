@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 class BlocsTest extends TestCase
 {
     protected $testDir;
+
     protected $actual;
 
     protected function setUp(): void
@@ -32,7 +33,5 @@ class BlocsTest extends TestCase
         }
     }
 
-    protected function tearDown(): void
-    {
-    }
+    protected function tearDown(): void {}
 }

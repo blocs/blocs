@@ -9,7 +9,9 @@ use PHPUnit\Framework\TestCase;
 class BlocsTest extends TestCase
 {
     protected $testDir;
+
     protected $expected;
+
     protected $actual;
 
     protected function setUp(): void
