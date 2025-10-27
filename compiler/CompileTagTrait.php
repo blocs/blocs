@@ -35,13 +35,13 @@ trait CompileTagTrait
             empty($endTagCounter['before']) || $compiledTag = $endTagCounter['before'].$compiledTag;
             empty($endTagCounter['after']) || array_unshift($htmlArray, $endTagCounter['after']);
 
-            if (!isset($endTagCounter['type'])) {
+            if (! isset($endTagCounter['type'])) {
                 continue;
             }
 
-            'ignore' === $endTagCounter['type'] && $this->ignoreFlg = false;
+            $endTagCounter['type'] === 'ignore' && $this->ignoreFlg = false;
 
-            if ('part' === $endTagCounter['type'] && $this->isPart()) {
+            if ($endTagCounter['type'] === 'part' && $this->isPart()) {
                 // タグ記法でのdata-bloc終了処理
                 $this->partInclude[$this->partName][] = $compiledTag;
                 $this->partName = '';
@@ -81,17 +81,17 @@ trait CompileTagTrait
         $compiledTag = $this->mergeDataAttribute($compiledTag, $attrList);
 
         // スクリプトの中のタグを無効化
-        if ('script' === $tagName || 'style' === $tagName) {
-            ++$this->scriptCounter;
-        } elseif ('/script' === $tagName || '/style' === $tagName) {
-            --$this->scriptCounter;
+        if ($tagName === 'script' || $tagName === 'style') {
+            $this->scriptCounter++;
+        } elseif ($tagName === '/script' || $tagName === '/style') {
+            $this->scriptCounter--;
         }
 
         if ($this->scriptCounter > 0) {
             return $compiledTag;
         }
 
-        if ('label' === $tagName) {
+        if ($tagName === 'label') {
             isset($attrList['for']) && $this->labelArray['id'] = $attrList['for'];
             $this->labelArray['label'] = '';
         }
@@ -101,8 +101,8 @@ trait CompileTagTrait
             if (isset($attrList['class'])) {
                 $classNameList = preg_split("/\s/", $attrList['class']);
                 foreach ($classNameList as $className) {
-                    list($className) = preg_split("/\<\?php/", $className, 2);
-                    if (!strncmp($className, 'ai-', 3)) {
+                    [$className] = preg_split("/\<\?php/", $className, 2);
+                    if (! strncmp($className, 'ai-', 3)) {
                         $classList[] = substr($className, 3);
                     }
                 }
@@ -122,7 +122,7 @@ trait CompileTagTrait
 
     private static function deleteDataAttribute($rawString, $attrList)
     {
-        if (!isset(self::$allAttrName)) {
+        if (! isset(self::$allAttrName)) {
             $allConstant = get_defined_constants();
             foreach ($allConstant as $key => $value) {
                 strncmp($key, 'BLOCS_DATA_', 11) || self::$allAttrName[] = $value;
@@ -130,7 +130,7 @@ trait CompileTagTrait
         }
 
         foreach (self::$allAttrName as $attrName) {
-            if (!isset($attrList[$attrName])) {
+            if (! isset($attrList[$attrName])) {
                 continue;
             }
 
@@ -145,9 +145,9 @@ trait CompileTagTrait
 
     private function setTagCounter($tagCounter, $unshift = true)
     {
-        isset($tagCounter['type']) && 'ignore' === $tagCounter['type'] && $this->ignoreFlg = true;
+        isset($tagCounter['type']) && $tagCounter['type'] === 'ignore' && $this->ignoreFlg = true;
 
-        if (!$unshift) {
+        if (! $unshift) {
             $this->tagCounter[] = $tagCounter;
 
             return;

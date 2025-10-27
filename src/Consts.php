@@ -1,7 +1,7 @@
 <?php
 
 // テンプレートのキャッシュを保存するディレクトリ
-if (!defined('BLOCS_CACHE_DIR')) {
+if (! defined('BLOCS_CACHE_DIR')) {
     if (function_exists('config')) {
         define('BLOCS_CACHE_DIR', config('view.compiled'));
     } else {
@@ -12,7 +12,7 @@ if (!defined('BLOCS_CACHE_DIR')) {
 (realpath(BLOCS_CACHE_DIR) && is_writable(BLOCS_CACHE_DIR)) || trigger_error('B001: Can not write cache file into directory', E_USER_ERROR);
 
 // テンプレートのルートディレクトリ
-if (!defined('BLOCS_ROOT_DIR')) {
+if (! defined('BLOCS_ROOT_DIR')) {
     if (function_exists('config')) {
         $viewPathList = config('view.paths');
         define('BLOCS_ROOT_DIR', $viewPathList[0]);
@@ -82,7 +82,7 @@ function setTemplateCacheDir()
     }
 
     foreach (['TMPDIR', 'TMP', 'TEMP', 'USERPROFILE'] as $key) {
-        if (!empty($_ENV[$key]) && ($key = str_replace(DIRECTORY_SEPARATOR, '/', realpath($_ENV[$key]))) && is_dir($key) && is_writable($key)) {
+        if (! empty($_ENV[$key]) && ($key = str_replace(DIRECTORY_SEPARATOR, '/', realpath($_ENV[$key]))) && is_dir($key) && is_writable($key)) {
             define('BLOCS_CACHE_DIR', $key.'/');
 
             return;
@@ -90,7 +90,7 @@ function setTemplateCacheDir()
     }
 
     $key = ini_get('upload_tmp_dir');
-    if (!empty($key) && ($key = str_replace(DIRECTORY_SEPARATOR, '/', realpath($key))) && is_dir($key) && is_writable($key)) {
+    if (! empty($key) && ($key = str_replace(DIRECTORY_SEPARATOR, '/', realpath($key))) && is_dir($key) && is_writable($key)) {
         define('BLOCS_CACHE_DIR', $key.'/');
 
         return;

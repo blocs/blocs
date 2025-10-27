@@ -7,6 +7,7 @@ require_once 'Consts.php';
 class View
 {
     private $filename;
+
     private $config;
 
     public function __construct($filename)
@@ -64,25 +65,25 @@ class View
 
         // タイムスタンプをチェック
         $updateCache = false;
-        if (!file_exists($compiledPath)) {
+        if (! file_exists($compiledPath)) {
             // キャッシュがない
             $updateCache = true;
         } elseif (isset($this->config['include'][$path]) && is_array($this->config['include'][$path])) {
             foreach ($this->config['include'][$path] as $includeFile) {
-                if (!file_exists($includeFile) || filemtime($includeFile) > $this->config['timestamp'][$path]) {
+                if (! file_exists($includeFile) || filemtime($includeFile) > $this->config['timestamp'][$path]) {
                     $updateCache = true;
                     break;
                 }
             }
         }
 
-        if (!$updateCache) {
+        if (! $updateCache) {
             // 更新なし
             return $compiledPath;
         }
 
         // Blocsを適用
-        $blocsCompiler = new Compiler\BlocsCompiler();
+        $blocsCompiler = new Compiler\BlocsCompiler;
         $contents = $blocsCompiler->compile($path);
 
         // 設定ファイルを作成
@@ -97,7 +98,7 @@ class View
     private function fixerOutput($writeBuff)
     {
         $head = strtolower(substr(trim($writeBuff), 0, 9));
-        if ('<!doctype' != $head && '<html' != substr($head, 0, 5)) {
+        if ($head != '<!doctype' && substr($head, 0, 5) != '<html') {
             // HTML以外は整形しない
             return $writeBuff;
         }
@@ -111,14 +112,16 @@ class View
             if (in_array(strtolower($content), ['textarea', 'pre'])) {
                 $writeBuff .= '<'.$content;
                 empty($replaceTag) && $replaceTag = $content;
+
                 continue;
             }
 
-            if (!empty($replaceTag)) {
+            if (! empty($replaceTag)) {
                 $buffList = preg_split("/<\s*\/\s*{$replaceTag}/si", $content, 2);
                 if (count($buffList) < 2) {
                     // 特定のタグでは整形しない
                     $writeBuff .= $content;
+
                     continue;
                 } else {
                     $writeBuff .= $buffList[0];

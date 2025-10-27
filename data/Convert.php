@@ -8,7 +8,7 @@ class Convert
     // 数値表示
     public static function number($str, $decimals = 0)
     {
-        if (!is_numeric($str)) {
+        if (! is_numeric($str)) {
             return $str;
         }
 
@@ -68,7 +68,7 @@ class Convert
         $prefix || $prefix = prefix();
         $class && $class = 'class="'.$class.'" ';
         $downloadUrl = route($prefix.'.download', ['filename' => $file['filename']]).'?'.time();
-        if (!empty($file['thumbnail'])) {
+        if (! empty($file['thumbnail'])) {
             $file['name'] = "<img src='{$downloadUrl}' {$class}/>";
         }
 
@@ -96,7 +96,7 @@ class Convert
     {
         $str = strip_tags($str);
         $str = str_replace(["\r\n", "\r", "\n"], ' ', $str);
-        if (!is_numeric($length)) {
+        if (! is_numeric($length)) {
             return $str;
         }
         $result = mb_substr($str, 0, $length);

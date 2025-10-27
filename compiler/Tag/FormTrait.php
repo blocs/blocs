@@ -12,14 +12,14 @@ trait FormTrait
         $quotesList = $htmlBuff['quotes'];
         $type = isset($attrList['type']) ? strtolower($attrList['type']) : '';
 
-        if ('input' === $tagName && isset($attrList['name']) && strlen($attrList['name'])) {
+        if ($tagName === 'input' && isset($attrList['name']) && strlen($attrList['name'])) {
             $formName = Common::checkFormName($attrList['name']);
-            if (false !== $formName) {
+            if ($formName !== false) {
                 $attrList['name'] = $formName;
                 count($this->labelArray) && $this->labelArray = array_merge($this->labelArray, $attrList);
 
-                if (('radio' === $type || 'checkbox' === $type) && isset($attrList['value'])) {
-                    !count($this->labelArray) && isset($attrList['id']) && $this->option[] = $attrList;
+                if (($type === 'radio' || $type === 'checkbox') && isset($attrList['value'])) {
+                    ! count($this->labelArray) && isset($attrList['id']) && $this->option[] = $attrList;
 
                     $selected = (isset($attrList['checked']) ? 'true' : 'false');
                     $compiledTag = Form::check($compiledTag, $attrList['name'], $attrList['value'], 'checked', $selected);
@@ -29,13 +29,13 @@ trait FormTrait
                 if (in_array($type, ['text', 'hidden', 'search', 'tel', 'url', 'email', 'datetime', 'date', 'month', 'week', 'time', 'datetime-local', 'number', 'range', 'color'])) {
                     $compiledTag = Form::value($compiledTag, $attrList);
                 }
-                if ('hidden' === $type && isset($attrList['class'])) {
+                if ($type === 'hidden' && isset($attrList['class'])) {
                     $classList = [];
                     if (isset($attrList['class'])) {
                         $classNameList = preg_split("/\s/", $attrList['class']);
                         foreach ($classNameList as $className) {
-                            list($className) = preg_split("/\<\?php/", $className, 2);
-                            if (!strncmp($className, 'ai-', 3)) {
+                            [$className] = preg_split("/\<\?php/", $className, 2);
+                            if (! strncmp($className, 'ai-', 3)) {
                                 $classList[] = substr($className, 3);
                             }
                         }
@@ -46,15 +46,15 @@ trait FormTrait
             }
         }
 
-        if ('select' === $tagName && isset($attrList['name']) && strlen($attrList['name'])) {
+        if ($tagName === 'select' && isset($attrList['name']) && strlen($attrList['name'])) {
             $formName = Common::checkFormName($attrList['name']);
-            if (false !== $formName) {
+            if ($formName !== false) {
                 $attrList['name'] = $formName;
                 $this->selectName = $attrList['name'];
 
                 isset($attrList['multiple']) && $this->generateDummyForm($attrList['name'], $compiledTag);
             }
-        } elseif ('option' === $tagName && strlen($this->selectName) && isset($attrList['value'])) {
+        } elseif ($tagName === 'option' && strlen($this->selectName) && isset($attrList['value'])) {
             $this->optionArray = $attrList;
             $this->optionArray['type'] = 'select';
             $this->optionArray['name'] = $this->selectName;
@@ -62,7 +62,7 @@ trait FormTrait
 
             $selected = (isset($attrList['selected']) ? 'true' : 'false');
             $compiledTag = Form::check($compiledTag, $this->selectName, $attrList['value'], 'selected', $selected);
-        } elseif ('/select' === $tagName && strlen($this->selectName)) {
+        } elseif ($tagName === '/select' && strlen($this->selectName)) {
             // メニューのグループタグを追加
             Form::select($compiledTag, $htmlArray, $this->selectName);
 
@@ -71,9 +71,9 @@ trait FormTrait
             return;
         }
 
-        if ('textarea' === $tagName && isset($attrList['name']) && strlen($attrList['name'])) {
+        if ($tagName === 'textarea' && isset($attrList['name']) && strlen($attrList['name'])) {
             $formName = Common::checkFormName($attrList['name']);
-            if (false !== $formName) {
+            if ($formName !== false) {
                 $attrList['name'] = $formName;
 
                 $tagCounter = [];
@@ -84,11 +84,11 @@ trait FormTrait
 
         // formのidを取得
         if ((isset($attrList['id']) || isset($attrList['for'])) && $arrayPath = $this->generateArrayFormName(1)) {
-            isset($attrList['id']) && false === strpos($attrList['id'], '<?php') && $compiledTag = Common::mergeAttribute($compiledTag, 'id', $arrayPath.'_'.$attrList['id'], $attrList);
-            isset($attrList['for']) && false === strpos($attrList['for'], '<?php') && $compiledTag = Common::mergeAttribute($compiledTag, 'for', $arrayPath.'_'.$attrList['for'], $attrList);
+            isset($attrList['id']) && strpos($attrList['id'], '<?php') === false && $compiledTag = Common::mergeAttribute($compiledTag, 'id', $arrayPath.'_'.$attrList['id'], $attrList);
+            isset($attrList['for']) && strpos($attrList['for'], '<?php') === false && $compiledTag = Common::mergeAttribute($compiledTag, 'for', $arrayPath.'_'.$attrList['for'], $attrList);
         }
 
-        if (('input' === $tagName || 'select' === $tagName || 'textarea' === $tagName) && isset($attrList['name']) && strlen($attrList['name'])) {
+        if (($tagName === 'input' || $tagName === 'select' || $tagName === 'textarea') && isset($attrList['name']) && strlen($attrList['name'])) {
             if ($arrayForm = $this->generateArrayFormName()) {
                 $compiledTag = Common::mergeAttribute($compiledTag, 'name', $arrayForm.'['.$attrList['name'].']', $attrList);
                 $arrayPath = $this->generateArrayFormName(1);
@@ -119,25 +119,25 @@ trait FormTrait
             $format = 3(Laravel validate): matrix.*.
         */
 
-        if (empty($this->tagCounter) || !empty($this->arrayFormName)) {
+        if (empty($this->tagCounter) || ! empty($this->arrayFormName)) {
             return '';
         }
 
         $formName = '';
         foreach (array_reverse($this->tagCounter) as $num => $buff) {
-            if (!isset($buff['array_form']) || !strncmp($buff['array_form'], 'option_', 7)) {
+            if (! isset($buff['array_form']) || ! strncmp($buff['array_form'], 'option_', 7)) {
                 continue;
             }
 
-            if (1 === $format) {
+            if ($format === 1) {
                 if ($formName) {
                     $formName .= '_'.$buff['array_form'];
                 } else {
                     $formName = $buff['array_form'];
                 }
-            } elseif (2 === $format) {
+            } elseif ($format === 2) {
                 $formName .= "['{$buff['array_form']}']";
-            } elseif (3 === $format) {
+            } elseif ($format === 3) {
                 $formName .= "{$buff['array_form']}.*.";
             } else {
                 if ($formName) {
@@ -147,9 +147,9 @@ trait FormTrait
                 }
             }
 
-            if (1 === $format) {
+            if ($format === 1) {
                 $formName .= "_<?php echo(\$loopIndex{$num}); ?>";
-            } elseif (2 === $format) {
+            } elseif ($format === 2) {
                 $formName .= '[$loopIndex'.$num.']';
             } else {
                 $formName .= "[<?php echo(\$loopIndex{$num}); ?>]";
@@ -200,7 +200,7 @@ trait FormTrait
             isset($attrList['maxlength']) && $dataValidate[$attrList['name']][] = 'max:'.$attrList['maxlength'];
         }
 
-        if (isset($attrList['type']) && 'number' === $attrList['type']) {
+        if (isset($attrList['type']) && $attrList['type'] === 'number') {
             if (isset($attrList['min']) && isset($attrList['max'])) {
                 isset($required) || $dataValidate[$attrList['name']][] = 'nullable';
                 if (isset($attrList['step'])) {

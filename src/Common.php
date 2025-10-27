@@ -5,12 +5,13 @@ namespace Blocs;
 class Common
 {
     private static $path;
+
     private static $config;
 
     // テンプレートのフルパスを取得
     public static function getPath($name)
     {
-        if (!function_exists('config')) {
+        if (! function_exists('config')) {
             return str_replace(DIRECTORY_SEPARATOR, '/', realpath($name));
         }
 
@@ -34,7 +35,7 @@ class Common
     // rawを指定すると適用されない
     public static function convertDefault($str, $key = null)
     {
-        if (!empty(self::$config['menu'][$key])) {
+        if (! empty(self::$config['menu'][$key])) {
             // 選択項目をラベルで置き換え
             is_array($str) || $str = explode("\t", $str);
 
@@ -49,16 +50,16 @@ class Common
 
             $query = '';
             foreach ($str as $buff) {
-                if (!isset($menuLabel[$buff])) {
+                if (! isset($menuLabel[$buff])) {
                     continue;
                 }
 
                 strlen($query) && $query .= BLOCS_OPTION_SEPARATOR;
 
-                if (false === strpos($menuLabel[$buff], 'data-')) {
+                if (strpos($menuLabel[$buff], 'data-') === false) {
                     $query .= $menuLabel[$buff];
                 } else {
-                    isset($blocsCompiler) || $blocsCompiler = new Compiler\BlocsCompiler();
+                    isset($blocsCompiler) || $blocsCompiler = new Compiler\BlocsCompiler;
                     $query .= $blocsCompiler->render($menuLabel[$buff]);
                 }
             }
@@ -82,7 +83,7 @@ class Common
             isset($str) && strlen($str) || $str = null;
         }
 
-        if (!isset($str)) {
+        if (! isset($str)) {
             // 未入力
             if ($checked) {
                 echo ' '.$checkFlg;
@@ -114,9 +115,9 @@ class Common
         $path = str_replace(DIRECTORY_SEPARATOR, '/', realpath($path));
 
         $configPath = self::getConfigPath(dirname($path));
-        if (!is_file($configPath)) {
+        if (! is_file($configPath)) {
             // 設定ファイルが見つからない
-            $blocsCompiler = new Compiler\BlocsCompiler();
+            $blocsCompiler = new Compiler\BlocsCompiler;
             $contents = $blocsCompiler->compile($path);
 
             // 設定ファイルを作成
@@ -190,7 +191,7 @@ class Common
         foreach ($config['option'] as $path => $configOption) {
             foreach ($configOption as $formName => $optionList) {
                 foreach ($optionList as $option) {
-                    if (!isset($option['value'])) {
+                    if (! isset($option['value'])) {
                         continue;
                     }
                     if (isset($existValueList[$formName][$option['value']])) {

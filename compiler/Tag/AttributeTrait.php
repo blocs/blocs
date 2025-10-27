@@ -41,7 +41,7 @@ trait AttributeTrait
                 $this->arrayFormName = '';
             }
 
-            if (!Common::checkValueName($attrList[BLOCS_DATA_LOOP])) {
+            if (! Common::checkValueName($attrList[BLOCS_DATA_LOOP])) {
                 trigger_error('B002: Invalid condition "'.BLOCS_DATA_LOOP.'" ('.$attrList[BLOCS_DATA_LOOP].')', E_USER_ERROR);
             }
 
@@ -64,7 +64,7 @@ trait AttributeTrait
 
     private function generateFilter($filter)
     {
-        list($filterClass, $filterFunc, $filterArg) = Common::checkFunc($filter);
+        [$filterClass, $filterFunc, $filterArg] = Common::checkFunc($filter);
         $filterFunc = self::findFilterFunc($filterClass, $filterFunc);
 
         return "\$value = {$filterFunc}(\$value{$filterArg});\n";
