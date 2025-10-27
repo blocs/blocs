@@ -5,6 +5,7 @@ namespace Blocs;
 class Validate
 {
     private static $path;
+
     private static $config;
 
     /**
@@ -15,9 +16,8 @@ class Validate
      * list($rules, $messages) = \Blocs\Validate::get('insert', $request);
      * empty($rules) || $request->validate($rules, $messages);
      *
-     * @param string  $templateName テンプレート名
-     * @param Request $request      リクエスト
-     *
+     * @param  string  $templateName  テンプレート名
+     * @param  Request  $request  リクエスト
      * @return array テンプレートで指定したバリデーション
      * @return array テンプレートで指定したメッセージ
      */
@@ -58,14 +58,14 @@ class Validate
 
     public static function rules($templateName)
     {
-        list($rules, $messages) = self::get($templateName);
+        [$rules, $messages] = self::get($templateName);
 
         return $rules;
     }
 
     public static function messages($templateName)
     {
-        list($rules, $messages) = self::get($templateName);
+        [$rules, $messages] = self::get($templateName);
 
         return $messages;
     }
@@ -79,9 +79,8 @@ class Validate
      * list($rules, $messages) = \Blocs\Validate::upload('/', 'upload');
      * empty($rules) || $request->validate($rules, $messages);
      *
-     * @param string $templateDir テンプレートのあるディレクトリ
-     * @param string $formName    フォーム名
-     *
+     * @param  string  $templateDir  テンプレートのあるディレクトリ
+     * @param  string  $formName  フォーム名
      * @return array テンプレートで指定したバリデーション
      * @return array テンプレートで指定したメッセージ
      */
@@ -89,12 +88,12 @@ class Validate
     {
         $templateDir = Common::getPath($templateDir);
         $configPath = Common::getConfigPath($templateDir);
-        if (!is_file($configPath)) {
+        if (! is_file($configPath)) {
             return [[], []];
         }
 
         $config = json_decode(file_get_contents($configPath), true);
-        if (!isset($config['upload'][$formName])) {
+        if (! isset($config['upload'][$formName])) {
             return [[], []];
         }
 
@@ -122,8 +121,7 @@ class Validate
      *
      * $requestAll = \Blocs\Validate::filter('insert', $requestAll);
      *
-     * @param string $templateName テンプレート名
-     *
+     * @param  string  $templateName  テンプレート名
      * @return array フィルターをかけた配列
      */
     public static function filter($templateName, $requestAll)
@@ -145,6 +143,7 @@ class Validate
         foreach ($requestArray as $key => $value) {
             if (is_array($value)) {
                 $requestArray[$key] = self::filterArray($value);
+
                 continue;
             }
 
@@ -167,7 +166,7 @@ class Validate
                 $className = $msgArgList[0];
                 $msgArgList = array_slice($msgArgList, 1);
 
-                if (!class_exists('\App\Rules\\'.$className)) {
+                if (! class_exists('\App\Rules\\'.$className)) {
                     continue;
                 }
 

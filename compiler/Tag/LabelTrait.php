@@ -7,9 +7,9 @@ trait LabelTrait
     private function compileTagLabel($tagName, $compiledTag)
     {
         if (isset($this->optionArray['label'])) {
-            if ('/option' === $tagName) {
+            if ($tagName === '/option') {
                 $this->optionArray['label'] = trim($this->optionArray['label']);
-                if (!isset($this->optionArray['value'])) {
+                if (! isset($this->optionArray['value'])) {
                     $this->optionArray['value'] = $this->optionArray['label'];
                 }
 
@@ -21,7 +21,7 @@ trait LabelTrait
         }
 
         if (isset($this->labelArray['label'])) {
-            if ('/label' === $tagName) {
+            if ($tagName === '/label') {
                 preg_match('/<br>$/si', $this->labelArray['label']) && $this->labelArray['label'] = substr($this->labelArray['label'], 0, -4);
                 preg_match('/<br \/>$/si', $this->labelArray['label']) && $this->labelArray['label'] = substr($this->labelArray['label'], 0, -6);
                 $this->labelArray['label'] = trim($this->labelArray['label']);
@@ -30,7 +30,7 @@ trait LabelTrait
 
                 isset($this->labelArray['id']) && strlen($this->labelArray['label']) && $this->label[$this->labelArray['id']] = $this->labelArray['label'];
                 $this->labelArray = [];
-            } elseif ('input' === $tagName) {
+            } elseif ($tagName === 'input') {
                 // ラベルに含めない
             } else {
                 $this->labelArray['label'] .= $compiledTag;

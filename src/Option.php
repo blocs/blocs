@@ -11,9 +11,8 @@ class Option
      *
      * $optionList = \Blocs\Option::get('insert', 'item');
      *
-     * @param string $templateName テンプレート名
-     * @param string $formName     フォーム名
-     *
+     * @param  string  $templateName  テンプレート名
+     * @param  string  $formName  フォーム名
      * @return array optionの値とラベル
      */
     public static function get($templateName, $formName)
@@ -40,8 +39,8 @@ class Option
      *
      * \Blocs\Option::add('item', ['value' => 'label']);
      *
-     * @param string $formName   フォーム名
-     * @param array  $optionList 値とラベルの配列
+     * @param  string  $formName  フォーム名
+     * @param  array  $optionList  値とラベルの配列
      */
     public static function add($formName, $optionList)
     {
@@ -68,8 +67,8 @@ class Option
      *
      * \Blocs\Option::set('insert', 'item');
      *
-     * @param string $templateName テンプレート名
-     * @param string $formName     フォーム名
+     * @param  string  $templateName  テンプレート名
+     * @param  string  $formName  フォーム名
      */
     public static function set($templateName, $formName)
     {

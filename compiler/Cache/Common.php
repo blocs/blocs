@@ -17,12 +17,12 @@ class Common
         }
 
         if (isset($attrList[$attrName])) {
-            if (BLOCS_ENDIF_SCRIPT === substr($attrBuff, -16) && false === strpos($attrBuff, '<?php else: ?>')) {
+            if (substr($attrBuff, -16) === BLOCS_ENDIF_SCRIPT && strpos($attrBuff, '<?php else: ?>') === false) {
                 $attrBuff = substr($attrBuff, 0, -16)."<?php else: ?>\n".$attrList[$attrName].BLOCS_ENDIF_SCRIPT;
             }
 
             $compiledTag = preg_replace('/(\s+'.$attrName.'\s*=\s*["\']{0,1})'.str_replace('/', '\/', preg_quote($attrList[$attrName])).'((\[\]){0,1}["\']{0,1}[\s<>\/]+)/si', '${1}'.$attrBuff.'${2}', $compiledTag);
-        } elseif ('/>' === substr($compiledTag, -2)) {
+        } elseif (substr($compiledTag, -2) === '/>') {
             if ($condition = self::checkAttributeValue($attrBuff, " {$attrName}{$preAttr}", $postAttr)) {
                 $compiledTag = rtrim(substr($compiledTag, 0, -2))."{$condition} />";
             } else {
@@ -54,31 +54,31 @@ class Common
     // 文字列からクラス、メソッド、引数を取得
     public static function checkFunc($funcQuery)
     {
-        if (false !== strpos($funcQuery, '::')) {
-            list($class, $funcQuery) = explode('::', $funcQuery, 2);
+        if (strpos($funcQuery, '::') !== false) {
+            [$class, $funcQuery] = explode('::', $funcQuery, 2);
         } else {
             $class = '';
         }
 
-        if (false === strpos($funcQuery, ':')) {
+        if (strpos($funcQuery, ':') === false) {
             $func = $funcQuery;
             $arguments = '';
         } else {
-            list($func, $arguments) = explode(':', $funcQuery, 2);
+            [$func, $arguments] = explode(':', $funcQuery, 2);
 
             $argArray = preg_split('/([:"\'])/s', $arguments, -1, PREG_SPLIT_DELIM_CAPTURE);
             $quotesBuff = '';
             $resultBuff = '';
             foreach ($argArray as $buff) {
-                if ("'" == $buff || '"' == $buff) {
-                    if (!strlen($quotesBuff)) {
+                if ($buff == "'" || $buff == '"') {
+                    if (! strlen($quotesBuff)) {
                         $quotesBuff = $buff;
                     } elseif ($quotesBuff == $buff) {
                         $quotesBuff = '';
                     }
                 }
 
-                if (!strlen($quotesBuff) && ':' == $buff) {
+                if (! strlen($quotesBuff) && $buff == ':') {
                     $resultBuff .= ', ';
                 } else {
                     $resultBuff .= $buff;
@@ -113,7 +113,7 @@ class Common
     // フォーム名は変数として使用できる文字列でなければならない
     public static function checkFormName($valueName)
     {
-        '[]' === substr($valueName, -2) && $valueName = substr($valueName, 0, -2);
+        substr($valueName, -2) === '[]' && $valueName = substr($valueName, 0, -2);
 
         if (is_numeric(substr($valueName, 0, 1)) || preg_match('/[^a-zA-Z0-9\_]/', $valueName)) {
             return false;
@@ -124,7 +124,7 @@ class Common
 
     private static function checkAttributeValue($attrBuff, $preAttr, $postAttr)
     {
-        if (!trim($attrBuff)) {
+        if (! trim($attrBuff)) {
             // data-valを指定しないケース
             return '';
         }
@@ -146,12 +146,12 @@ class Common
                 $buff = explode(': ?>', $buff, 2);
                 $condition .= $buff[0].": ?>\n<?php echo(\$preAttr); \$preAttr=''; \$postAttr='{$postAttr}'; ?>".$buff[1];
             }
-            ++$ifDepth;
+            $ifDepth++;
 
-            if (false !== strpos($buff[1], BLOCS_ENDIF_SCRIPT)) {
+            if (strpos($buff[1], BLOCS_ENDIF_SCRIPT) !== false) {
                 $buff = explode(BLOCS_ENDIF_SCRIPT, $buff[1]);
                 foreach ($buff as $endif) {
-                    if (!$ifDepth && preg_replace("/\s/", '', $endif)) {
+                    if (! $ifDepth && preg_replace("/\s/", '', $endif)) {
                         return '';
                     }
                     $ifDepth && $ifDepth--;

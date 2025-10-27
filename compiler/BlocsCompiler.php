@@ -5,11 +5,17 @@ namespace Blocs\Compiler;
 class BlocsConfig
 {
     public $include;
+
     public $filter;
+
     public $option;
+
     public $validate;
+
     public $message;
+
     public $upload;
+
     public $label;
 }
 
@@ -63,12 +69,12 @@ class BlocsCompiler
         }
 
         foreach (array_keys($this->validate) as $formName) {
-            if (false !== strpos($formName, '<?php')) {
+            if (strpos($formName, '<?php') !== false) {
                 unset($this->validate[$formName]);
             }
         }
 
-        $blocsConfig = new BlocsConfig();
+        $blocsConfig = new BlocsConfig;
         $blocsConfig->include = array_merge(array_unique($this->include));
         $blocsConfig->filter = $this->filter;
         $blocsConfig->option = $this->option;
@@ -89,22 +95,24 @@ class BlocsCompiler
         while ($htmlArray) {
             $htmlBuff = array_shift($htmlArray);
 
-            if (!count($htmlArray) && !isset($autoincludeFlg)) {
+            if (! count($htmlArray) && ! isset($autoincludeFlg)) {
                 // classでのauto includeは最後に一回だけ
                 $this->addAutoincludeClass($htmlArray);
                 $autoincludeFlg = true;
             }
 
-            if (!is_array($htmlBuff)) {
+            if (! is_array($htmlBuff)) {
                 /* テキストとコメントを処理 */
 
                 // autoincludeの深さを取得
-                if ('{{AUTOINCLUDE_START_FROM}}' === $htmlBuff) {
-                    ++$this->autoincludeDepth;
+                if ($htmlBuff === '{{AUTOINCLUDE_START_FROM}}') {
+                    $this->autoincludeDepth++;
+
                     continue;
                 }
-                if ('{{AUTOINCLUDE_END_TO}}' === $htmlBuff) {
-                    --$this->autoincludeDepth;
+                if ($htmlBuff === '{{AUTOINCLUDE_END_TO}}') {
+                    $this->autoincludeDepth--;
+
                     continue;
                 }
 
@@ -116,7 +124,7 @@ class BlocsCompiler
                 isset($this->optionArray['label']) && $this->optionArray['label'] .= $htmlBuff;
                 isset($this->labelArray['label']) && $this->labelArray['label'] .= $htmlBuff;
 
-                if (!strncmp($htmlBuff, '<!', 2) && $this->isPart() < 2) {
+                if (! strncmp($htmlBuff, '<!', 2) && $this->isPart() < 2) {
                     // タグ記法でブロック処理中は実行しない
                     // コメント記法を処理
                     $this->compileComment($htmlBuff, $htmlArray);
@@ -125,6 +133,7 @@ class BlocsCompiler
                 // ブロックごとにタグを保持
                 if ($this->isPart()) {
                     $this->partInclude[$this->partName][] = $htmlBuff;
+
                     continue;
                 }
 
@@ -151,7 +160,7 @@ class BlocsCompiler
 
         // auto includeを呼び出された場所に移動
         if ($this->autoincludeTemplate) {
-            if (false !== strpos($this->compiledTemplate, '{{REPLACE_TO_AUTOINCLUDE}}')) {
+            if (strpos($this->compiledTemplate, '{{REPLACE_TO_AUTOINCLUDE}}') !== false) {
                 $this->compiledTemplate = str_replace('{{REPLACE_TO_AUTOINCLUDE}}', $this->autoincludeTemplate, $this->compiledTemplate);
             }
         } else {

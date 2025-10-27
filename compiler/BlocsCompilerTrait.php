@@ -7,20 +7,27 @@ use Blocs\Compiler\Cache\Common;
 trait BlocsCompilerTrait
 {
     private array $include;
+
     private array $filter;
+
     private array $option;
 
     // バリデーション変数
     private array $validate;
+
     private array $validateMessage;
+
     private array $validateUpload;
 
     private array $dataAttribute;
+
     private array $endloop;
 
     // タグ記法のための変数
     private array $tagCounter;
+
     private bool $ignoreFlg;
+
     private $arrayFormName;
 
     // 処理中のdata-bloc
@@ -34,23 +41,28 @@ trait BlocsCompilerTrait
 
     // classでincludeするテンプレート
     private array $autoincludeClass;
+
     private array $autoincluded;
 
     // autoincludeのコンパイル後の文字列
     private $autoincludeDepth;
+
     private $autoincludeTemplate;
 
     private array $assignedValue;
 
     // オプション変数
     private array $label;
+
     private array $optionArray;
+
     private array $labelArray;
 
     // dummyを付与済フラグ
     private array $dummyArray;
 
     private $scriptCounter;
+
     private $selectName;
 
     // コンパイル後の文字列
@@ -115,29 +127,29 @@ trait BlocsCompilerTrait
     private function addAutoincludeClass(&$htmlArray)
     {
         $autoincludeDir = self::getAutoincludeDir();
-        if (false === $autoincludeDir) {
+        if ($autoincludeDir === false) {
             return;
         }
 
         // auto includeの候補
-        if (!count($this->autoincludeClass)) {
+        if (! count($this->autoincludeClass)) {
             return;
         }
         $this->autoincludeClass = array_merge(array_unique($this->autoincludeClass));
 
         $targetFileList = scandir($autoincludeDir);
         foreach ($targetFileList as $targetFile) {
-            if ('.' == substr($targetFile, 0, 1)) {
+            if (substr($targetFile, 0, 1) == '.') {
                 continue;
             }
             $targetFile = $autoincludeDir.'/'.$targetFile;
-            if (!is_file($targetFile)) {
+            if (! is_file($targetFile)) {
                 continue;
             }
 
             $autoinclude = pathinfo($targetFile, PATHINFO_FILENAME);
 
-            if (!in_array($autoinclude, $this->autoincludeClass)) {
+            if (! in_array($autoinclude, $this->autoincludeClass)) {
                 // classでのコールされていないのでauto includeしない
                 continue;
             }
@@ -150,22 +162,21 @@ trait BlocsCompilerTrait
             $htmlArray[] = '<!-- '.BLOCS_DATA_INCLUDE."='".str_replace(BLOCS_ROOT_DIR, '', $autoincludeDir).'/'.$autoinclude.".html' -->";
         }
 
-        return;
     }
 
     private function getAutoincludeDir()
     {
-        if (!empty($GLOBALS['BLOCS_AUTOINCLUDE_DIR'])) {
+        if (! empty($GLOBALS['BLOCS_AUTOINCLUDE_DIR'])) {
             $autoincludeDir = $GLOBALS['BLOCS_AUTOINCLUDE_DIR'];
         } elseif (defined('BLOCS_ROOT_DIR')) {
             $autoincludeDir = BLOCS_ROOT_DIR.'/autoinclude';
         }
 
-        if (empty($autoincludeDir) || !is_dir($autoincludeDir)) {
+        if (empty($autoincludeDir) || ! is_dir($autoincludeDir)) {
             $autoincludeDir = realpath(__DIR__.'/../../autoinclude');
         }
 
-        if (empty($autoincludeDir) || !is_dir($autoincludeDir)) {
+        if (empty($autoincludeDir) || ! is_dir($autoincludeDir)) {
             return false;
         }
 
@@ -200,15 +211,17 @@ END_of_HTML;
     {
         $idList = [];
         foreach ($thisOption as $num => $buff) {
-            if (isset($buff['value']) && !strncmp($buff['value'], '<?php', 5)) {
+            if (isset($buff['value']) && ! strncmp($buff['value'], '<?php', 5)) {
                 unset($thisOption[$num]);
+
                 continue;
             }
 
-            if (!isset($buff['id'])) {
-                if (!isset($buff['name']) || !isset($buff['value'])) {
+            if (! isset($buff['id'])) {
+                if (! isset($buff['name']) || ! isset($buff['value'])) {
                     unset($thisOption[$num]);
                 }
+
                 continue;
             }
 
@@ -222,10 +235,10 @@ END_of_HTML;
 
         $optionItemList = [];
         foreach ($thisOption as $num => $buff) {
-            if (!isset($buff['name']) || !isset($buff['value']) || !isset($buff['label'])) {
+            if (! isset($buff['name']) || ! isset($buff['value']) || ! isset($buff['label'])) {
                 continue;
             }
-            if (empty($buff['type']) || !('radio' === $buff['type'] || 'checkbox' === $buff['type'] || 'select' === $buff['type'])) {
+            if (empty($buff['type']) || ! ($buff['type'] === 'radio' || $buff['type'] === 'checkbox' || $buff['type'] === 'select')) {
                 continue;
             }
 
@@ -240,7 +253,7 @@ END_of_HTML;
         $resultBuff = array_shift($rawString);
         foreach ($rawString as $buff) {
             $resultBuff .= '<?';
-            if (false === strpos($buff, '?>')) {
+            if (strpos($buff, '?>') === false) {
                 $resultBuff .= $buff;
             }
 

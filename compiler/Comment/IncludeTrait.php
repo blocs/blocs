@@ -11,8 +11,8 @@ trait IncludeTrait
     {
         // auto includeのタグの埋め込み
         $autoincludeDir = self::getAutoincludeDir();
-        if ('auto' == $attrList[BLOCS_DATA_INCLUDE]) {
-            if (false === $autoincludeDir) {
+        if ($attrList[BLOCS_DATA_INCLUDE] == 'auto') {
+            if ($autoincludeDir === false) {
                 if (isset($attrList[BLOCS_DATA_EXIST])) {
                     return;
                 } else {
@@ -49,7 +49,7 @@ trait IncludeTrait
 
         // conditionで挟み込み
         $condition = Condition::condition('', $attrList, $quotesList);
-        if (!empty($condition)) {
+        if (! empty($condition)) {
             array_unshift($resultArray, $condition);
             $resultArray[] = BLOCS_ENDIF_SCRIPT;
         }
@@ -65,20 +65,20 @@ trait IncludeTrait
         $_ = fn ($s) => $s;
         eval("\$attrList[BLOCS_DATA_INCLUDE] = <<<EOS\n{$attrList[BLOCS_DATA_INCLUDE]}\nEOS;\n");
 
-        if (!strncmp($attrList[BLOCS_DATA_INCLUDE], '/', 1) && !is_file($attrList[BLOCS_DATA_INCLUDE])) {
+        if (! strncmp($attrList[BLOCS_DATA_INCLUDE], '/', 1) && ! is_file($attrList[BLOCS_DATA_INCLUDE])) {
             // ルートディレクトリのパスを変換
             $attrList[BLOCS_DATA_INCLUDE] = BLOCS_ROOT_DIR.$attrList[BLOCS_DATA_INCLUDE];
         } elseif (empty($quotesList[BLOCS_DATA_INCLUDE])) {
             eval('$attrList[BLOCS_DATA_INCLUDE] = '.$attrList[BLOCS_DATA_INCLUDE].';');
         }
 
-        if (!strlen($realpath = str_replace(DIRECTORY_SEPARATOR, '/', realpath($attrList[BLOCS_DATA_INCLUDE])))) {
+        if (! strlen($realpath = str_replace(DIRECTORY_SEPARATOR, '/', realpath($attrList[BLOCS_DATA_INCLUDE])))) {
             if (false !== ($resultBuff = $this->addAutoinclude($attrList, $htmlBuff))) {
                 // data-includeができないのでauto includeしてみる
                 return $resultBuff;
             }
 
-            if (isset($attrList[BLOCS_DATA_EXIST]) && !strlen($attrList[BLOCS_DATA_EXIST])) {
+            if (isset($attrList[BLOCS_DATA_EXIST]) && ! strlen($attrList[BLOCS_DATA_EXIST])) {
                 return [];
             }
 
@@ -97,7 +97,7 @@ trait IncludeTrait
 
         $autoincludeDir = self::getAutoincludeDir();
         $autoinclude = pathinfo($realpath, PATHINFO_FILENAME);
-        if (false !== $autoincludeDir && !strncmp($realpath, $autoincludeDir, strlen($autoincludeDir))) {
+        if ($autoincludeDir !== false && ! strncmp($realpath, $autoincludeDir, strlen($autoincludeDir))) {
             if (isset($this->autoincluded[$autoinclude])) {
                 // auto includeは一回だけしかincludeしない
                 return [];
@@ -105,7 +105,7 @@ trait IncludeTrait
         }
         $this->autoincluded[$autoinclude] = true;
 
-        if (!isset($this->partInclude[$realpath])) {
+        if (! isset($this->partInclude[$realpath])) {
             // ファイルごとにタグを保持
             $this->partInclude[$realpath] = $this->parseTemplate(self::checkEncoding($realpath), $realpath);
         }
@@ -116,12 +116,12 @@ trait IncludeTrait
     private function addAutoinclude($attrList, $htmlBuff)
     {
         $autoincludeDir = self::getAutoincludeDir();
-        if (false === $autoincludeDir) {
+        if ($autoincludeDir === false) {
             return false;
         }
 
-        list($autoinclude) = explode('_', $attrList[BLOCS_DATA_INCLUDE]);
-        if (!is_file($autoincludeDir.'/'.$autoinclude.'.html')) {
+        [$autoinclude] = explode('_', $attrList[BLOCS_DATA_INCLUDE]);
+        if (! is_file($autoincludeDir.'/'.$autoinclude.'.html')) {
             return false;
         }
 
@@ -154,9 +154,9 @@ trait IncludeTrait
         foreach ($htmlArray as $htmlBuff) {
             $resultArray[] = $htmlBuff;
 
-            if (!is_array($htmlBuff) && !strncmp($htmlBuff, '<!', 2)) {
+            if (! is_array($htmlBuff) && ! strncmp($htmlBuff, '<!', 2)) {
                 // data-blocのロケーションはオリジナルファイルのパスに設定
-                list($includeBuff) = Parser::parse($htmlBuff, true);
+                [$includeBuff] = Parser::parse($htmlBuff, true);
 
                 if (isset($includeBuff['attribute'][BLOCS_DATA_BLOC])) {
                     $resultArray[] = $chdirBuff;
@@ -164,13 +164,13 @@ trait IncludeTrait
             }
         }
 
-        if (!$autoinclude) {
+        if (! $autoinclude) {
             return $resultArray;
         }
 
         // auto inlcudeテンプレートは移動
         $autoincludeDir = self::getAutoincludeDir();
-        if (false !== $autoincludeDir && !strncmp($realpath, $autoincludeDir, strlen($autoincludeDir))) {
+        if ($autoincludeDir !== false && ! strncmp($realpath, $autoincludeDir, strlen($autoincludeDir))) {
             array_unshift($resultArray, '{{AUTOINCLUDE_START_FROM}}');
             $resultArray[] = '{{AUTOINCLUDE_END_TO}}';
         }
@@ -184,7 +184,7 @@ trait IncludeTrait
 
         if (function_exists('mb_detect_encoding')) {
             $encoding = mb_detect_encoding($viewBuff, 'UTF-8', true);
-            if ('UTF-8' !== $encoding) {
+            if ($encoding !== 'UTF-8') {
                 trigger_error('B011: Can not permit this encoding ('.$encoding.') and have to convert to "UTF-8"', E_USER_ERROR);
             }
         }

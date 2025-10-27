@@ -9,7 +9,9 @@ use PHPUnit\Framework\TestCase;
 class BlocsTest extends TestCase
 {
     protected $testDir;
+
     protected $expected;
+
     protected $actual;
 
     protected function setUp(): void
@@ -28,7 +30,7 @@ class BlocsTest extends TestCase
         $blocs = new \Blocs\View($this->testDir.'/test.html');
         $this->actual = $blocs->generate(null, true);
 
-        list($rules, $messages) = \Blocs\Validate::get($this->testDir.'/test.html');
+        [$rules, $messages] = \Blocs\Validate::get($this->testDir.'/test.html');
         $this->actual .= json_encode($rules).'<br />';
         $this->actual .= json_encode($messages).'<br />';
 

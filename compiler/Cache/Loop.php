@@ -10,7 +10,7 @@ class Loop
         $strSingular = self::getSingular($attrList);
 
         $compiledTag = '';
-        if ('()' !== substr($attrList[BLOCS_DATA_LOOP], -2)) {
+        if (substr($attrList[BLOCS_DATA_LOOP], -2) !== '()') {
             // 未定義でエラーにならないように
             $compiledTag .= <<< END_of_HTML
 <?php
@@ -21,7 +21,7 @@ END_of_HTML;
 
             // data-convertで変換
             if (isset($attrList[BLOCS_DATA_CONVERT])) {
-                list($convertClass, $convertFunc, $convertArg) = Common::checkFunc($attrList[BLOCS_DATA_CONVERT]);
+                [$convertClass, $convertFunc, $convertArg] = Common::checkFunc($attrList[BLOCS_DATA_CONVERT]);
                 $convertFunc = Common::findConvertFunc($convertClass, $convertFunc);
 
                 $compiledTag .= <<< END_of_HTML
@@ -83,7 +83,7 @@ END_of_HTML;
     // テーブルフォームのためにloopIndexをつける
     private static function generateForeach($attrList, $tagCounterNum, $strSingular)
     {
-        if (method_exists('Str', 'singular') && !defined('BLOCS_BLADE_OFF')) {
+        if (method_exists('Str', 'singular') && ! defined('BLOCS_BLADE_OFF')) {
             // Laravelあり
             return <<< END_of_HTML
     @foreach({$attrList[BLOCS_DATA_LOOP]} as \$loopIndex{$tagCounterNum} => \${$strSingular})
@@ -108,16 +108,16 @@ END_of_HTML;
 
     private static function generateEndForeach()
     {
-        if (method_exists('Str', 'singular') && !defined('BLOCS_BLADE_OFF')) {
+        if (method_exists('Str', 'singular') && ! defined('BLOCS_BLADE_OFF')) {
             // Laravelあり
-            return <<< END_of_HTML
+            return <<< 'END_of_HTML'
     @endforeach
 
 END_of_HTML;
         }
 
         // Laravelなし
-        return <<< END_of_HTML
+        return <<< 'END_of_HTML'
 <?php
     endforeach;
 ?>
@@ -128,12 +128,12 @@ END_of_HTML;
     // ループで使うために自動で単数型を取得する
     private static function getSingular($attrList)
     {
-        if (!empty($attrList[BLOCS_DATA_ASSIGN]) && Common::checkValueName($attrList[BLOCS_DATA_ASSIGN])) {
+        if (! empty($attrList[BLOCS_DATA_ASSIGN]) && Common::checkValueName($attrList[BLOCS_DATA_ASSIGN])) {
             // data-assignで指定できる
             return substr($attrList[BLOCS_DATA_ASSIGN], 1);
         }
 
-        if (!method_exists('Str', 'singular')) {
+        if (! method_exists('Str', 'singular')) {
             // Laravelなし
             return '_'.md5($attrList[BLOCS_DATA_LOOP]);
         }

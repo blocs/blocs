@@ -21,7 +21,7 @@ class Compiler extends ViewCompiler implements CompilerInterface
         // includeファイルの更新を確認
         if (isset($config['include'][$path]) && is_array($config['include'][$path])) {
             foreach ($config['include'][$path] as $includeFile) {
-                if (!file_exists($includeFile) || filemtime($includeFile) > $config['timestamp'][$path]) {
+                if (! file_exists($includeFile) || filemtime($includeFile) > $config['timestamp'][$path]) {
                     return true;
                 }
             }
@@ -34,7 +34,7 @@ class Compiler extends ViewCompiler implements CompilerInterface
     public function compile($path)
     {
         // Blocsを適用
-        $blocsCompiler = new Compiler\BlocsCompiler();
+        $blocsCompiler = new Compiler\BlocsCompiler;
         $contents = $blocsCompiler->compile($path);
 
         // 設定ファイルを作成
