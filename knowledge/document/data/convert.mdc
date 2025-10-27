@@ -1,6 +1,6 @@
 ---
 description: 変数の表示形式を整形する方法
-globs: "**/*.{blocs.html,html}"
+globs: "**/*.{blocs.html,html,php}"
 ---
 # 変数の表示形式を整形する方法
 ## **data-convert** の使い方

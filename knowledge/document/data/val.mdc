@@ -1,6 +1,6 @@
 ---
 description: テンプレートで変数の値を表示する方法
-globs: "**/*.{blocs.html,html}"
+globs: "**/*.{blocs.html,html,php}"
 ---
 # テンプレートで変数の値を表示する方法
 ## **data-val** の使い方

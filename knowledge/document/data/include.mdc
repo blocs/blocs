@@ -1,6 +1,6 @@
 ---
 description: 他のテンプレートを読み込む方法
-globs: "**/*.{blocs.html,html}"
+globs: "**/*.{blocs.html,html,php}"
 ---
 # 他のテンプレートを読み込む方法
 ## **data-include** の使い方
