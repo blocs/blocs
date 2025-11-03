@@ -24,5 +24,5 @@ cd laravel-blocs
 
 3. Composer で BLOCS をインストール
 ```sh
-laravel-blocs % composer require blocs/blocs    
+composer require blocs/blocs    
 ```
