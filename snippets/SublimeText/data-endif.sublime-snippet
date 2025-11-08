@@ -1,6 +1,0 @@
-<snippet>
-    <content><![CDATA[<!-- data-endif -->]]></content>
-    <tabTrigger>data-endif</tabTrigger>
-    <scope>text.html.basic</scope>
-    <description><![CDATA[data-endif]]></description>
-</snippet>
