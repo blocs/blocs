@@ -11,7 +11,7 @@ class Common
     // テンプレートのフルパスを取得
     public static function getPath($name)
     {
-        if (! function_exists('config')) {
+        if (defined('BLOCS_VIEW')) {
             return str_replace(DIRECTORY_SEPARATOR, '/', realpath($name));
         }
 

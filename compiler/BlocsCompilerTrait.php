@@ -191,7 +191,7 @@ trait BlocsCompilerTrait
     \$_appendOption = \\Blocs\\Option::append();
     extract(\$_appendOption, EXTR_PREFIX_ALL, 'option');
 
-    if (function_exists('old')) {
+    if (! defined('BLOCS_VIEW')) {
         \$_oldValue = old();
         !empty(\$_oldValue) && is_array(\$_oldValue) && extract(\$_oldValue, EXTR_SKIP);
 

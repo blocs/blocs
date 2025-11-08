@@ -2,6 +2,38 @@
 
 namespace Blocs;
 
+function setTemplateCacheDir()
+{
+    define('BLOCS_VIEW', true);
+
+    $key = '/tmp';
+    if (($key = str_replace(DIRECTORY_SEPARATOR, '/', realpath($key))) && is_dir($key) && is_writable($key)) {
+        define('BLOCS_CACHE_DIR', $key.'/');
+
+        return;
+    }
+
+    foreach (['TMPDIR', 'TMP', 'TEMP', 'USERPROFILE'] as $key) {
+        if (! empty($_ENV[$key]) && ($key = str_replace(DIRECTORY_SEPARATOR, '/', realpath($_ENV[$key]))) && is_dir($key) && is_writable($key)) {
+            define('BLOCS_CACHE_DIR', $key.'/');
+
+            return;
+        }
+    }
+
+    $key = ini_get('upload_tmp_dir');
+    if (! empty($key) && ($key = str_replace(DIRECTORY_SEPARATOR, '/', realpath($key))) && is_dir($key) && is_writable($key)) {
+        define('BLOCS_CACHE_DIR', $key.'/');
+
+        return;
+    }
+
+    trigger_error('B001: Can not write cache file into directory', E_USER_ERROR);
+}
+
+defined('BLOCS_CACHE_DIR') || setTemplateCacheDir();
+defined('BLOCS_ROOT_DIR') || define('BLOCS_ROOT_DIR', $_SERVER['DOCUMENT_ROOT']);
+
 require_once 'Consts.php';
 
 class View
