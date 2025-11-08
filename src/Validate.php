@@ -174,8 +174,10 @@ class Validate
                     array_push($msgArgList, $validateMessage[$formName.'.'.$className]);
                 }
 
-                $reflClass = new \ReflectionClass('\App\Rules\\'.$className);
-                $configValidate[$formName][$validateNum] = call_user_func_array([$reflClass, 'newInstance'], $msgArgList);
+                if (! defined('BLOCS_VIEW')) {
+                    $reflClass = new \ReflectionClass('\App\Rules\\'.$className);
+                    $configValidate[$formName][$validateNum] = call_user_func_array([$reflClass, 'newInstance'], $msgArgList);
+                }
             }
         }
 
