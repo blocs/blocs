@@ -1,6 +1,0 @@
-<snippet>
-    <content><![CDATA[data-filter="${1:format}"]]></content>
-    <tabTrigger>data-filter</tabTrigger>
-    <scope>text.html.basic</scope>
-    <description><![CDATA[data-filter="format"]]></description>
-</snippet>
