@@ -1,6 +1,0 @@
-<snippet>
-    <content><![CDATA[data-none=\$${1:variable}]]></content>
-    <tabTrigger>data-none</tabTrigger>
-    <scope>text.html.basic</scope>
-    <description><![CDATA[data-none=$variable]]></description>
-</snippet>

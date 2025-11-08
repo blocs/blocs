@@ -1,6 +1,0 @@
-<snippet>
-    <content><![CDATA[data-convert="${1:convert}"]]></content>
-    <tabTrigger>data-convert</tabTrigger>
-    <scope>text.html.basic</scope>
-    <description><![CDATA[data-convert="convert"]]></description>
-</snippet>
