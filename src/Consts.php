@@ -1,24 +1,14 @@
 <?php
 
 // テンプレートのキャッシュを保存するディレクトリ
-if (! defined('BLOCS_CACHE_DIR')) {
-    if (function_exists('config')) {
-        define('BLOCS_CACHE_DIR', config('view.compiled'));
-    } else {
-        setTemplateCacheDir();
-    }
-}
+defined('BLOCS_CACHE_DIR') || define('BLOCS_CACHE_DIR', config('view.compiled'));
 
 (realpath(BLOCS_CACHE_DIR) && is_writable(BLOCS_CACHE_DIR)) || trigger_error('B001: Can not write cache file into directory', E_USER_ERROR);
 
 // テンプレートのルートディレクトリ
 if (! defined('BLOCS_ROOT_DIR')) {
-    if (function_exists('config')) {
-        $viewPathList = config('view.paths');
-        define('BLOCS_ROOT_DIR', $viewPathList[0]);
-    } else {
-        define('BLOCS_ROOT_DIR', $_SERVER['DOCUMENT_ROOT']);
-    }
+    $viewPathList = config('view.paths');
+    define('BLOCS_ROOT_DIR', $viewPathList[0]);
 }
 
 // optionをつなぐ文字列
@@ -71,30 +61,3 @@ define('BLOCS_TAG_NAME_REGREX', '[a-zA-Z\_\:\!\$][a-zA-Z0-9\_\:\-\.]*');
 define('BLOCS_ATTR_NAME_REGREX', '[a-zA-Z0-9\_\:\!\-\/][a-zA-Z0-9\_\-\.\*]*');
 
 define('BLOCS_CLASS_UPLOAD', 'ai-upload');
-
-function setTemplateCacheDir()
-{
-    $key = '/tmp';
-    if (($key = str_replace(DIRECTORY_SEPARATOR, '/', realpath($key))) && is_dir($key) && is_writable($key)) {
-        define('BLOCS_CACHE_DIR', $key.'/');
-
-        return;
-    }
-
-    foreach (['TMPDIR', 'TMP', 'TEMP', 'USERPROFILE'] as $key) {
-        if (! empty($_ENV[$key]) && ($key = str_replace(DIRECTORY_SEPARATOR, '/', realpath($_ENV[$key]))) && is_dir($key) && is_writable($key)) {
-            define('BLOCS_CACHE_DIR', $key.'/');
-
-            return;
-        }
-    }
-
-    $key = ini_get('upload_tmp_dir');
-    if (! empty($key) && ($key = str_replace(DIRECTORY_SEPARATOR, '/', realpath($key))) && is_dir($key) && is_writable($key)) {
-        define('BLOCS_CACHE_DIR', $key.'/');
-
-        return;
-    }
-
-    trigger_error('B001: Can not write cache file into directory', E_USER_ERROR);
-}
