@@ -7,13 +7,11 @@ use Illuminate\View\ViewServiceProvider;
 
 class ServiceProvider extends ViewServiceProvider
 {
-    // Bladeを参照
     public function register()
     {
         $this->registerBlocsCompiler();
     }
 
-    // Bladeを参照
     public function boot()
     {
         // 定数の読み込み
@@ -22,7 +20,6 @@ class ServiceProvider extends ViewServiceProvider
         $this->registerExtension();
     }
 
-    // Bladeを参照
     public function registerBlocsCompiler()
     {
         $this->app->singleton('blocs.compiler', fn ($app) => new Compiler($app['files'], $app['config']['view.compiled']));

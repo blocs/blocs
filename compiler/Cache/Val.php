@@ -4,89 +4,93 @@ namespace Blocs\Compiler\Cache;
 
 class Val
 {
-    // data-valのスクリプトを生成
+    // data-val属性に対応するPHPスクリプトを生成する
     public static function val($attrList, $quotesList, &$dataAttribute, $tagName = '', &$tagCounter = null, &$htmlArray = null)
     {
-        $resultBuff = '';
+        $outputBuffer = '';
 
         isset($quotesList[BLOCS_DATA_VAL]) || $quotesList[BLOCS_DATA_VAL] = '';
         $dataVal = $quotesList[BLOCS_DATA_VAL].$attrList[BLOCS_DATA_VAL].$quotesList[BLOCS_DATA_VAL];
 
-        if (Common::checkValueName($attrList[BLOCS_DATA_VAL])) {
-            if (! isset($attrList[BLOCS_DATA_ATTRIBUTE])) {
-                $resultBuff .= "<?php if(isset({$attrList[BLOCS_DATA_VAL]}) && !is_object({$attrList[BLOCS_DATA_VAL]}) && !is_array({$attrList[BLOCS_DATA_VAL]}) && strlen({$attrList[BLOCS_DATA_VAL]})): ?>\n";
-            } else {
-                $resultBuff .= "<?php if(isset({$attrList[BLOCS_DATA_VAL]}) && !is_object({$attrList[BLOCS_DATA_VAL]}) && !is_array({$attrList[BLOCS_DATA_VAL]})): ?>\n";
-            }
-        } else {
-            if (! isset($attrList[BLOCS_DATA_ATTRIBUTE])) {
-                $resultBuff .= "<?php if(strlen({$dataVal})): ?>\n";
-            }
+        $hasDataAttribute = isset($attrList[BLOCS_DATA_ATTRIBUTE]);
+        $usesAssignment = ! empty($attrList[BLOCS_DATA_ASSIGN]);
+        $isNamedValue = Common::checkValueName($attrList[BLOCS_DATA_VAL]);
+
+        if ($isNamedValue) {
+            $condition = "isset({$attrList[BLOCS_DATA_VAL]}) && !is_object({$attrList[BLOCS_DATA_VAL]}) && !is_array({$attrList[BLOCS_DATA_VAL]})";
+            $hasDataAttribute || $condition .= " && strlen({$attrList[BLOCS_DATA_VAL]})";
+            $outputBuffer .= "<?php if({$condition}): ?>\n";
+        } elseif (! $hasDataAttribute) {
+            $outputBuffer .= "<?php if(strlen({$dataVal})): ?>\n";
         }
 
-        if (! empty($attrList[BLOCS_DATA_ASSIGN])) {
+        if ($usesAssignment) {
             Common::checkValueName($attrList[BLOCS_DATA_ASSIGN]) || trigger_error('B012: Invalid condition "'.BLOCS_DATA_ASSIGN.'" ('.$attrList[BLOCS_DATA_ASSIGN].')', E_USER_ERROR);
 
-            $resultBuff .= "<?php \$dataVal = ''; ?>\n";
+            $outputBuffer .= "<?php \$dataVal = ''; ?>\n";
         }
 
-        $resultBuff = self::addFixValue($attrList, $quotesList, $resultBuff, BLOCS_DATA_PREFIX);
+        $outputBuffer = self::appendFixedValueSegment($attrList, $quotesList, $outputBuffer, BLOCS_DATA_PREFIX);
 
-        if (empty($attrList[BLOCS_DATA_ASSIGN])) {
-            $resultBuff .= '<?php echo(';
+        if (! $usesAssignment) {
+            $outputBuffer .= '<?php echo(';
         } else {
-            $resultBuff .= '<?php $dataVal .= ';
+            $outputBuffer .= '<?php $dataVal .= ';
         }
 
         if (isset($attrList[BLOCS_DATA_CONVERT]) && $attrList[BLOCS_DATA_CONVERT] === 'raw') {
             unset($attrList[BLOCS_DATA_CONVERT]);
-        } elseif (empty($attrList[BLOCS_DATA_ASSIGN]) && (! isset($attrList[BLOCS_DATA_CONVERT]) || (strncmp($attrList[BLOCS_DATA_CONVERT], 'raw_', 4) && strpos($attrList[BLOCS_DATA_CONVERT], '::raw_') === false))) {
-            $resultBuff .= '\Blocs\Common::convertDefault(';
-            $postConvert = self::getMenuName($attrList[BLOCS_DATA_VAL]).')';
+        } elseif (! $usesAssignment && (! isset($attrList[BLOCS_DATA_CONVERT]) || (strncmp($attrList[BLOCS_DATA_CONVERT], 'raw_', 4) && strpos($attrList[BLOCS_DATA_CONVERT], '::raw_') === false))) {
+            $outputBuffer .= '\Blocs\Common::convertDefault(';
+            $postConvertSuffix = self::resolveMenuNameSuffix($attrList[BLOCS_DATA_VAL]).')';
         }
+
         if (isset($attrList[BLOCS_DATA_CONVERT])) {
             [$convertClass, $convertFunc, $convertArg] = Common::checkFunc($attrList[BLOCS_DATA_CONVERT]);
             $convertFunc = Common::findConvertFunc($convertClass, $convertFunc);
 
-            $resultBuff .= $convertFunc.'('.$dataVal.$convertArg.')';
+            $outputBuffer .= $convertFunc.'('.$dataVal.$convertArg.')';
         } else {
-            $resultBuff .= $dataVal;
+            $outputBuffer .= $dataVal;
         }
-        isset($postConvert) && $resultBuff .= $postConvert;
 
-        if (empty($attrList[BLOCS_DATA_ASSIGN])) {
-            $resultBuff .= "); ?>\n";
+        isset($postConvertSuffix) && $outputBuffer .= $postConvertSuffix;
+
+        if (! $usesAssignment) {
+            $outputBuffer .= "); ?>\n";
         } else {
-            $resultBuff .= "; ?>\n";
+            $outputBuffer .= "; ?>\n";
         }
 
-        $resultBuff = self::addFixValue($attrList, $quotesList, $resultBuff, BLOCS_DATA_POSTFIX);
+        $outputBuffer = self::appendFixedValueSegment($attrList, $quotesList, $outputBuffer, BLOCS_DATA_POSTFIX);
 
-        if (! empty($attrList[BLOCS_DATA_ASSIGN])) {
-            $resultBuff .= "<?php {$attrList[BLOCS_DATA_ASSIGN]} = \$dataVal; ?>\n";
+        if ($usesAssignment) {
+            $outputBuffer .= "<?php {$attrList[BLOCS_DATA_ASSIGN]} = \$dataVal; ?>\n";
         }
 
-        if (Common::checkValueName($attrList[BLOCS_DATA_VAL]) || ! isset($attrList[BLOCS_DATA_ATTRIBUTE])) {
-            $resultBuff .= BLOCS_ENDIF_SCRIPT;
+        if ($isNamedValue || ! $hasDataAttribute) {
+            $outputBuffer .= BLOCS_ENDIF_SCRIPT;
         }
 
-        if (isset($attrList[BLOCS_DATA_ATTRIBUTE])) {
-            // data-attributeが設定されている時の処理
+        if ($hasDataAttribute) {
+            // data-attributeが設定されている場合の出力専用処理
             $dataAttribute[] = [
                 'name' => $attrList[BLOCS_DATA_ATTRIBUTE],
-                'value' => $resultBuff,
+                'value' => $outputBuffer,
             ];
 
             return '';
         }
 
-        // data-attributeが設定されていない時の処理
-        $tagName && $resultBuff = self::setTagCounterVal($resultBuff, $attrList, $tagName, $tagCounter, $htmlArray);
+        // data-attributeが設定されていない場合のタグ計数処理
+        if ($tagName) {
+            return self::updateTagCounterState($outputBuffer, $attrList, $tagName, $tagCounter, $htmlArray);
+        }
 
-        return $resultBuff;
+        return $outputBuffer;
     }
 
-    // data-noticeのスクリプトを生成
+    // data-notice属性に対応するPHPスクリプトを生成する
     public static function notice($attrList, $quotesList, &$dataAttribute, $tagName = '', &$tagCounter = null, &$htmlArray = null)
     {
         $noticeList = explode(':', $attrList[BLOCS_DATA_NOTICE]);
@@ -101,101 +105,106 @@ class Val
             }
         }
 
-        $resultBuff = '';
-        if (empty($attrList[BLOCS_DATA_ASSIGN])) {
-            $resultBuff .= '<?php echo(';
+        $outputBuffer = '';
+        $usesAssignment = ! empty($attrList[BLOCS_DATA_ASSIGN]);
+
+        if (! $usesAssignment) {
+            $outputBuffer .= '<?php echo(';
             if (! (isset($attrList[BLOCS_DATA_CONVERT]) && $attrList[BLOCS_DATA_CONVERT] === 'raw')) {
-                $resultBuff .= '\Blocs\Common::convertDefault(';
+                $outputBuffer .= '\Blocs\Common::convertDefault(';
             }
         } else {
             if (! Common::checkValueName($attrList[BLOCS_DATA_ASSIGN])) {
                 trigger_error('B012: Invalid condition "'.BLOCS_DATA_ASSIGN.'" ('.$attrList[BLOCS_DATA_ASSIGN].')', E_USER_ERROR);
             }
 
-            $resultBuff .= "<?php {$attrList[BLOCS_DATA_ASSIGN]} = ";
+            $outputBuffer .= "<?php {$attrList[BLOCS_DATA_ASSIGN]} = ";
         }
 
-        $resultBuff .= '\Blocs\Lang::get("'.$attrList[BLOCS_DATA_NOTICE].'")';
+        $outputBuffer .= '\Blocs\Lang::get("'.$attrList[BLOCS_DATA_NOTICE].'")';
 
-        if (empty($attrList[BLOCS_DATA_ASSIGN])) {
+        if (! $usesAssignment) {
             if (! (isset($attrList[BLOCS_DATA_CONVERT]) && $attrList[BLOCS_DATA_CONVERT] === 'raw')) {
-                $resultBuff .= ')';
+                $outputBuffer .= ')';
             }
-            $resultBuff .= "); ?>\n";
+            $outputBuffer .= "); ?>\n";
         } else {
-            $resultBuff .= "; ?>\n";
+            $outputBuffer .= "; ?>\n";
         }
 
-        // data-attributeが設定されている時の処理
+        // data-attributeが設定されている場合の出力専用処理
         if (isset($attrList[BLOCS_DATA_ATTRIBUTE])) {
             $dataAttribute[] = [
                 'name' => $attrList[BLOCS_DATA_ATTRIBUTE],
-                'value' => $resultBuff,
+                'value' => $outputBuffer,
             ];
-            $resultBuff = '';
+            $outputBuffer = '';
         }
 
-        // data-attributeが設定されていない時の処理
-        $tagName && $resultBuff = self::setTagCounterVal($resultBuff, $attrList, $tagName, $tagCounter, $htmlArray);
+        // data-attributeが設定されていない場合のタグ計数処理
+        if ($tagName) {
+            $outputBuffer = self::updateTagCounterState($outputBuffer, $attrList, $tagName, $tagCounter, $htmlArray);
+        }
 
-        return $resultBuff;
+        return $outputBuffer;
     }
 
-    private static function addFixValue($attrList, $quotesList, $resultBuff, $attrName)
+    private static function appendFixedValueSegment($attrList, $quotesList, $outputBuffer, $attrName)
     {
         if (! (isset($attrList[$attrName]))) {
-            return $resultBuff;
+            return $outputBuffer;
         }
 
         if (empty($attrList[BLOCS_DATA_ASSIGN])) {
             if (empty($quotesList[$attrName])) {
-                // 変数の場合
-                return $resultBuff."<?php echo({$attrList[$attrName]}); ?>\n";
+                // 変数パターンの固定値を追加
+                return $outputBuffer."<?php echo({$attrList[$attrName]}); ?>\n";
             } else {
-                return $resultBuff.$attrList[$attrName];
+                return $outputBuffer.$attrList[$attrName];
             }
         }
 
         empty($quotesList[$attrName]) && $quotesList[$attrName] = '';
-        $resultBuff .= "<?php \$dataVal .= {$quotesList[$attrName]}{$attrList[$attrName]}{$quotesList[$attrName]}; ?>\n";
+        $outputBuffer .= "<?php \$dataVal .= {$quotesList[$attrName]}{$attrList[$attrName]}{$quotesList[$attrName]}; ?>\n";
 
-        return $resultBuff;
+        return $outputBuffer;
     }
 
-    private static function getMenuName($dataVal)
+    private static function resolveMenuNameSuffix($dataVal)
     {
         if (! Common::checkValueName($dataVal)) {
             return '';
         }
 
-        $propertyName = explode('->', $dataVal, 2);
-        if (count($propertyName) > 1) {
-            $dataVal = '$'.$propertyName[1];
+        $propertySegments = explode('->', $dataVal, 2);
+        if (count($propertySegments) > 1) {
+            $dataVal = '$'.$propertySegments[1];
         }
 
-        $valueName = explode('[', $dataVal);
-        if (count($valueName) === 1) {
+        $valueSegments = explode('[', $dataVal);
+        if (count($valueSegments) === 1) {
             return ', \''.substr($dataVal, 1).'\'';
         }
 
-        if (! strncmp(end($valueName), "'", 1) || ! strncmp(end($valueName), '"', 1)) {
-            return ', '.substr(end($valueName), 0, -1);
+        $lastSegment = end($valueSegments);
+        if (! strncmp($lastSegment, "'", 1) || ! strncmp($lastSegment, '"', 1)) {
+            return ', '.substr($lastSegment, 0, -1);
         } else {
-            return ', \''.substr(end($valueName), 0, -1).'\'';
+            return ', \''.substr($lastSegment, 0, -1).'\'';
         }
     }
 
-    private static function setTagCounterVal($resultBuff, $attrList, $tagName, &$tagCounter, &$htmlArray)
+    private static function updateTagCounterState($outputBuffer, $attrList, $tagName, &$tagCounter, &$htmlArray)
     {
-        if (substr($resultBuff, -16) !== BLOCS_ENDIF_SCRIPT) {
+        if (substr($outputBuffer, -16) !== BLOCS_ENDIF_SCRIPT) {
             $tagCounter = [
                 'tag' => $tagName,
-                'before' => $resultBuff,
+                'before' => $outputBuffer,
                 'type' => 'ignore',
             ];
         } else {
             // 次回のタグ処理の先頭に入れる
-            array_unshift($htmlArray, substr($resultBuff, 0, -16)."<?php else: ?>\n");
+            array_unshift($htmlArray, substr($outputBuffer, 0, -16)."<?php else: ?>\n");
 
             $tagCounter = [
                 'tag' => $tagName,

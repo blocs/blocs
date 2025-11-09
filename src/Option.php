@@ -6,70 +6,36 @@ class Option
 {
     private static array $appendOption = [];
 
-    /**
-     * テンプレートで定義したoptionを取得する
-     *
-     * $optionList = \Blocs\Option::get('insert', 'item');
-     *
-     * @param  string  $templateName  テンプレート名
-     * @param  string  $formName  フォーム名
-     * @return array optionの値とラベル
-     */
     public static function get($templateName, $formName)
     {
         $path = Common::getPath($templateName);
 
-        // 設定ファイルを読み込み
+        // 設定ファイルを読み込みテンプレートに定義されたメニューを取得
         $config = Common::readConfig($path);
-
         if (empty($config['menu'][$formName])) {
             return [];
         }
 
-        $optionList = [];
-        foreach ($config['menu'][$formName] as $buff) {
-            $optionList[$buff['value']] = $buff['label'];
-        }
-
-        return $optionList;
+        return array_column($config['menu'][$formName], 'label', 'value');
     }
 
-    /**
-     * テンプレートで定義したoptionに動的に項目を追加する
-     *
-     * \Blocs\Option::add('item', ['value' => 'label']);
-     *
-     * @param  string  $formName  フォーム名
-     * @param  array  $optionList  値とラベルの配列
-     */
     public static function add($formName, $optionList)
     {
-        isset(self::$appendOption[$formName]) || self::$appendOption[$formName] = [];
-
-        $valueList = [];
-        foreach (self::$appendOption[$formName] as $option) {
-            $valueList[] = $option['value'];
+        if (! isset(self::$appendOption[$formName])) {
+            self::$appendOption[$formName] = [];
         }
 
-        $optionList = self::addMenu($optionList);
-        foreach ($optionList as $option) {
-            in_array($option['value'], $valueList) || self::$appendOption[$formName][] = $option;
+        $registeredValues = array_column(self::$appendOption[$formName], 'value');
+        $menuEntries = self::buildMenuEntries($optionList);
+
+        foreach ($menuEntries as $entry) {
+            in_array($entry['value'], $registeredValues, true) || self::$appendOption[$formName][] = $entry;
         }
 
         // 設定ファイルを読み込み
         Common::readConfig();
     }
 
-    /**
-     * 他のテンプレートで定義したoptionをセットする
-     * 同じディレクトリ内のテンプレートはoptionが共有される
-     * 違うディレクトリのテンプレートにoptionを共有したい時に使う
-     *
-     * \Blocs\Option::set('insert', 'item');
-     *
-     * @param  string  $templateName  テンプレート名
-     * @param  string  $formName  フォーム名
-     */
     public static function set($templateName, $formName)
     {
         $optionList = self::get($templateName, $formName);
@@ -82,41 +48,44 @@ class Option
         return self::$appendOption;
     }
 
-    private static function addMenu($menu, $label = null, $optionGroupList = null)
+    private static function buildMenuEntries($menu, $label = null, $optionGroupList = null)
     {
-        $menuList = [];
-        $optionGroupList = [];
+        $menuLabelMap = [];
+        $menuGroupMap = [];
+
         if (is_array($menu)) {
             if (array_values($menu) === $menu) {
-                // valueだけ指定された時
+                // valueだけが指定された場合は value をラベルとして再構成
                 $menu = array_combine(array_values($menu), array_values($menu));
             }
 
-            foreach ($menu as $key => $value) {
-                if (is_array($value)) {
-                    foreach ($value as $optionKey => $optionValue) {
-                        $menuList[$optionKey] = $optionValue;
-                        $optionGroupList[$optionKey] = $key;
+            foreach ($menu as $menuKey => $menuValue) {
+                if (is_array($menuValue)) {
+                    foreach ($menuValue as $optionValue => $optionLabel) {
+                        $menuLabelMap[$optionValue] = $optionLabel;
+                        $menuGroupMap[$optionValue] = $menuKey;
                     }
                 } else {
-                    $menuList[$key] = $value;
+                    $menuLabelMap[$menuKey] = $menuValue;
                 }
             }
         } else {
-            isset($label) || $label = $menu;
-            $menuList = [$menu => $label];
-            $optionGroupList[$menu] = $optionGroupList;
-        }
-
-        $menuDataList = [];
-        foreach ($menuList as $value => $label) {
-            if (isset($optionGroupList[$value])) {
-                $menuDataList[] = ['value' => $value, 'label' => $label, 'optgroup' => $optionGroupList[$value]];
-            } else {
-                $menuDataList[] = ['value' => $value, 'label' => $label];
+            $defaultLabel = $label ?? $menu;
+            $menuLabelMap = [$menu => $defaultLabel];
+            if (! is_null($optionGroupList)) {
+                $menuGroupMap[$menu] = $optionGroupList;
             }
         }
 
-        return $menuDataList;
+        $menuEntries = [];
+        foreach ($menuLabelMap as $value => $labelName) {
+            if (isset($menuGroupMap[$value])) {
+                $menuEntries[] = ['value' => $value, 'label' => $labelName, 'optgroup' => $menuGroupMap[$value]];
+            } else {
+                $menuEntries[] = ['value' => $value, 'label' => $labelName];
+            }
+        }
+
+        return $menuEntries;
     }
 }

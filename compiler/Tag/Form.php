@@ -7,14 +7,14 @@ use Blocs\Compiler\Parser;
 
 class Form
 {
-    // フォーム部品に値をつける
+    // フォーム部品に値を設定する
     public static function value($compiledTag, &$attrList, $tagName = '', &$tagCounter = null, &$htmlArray = null)
     {
         $valueBuff = "<?php if(isset(\${$attrList['name']})): ?>\n";
         $valueBuff .= "<?php echo(htmlspecialchars(\${$attrList['name']}, ENT_QUOTES, 'UTF-8')); ?>\n";
 
         if ($tagName) {
-            // textarea
+            // textareaの場合は閉じタグ直前にデフォルト値を差し込む
             array_unshift($htmlArray, $valueBuff."<?php else: ?>\n");
 
             $tagCounter = [
@@ -25,23 +25,25 @@ class Form
             return;
         }
 
-        isset($attrList['value']) && $valueBuff .= "<?php else: ?>\n".$attrList['value'];
+        if (isset($attrList['value'])) {
+            $valueBuff .= "<?php else: ?>\n".$attrList['value'];
+        }
         $valueBuff .= BLOCS_ENDIF_SCRIPT;
 
         return Common::mergeAttribute($compiledTag, 'value', $valueBuff, $attrList);
     }
 
-    // selectなどのフォーム部品にchecked、selectedをつける
+    // selectなどのフォーム部品にchecked、selectedを設定する
     public static function check($compiledTag, $attrName, $attrValue, $checkFlg, $attrChecked)
     {
         if (isset($attrValue) && ! strncmp($attrValue, '<?', 2)) {
-            $valueBuff = '(isset($check_'.$attrName.') ? $check_'.$attrName.' : null)';
+            $valueExpression = '(isset($check_'.$attrName.') ? $check_'.$attrName.' : null)';
             $checkTag = str_replace('echo(', '$check_'.$attrName.' = (', $attrValue);
         } else {
-            $valueBuff = (isset($attrValue) ? Common::escapeDoubleQuote($attrValue) : 'null');
+            $valueExpression = isset($attrValue) ? Common::escapeDoubleQuote($attrValue) : 'null';
             $checkTag = '';
         }
-        $checkTag .= "<?php \Blocs\Common::addChecked((isset(\${$attrName}) ? \${$attrName} : null), {$valueBuff}, {$attrChecked}, '{$checkFlg}'); ?>\n";
+        $checkTag .= "<?php \Blocs\Common::addChecked((isset(\${$attrName}) ? \${$attrName} : null), {$valueExpression}, {$attrChecked}, '{$checkFlg}'); ?>\n";
 
         $compiledTag = preg_replace('/\s+'.$checkFlg.'([\s>]+)/i', '${1}', $compiledTag);
         $compiledTag = preg_replace('/\s+'.$checkFlg.'\s*=\s*["\']{0,1}'.$checkFlg.'["\']{0,1}([\s>\/]+)/i', '${1}', $compiledTag);
@@ -56,7 +58,7 @@ class Form
         return $compiledTag;
     }
 
-    // optionグループのHTMLを生成
+    // optionグループのHTMLを生成する
     public static function select($compiledTag, &$htmlArray, $selectName)
     {
         $optionBuff = <<< END_of_HTML

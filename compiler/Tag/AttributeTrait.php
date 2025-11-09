@@ -17,24 +17,30 @@ trait AttributeTrait
         if (isset($attrList[BLOCS_DATA_VAL])) {
             $tagCounter = [];
             Val::val($attrList, $quotesList, $this->dataAttribute, $tagName, $tagCounter, $htmlArray);
-            count($tagCounter) && $this->setTagCounter($tagCounter);
+            if (! empty($tagCounter)) {
+                $this->registerTagCounter($tagCounter);
+            }
         }
 
         if (isset($attrList[BLOCS_DATA_NOTICE])) {
             $tagCounter = [];
             Val::notice($attrList, $quotesList, $this->dataAttribute, $tagName, $tagCounter, $htmlArray);
-            count($tagCounter) && $this->setTagCounter($tagCounter);
+            if (! empty($tagCounter)) {
+                $this->registerTagCounter($tagCounter);
+            }
         }
 
         if (isset($attrList[BLOCS_DATA_EXIST]) || isset($attrList[BLOCS_DATA_NONE]) || isset($attrList[BLOCS_DATA_IF]) || isset($attrList[BLOCS_DATA_UNLESS])) {
             $tagCounter = [];
             Condition::partInclude($this->partInclude);
             $compiledTag = Condition::condition($compiledTag, $attrList, $quotesList, $tagName, $tagCounter, $htmlArray);
-            count($tagCounter) && $this->setTagCounter($tagCounter);
+            if (! empty($tagCounter)) {
+                $this->registerTagCounter($tagCounter);
+            }
         }
 
         if (isset($attrList[BLOCS_DATA_LOOP])) {
-            // loop内のform名を置換するか
+            // ループ内でフォーム名を差し替える必要があるかどうかを確認する
             if (isset($attrList[BLOCS_DATA_FORM])) {
                 $this->arrayFormName = $attrList[BLOCS_DATA_FORM];
             } else {
@@ -47,7 +53,7 @@ trait AttributeTrait
 
             $compiledTag = Loop::loop($attrList, count($this->tagCounter)).$compiledTag;
 
-            $this->setTagCounter([
+            $this->registerTagCounter([
                 'tag' => $tagName,
                 'after' => Loop::endloop($attrList),
                 'array_form' => substr($attrList[BLOCS_DATA_LOOP], 1),
@@ -55,22 +61,24 @@ trait AttributeTrait
         }
 
         if (isset($attrList[BLOCS_DATA_FILTER]) && isset($attrList['name']) && strlen($attrList['name'])) {
-            foreach (explode('|', $attrList[BLOCS_DATA_FILTER]) as $buff) {
-                isset($this->filter[$attrList['name']]) || $this->filter[$attrList['name']] = '';
-                $this->filter[$attrList['name']] .= $this->generateFilter($buff);
+            foreach (explode('|', $attrList[BLOCS_DATA_FILTER]) as $filterToken) {
+                if (! isset($this->filter[$attrList['name']])) {
+                    $this->filter[$attrList['name']] = '';
+                }
+                $this->filter[$attrList['name']] .= $this->buildFilterStatement($filterToken);
             }
         }
     }
 
-    private function generateFilter($filter)
+    private function buildFilterStatement($filter)
     {
         [$filterClass, $filterFunc, $filterArg] = Common::checkFunc($filter);
-        $filterFunc = self::findFilterFunc($filterClass, $filterFunc);
+        $filterFunc = self::resolveFilterCallable($filterClass, $filterFunc);
 
         return "\$value = {$filterFunc}(\$value{$filterArg});\n";
     }
 
-    private static function findFilterFunc($filterClass, $filterFunc)
+    private static function resolveFilterCallable($filterClass, $filterFunc)
     {
         if ($filterClass && method_exists($filterClass, $filterFunc)) {
             return $filterClass.'::'.$filterFunc;

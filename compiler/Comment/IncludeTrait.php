@@ -9,8 +9,8 @@ trait IncludeTrait
 {
     private function compileCommentInclude($attrList, &$htmlBuff, &$htmlArray, $quotesList)
     {
-        // auto includeのタグの埋め込み
-        $autoincludeDir = self::getAutoincludeDir();
+        // auto includeを解決してタグを埋め込む
+        $autoincludeDir = self::resolveAutoincludeDirectory();
         if ($attrList[BLOCS_DATA_INCLUDE] == 'auto') {
             if ($autoincludeDir === false) {
                 if (isset($attrList[BLOCS_DATA_EXIST])) {
@@ -20,8 +20,8 @@ trait IncludeTrait
                 }
             }
 
-            // 引数を渡せるように
-            $htmlBuff = $this->assignValue($attrList, $quotesList);
+            // 引数を渡せるようにする
+            $htmlBuff = $this->buildAssignmentScript($attrList, $quotesList);
 
             $htmlBuff .= '{{REPLACE_TO_AUTOINCLUDE}}';
 
@@ -47,7 +47,7 @@ trait IncludeTrait
 
         $resultArray[] = '<!-- '.BLOCS_DATA_CHDIR.'="'.getcwd().'" '.BLOCS_DATA_ASSIGN.' -->';
 
-        // conditionで挟み込み
+        // conditionで挟み込む
         $condition = Condition::condition('', $attrList, $quotesList);
         if (! empty($condition)) {
             array_unshift($resultArray, $condition);
@@ -56,8 +56,8 @@ trait IncludeTrait
 
         $htmlArray = array_merge($resultArray, $htmlArray);
 
-        // 引数を渡せるように
-        $htmlBuff = $this->assignValue($attrList, $quotesList, true);
+        // 引数を渡せるようにする
+        $htmlBuff = $this->buildAssignmentScript($attrList, $quotesList, true);
     }
 
     private function addDataInclude($attrList, $htmlBuff, $quotesList)
@@ -66,7 +66,7 @@ trait IncludeTrait
         eval("\$attrList[BLOCS_DATA_INCLUDE] = <<<EOS\n{$attrList[BLOCS_DATA_INCLUDE]}\nEOS;\n");
 
         if (! strncmp($attrList[BLOCS_DATA_INCLUDE], '/', 1) && ! is_file($attrList[BLOCS_DATA_INCLUDE])) {
-            // ルートディレクトリのパスを変換
+            // ルートディレクトリのパスへ変換する
             $attrList[BLOCS_DATA_INCLUDE] = BLOCS_ROOT_DIR.$attrList[BLOCS_DATA_INCLUDE];
         } elseif (empty($quotesList[BLOCS_DATA_INCLUDE])) {
             eval('$attrList[BLOCS_DATA_INCLUDE] = '.$attrList[BLOCS_DATA_INCLUDE].';');
@@ -74,7 +74,7 @@ trait IncludeTrait
 
         if (! strlen($realpath = str_replace(DIRECTORY_SEPARATOR, '/', realpath($attrList[BLOCS_DATA_INCLUDE])))) {
             if (false !== ($resultBuff = $this->addAutoinclude($attrList, $htmlBuff))) {
-                // data-includeができないのでauto includeしてみる
+                // data-includeが見つからない場合はauto includeを試す
                 return $resultBuff;
             }
 
@@ -83,7 +83,7 @@ trait IncludeTrait
             }
 
             if (isset($this->autoincluded[$attrList[BLOCS_DATA_INCLUDE]])) {
-                // すでにincludeされている
+                // すでにinclude済み
                 return [];
             }
 
@@ -95,18 +95,18 @@ trait IncludeTrait
         }
         $this->include[] = $realpath;
 
-        $autoincludeDir = self::getAutoincludeDir();
+        $autoincludeDir = self::resolveAutoincludeDirectory();
         $autoinclude = pathinfo($realpath, PATHINFO_FILENAME);
         if ($autoincludeDir !== false && ! strncmp($realpath, $autoincludeDir, strlen($autoincludeDir))) {
             if (isset($this->autoincluded[$autoinclude])) {
-                // auto includeは一回だけしかincludeしない
+                // auto includeは一度だけincludeする
                 return [];
             }
         }
         $this->autoincluded[$autoinclude] = true;
 
         if (! isset($this->partInclude[$realpath])) {
-            // ファイルごとにタグを保持
+            // ファイル単位でタグを保持する
             $this->partInclude[$realpath] = $this->parseTemplate(self::checkEncoding($realpath), $realpath);
         }
 
@@ -115,7 +115,7 @@ trait IncludeTrait
 
     private function addAutoinclude($attrList, $htmlBuff)
     {
-        $autoincludeDir = self::getAutoincludeDir();
+        $autoincludeDir = self::resolveAutoincludeDirectory();
         if ($autoincludeDir === false) {
             return false;
         }
@@ -130,9 +130,9 @@ trait IncludeTrait
             return false;
         }
 
-        // auto includeの対象に追加（無限ループにならないよう注意）
+        // auto includeの対象に追加する（無限ループに注意）
         if ($autoinclude === $attrList[BLOCS_DATA_INCLUDE]) {
-            // data-include="button"に対応（auto includeのファイル名と一致するケース）
+            // data-include="button"に対応する（auto includeのファイル名と一致する場合）
             $htmlBuff = str_replace(BLOCS_DATA_INCLUDE, BLOCS_DATA_EXIST.' '.BLOCS_DATA_INCLUDE, $htmlBuff);
         }
 
@@ -142,10 +142,10 @@ trait IncludeTrait
         ];
     }
 
-    // ファイルごとにパーシング
+    // ファイル単位でパースする
     private function parseTemplate($writeBuff, $realpath, $autoinclude = true)
     {
-        // ブロックのために元ファイルのパスをセットするタグを追加
+        // ブロック識別のため元ファイルのパスを設定するタグを追加する
         $chdirBuff = '<!-- '.BLOCS_DATA_CHDIR.'="'.dirname($realpath).'" -->';
         $htmlArray = Parser::parse($writeBuff);
         array_unshift($htmlArray, $chdirBuff);
@@ -155,7 +155,7 @@ trait IncludeTrait
             $resultArray[] = $htmlBuff;
 
             if (! is_array($htmlBuff) && ! strncmp($htmlBuff, '<!', 2)) {
-                // data-blocのロケーションはオリジナルファイルのパスに設定
+                // data-blocのロケーションをオリジナルファイルのパスに設定する
                 [$includeBuff] = Parser::parse($htmlBuff, true);
 
                 if (isset($includeBuff['attribute'][BLOCS_DATA_BLOC])) {
@@ -168,8 +168,8 @@ trait IncludeTrait
             return $resultArray;
         }
 
-        // auto inlcudeテンプレートは移動
-        $autoincludeDir = self::getAutoincludeDir();
+        // auto includeテンプレートの範囲をマークする
+        $autoincludeDir = self::resolveAutoincludeDirectory();
         if ($autoincludeDir !== false && ! strncmp($realpath, $autoincludeDir, strlen($autoincludeDir))) {
             array_unshift($resultArray, '{{AUTOINCLUDE_START_FROM}}');
             $resultArray[] = '{{AUTOINCLUDE_END_TO}}';

@@ -4,94 +4,84 @@ namespace Blocs\Compiler\Cache;
 
 class Common
 {
-    // attributeの置き換え
+    // attributeの置き換え: ビルド済みタグへ属性を統合する
     public static function mergeAttribute($compiledTag, $attrName, $attrBuff, &$attrList, $noValue = false)
     {
         // data-attributeと空白のdata-val時（値のない属性）の処理
-        if ($noValue) {
-            $preAttr = '';
-            $postAttr = '';
+        [$attributePrefix, $attributeSuffix] = self::buildAttributeWrapper((bool) $noValue);
+
+        $attributeName = $attrName;
+        $attributeBuffer = $attrBuff;
+        $attributeList = &$attrList;
+
+        if (isset($attributeList[$attributeName])) {
+            $compiledTag = self::replaceExistingAttributeValue($compiledTag, $attributeName, $attributeBuffer, $attributeList[$attributeName]);
+        } elseif (self::isSelfClosingTag($compiledTag)) {
+            $compiledTag = self::appendAttributeToSelfClosingTag($compiledTag, $attributeName, $attributeBuffer, $attributePrefix, $attributeSuffix);
         } else {
-            $preAttr = '="';
-            $postAttr = '"';
+            $compiledTag = self::appendAttributeToStandardTag($compiledTag, $attributeName, $attributeBuffer, $attributePrefix, $attributeSuffix);
         }
 
-        if (isset($attrList[$attrName])) {
-            if (substr($attrBuff, -16) === BLOCS_ENDIF_SCRIPT && strpos($attrBuff, '<?php else: ?>') === false) {
-                $attrBuff = substr($attrBuff, 0, -16)."<?php else: ?>\n".$attrList[$attrName].BLOCS_ENDIF_SCRIPT;
-            }
-
-            $compiledTag = preg_replace('/(\s+'.$attrName.'\s*=\s*["\']{0,1})'.str_replace('/', '\/', preg_quote($attrList[$attrName])).'((\[\]){0,1}["\']{0,1}[\s<>\/]+)/si', '${1}'.$attrBuff.'${2}', $compiledTag);
-        } elseif (substr($compiledTag, -2) === '/>') {
-            if ($condition = self::checkAttributeValue($attrBuff, " {$attrName}{$preAttr}", $postAttr)) {
-                $compiledTag = rtrim(substr($compiledTag, 0, -2))."{$condition} />";
-            } else {
-                $compiledTag = rtrim(substr($compiledTag, 0, -2))." {$attrName}{$preAttr}{$attrBuff}{$postAttr} />";
-            }
-        } else {
-            if ($condition = self::checkAttributeValue($attrBuff, " {$attrName}{$preAttr}", $postAttr)) {
-                $compiledTag = rtrim(substr($compiledTag, 0, -1))."{$condition}>";
-            } else {
-                $compiledTag = rtrim(substr($compiledTag, 0, -1))." {$attrName}{$preAttr}{$attrBuff}{$postAttr}>";
-            }
-        }
-
-        $attrList[$attrName] = $attrBuff;
+        $attributeList[$attributeName] = $attributeBuffer;
 
         return $compiledTag;
     }
 
-    // 特定文字をエスケープ
+    // 特定文字をエスケープ: ダブルクォート用の文字列を生成する
     public static function escapeDoubleQuote($str)
     {
-        $str = str_replace(['\\', "\n", "\r", "\t", '"'], ['\\\\', '\n', '\r', '\t', '\"'], $str);
-        $str = str_replace(["\v", "\f"], ['\v', '\f'], $str);
-        $str = str_replace("\e", '\e', $str);
+        $escapedString = strtr($str, [
+            '\\' => '\\\\',
+            "\n" => '\n',
+            "\r" => '\r',
+            "\t" => '\t',
+            '"' => '\"',
+            "\v" => '\v',
+            "\f" => '\f',
+            "\e" => '\e',
+        ]);
 
-        return '"'.$str.'"';
+        return '"'.$escapedString.'"';
     }
 
-    // 文字列からクラス、メソッド、引数を取得
+    // 文字列からクラス、メソッド、引数を取得: data-call指定をパースする
     public static function checkFunc($funcQuery)
     {
-        if (strpos($funcQuery, '::') !== false) {
-            [$class, $funcQuery] = explode('::', $funcQuery, 2);
-        } else {
-            $class = '';
+        $class = '';
+        $functionQuery = $funcQuery;
+
+        if (strpos($functionQuery, '::') !== false) {
+            [$class, $functionQuery] = explode('::', $functionQuery, 2);
         }
 
-        if (strpos($funcQuery, ':') === false) {
-            $func = $funcQuery;
+        if (strpos($functionQuery, ':') === false) {
+            $function = $functionQuery;
             $arguments = '';
         } else {
-            [$func, $arguments] = explode(':', $funcQuery, 2);
+            [$function, $arguments] = explode(':', $functionQuery, 2);
+            $argumentFragments = preg_split('/([:"\'])/s', $arguments, -1, PREG_SPLIT_DELIM_CAPTURE);
+            $quoteBuffer = '';
+            $resultBuffer = '';
 
-            $argArray = preg_split('/([:"\'])/s', $arguments, -1, PREG_SPLIT_DELIM_CAPTURE);
-            $quotesBuff = '';
-            $resultBuff = '';
-            foreach ($argArray as $buff) {
-                if ($buff == "'" || $buff == '"') {
-                    if (! strlen($quotesBuff)) {
-                        $quotesBuff = $buff;
-                    } elseif ($quotesBuff == $buff) {
-                        $quotesBuff = '';
+            foreach ($argumentFragments as $fragment) {
+                if ($fragment === "'" || $fragment === '"') {
+                    if ($quoteBuffer === '') {
+                        $quoteBuffer = $fragment;
+                    } elseif ($quoteBuffer === $fragment) {
+                        $quoteBuffer = '';
                     }
                 }
 
-                if (! strlen($quotesBuff) && $buff == ':') {
-                    $resultBuff .= ', ';
-                } else {
-                    $resultBuff .= $buff;
-                }
+                $resultBuffer .= ($quoteBuffer === '' && $fragment === ':') ? ', ' : $fragment;
             }
 
-            $arguments = ', '.$resultBuff;
+            $arguments = ', '.$resultBuffer;
         }
 
-        return [$class, $func, $arguments];
+        return [$class, $function, $arguments];
     }
 
-    // 変数として使用できる文字列かチェック
+    // 変数として使用できる文字列かチェック: data-assignの値がPHP変数として妥当か検証する
     // data-assignなどで指定された文字列が変数として使用できないとエラーが発生するため
     public static function checkValueName($valueName)
     {
@@ -99,67 +89,118 @@ class Common
             return false;
         }
 
-        $valueName = preg_replace('/\[[^\]]+\]/', '', $valueName);
-        $valueName = str_replace('->', '', $valueName);
+        $normalizedValueName = preg_replace('/\[[^\]]+\]/', '', $valueName);
+        $normalizedValueName = str_replace('->', '', $normalizedValueName);
 
-        if (is_numeric(substr($valueName, 1, 1)) || preg_match('/[^a-zA-Z0-9\_]/', substr($valueName, 1))) {
+        if (is_numeric(substr($normalizedValueName, 1, 1)) || preg_match('/[^a-zA-Z0-9\_]/', substr($normalizedValueName, 1))) {
             return false;
         }
 
         return true;
     }
 
-    // フォーム名として使用できる文字列かチェック
+    // フォーム名として使用できる文字列かチェック: フォーム名は変数として使用できる文字列でなければならない
     // フォーム名は変数として使用できる文字列でなければならない
     public static function checkFormName($valueName)
     {
-        substr($valueName, -2) === '[]' && $valueName = substr($valueName, 0, -2);
+        $normalizedValueName = substr($valueName, -2) === '[]' ? substr($valueName, 0, -2) : $valueName;
 
-        if (is_numeric(substr($valueName, 0, 1)) || preg_match('/[^a-zA-Z0-9\_]/', $valueName)) {
+        if (is_numeric(substr($normalizedValueName, 0, 1)) || preg_match('/[^a-zA-Z0-9\_]/', $normalizedValueName)) {
             return false;
         }
 
-        return $valueName;
+        return $normalizedValueName;
     }
 
-    private static function checkAttributeValue($attrBuff, $preAttr, $postAttr)
+    private static function buildConditionalAttributeValue($attributeBuffer, $attributePrefix, $attributeSuffix)
     {
-        if (! trim($attrBuff)) {
+        if (! trim($attributeBuffer)) {
             // data-valを指定しないケース
             return '';
         }
 
-        $partList = explode('<?php if', $attrBuff);
-        if (preg_replace("/\s/", '', $partList[0])) {
+        $attributeParts = explode('<?php if', $attributeBuffer);
+        if (preg_replace('/\s/', '', $attributeParts[0])) {
             return '';
         }
 
         $ifDepth = 0;
-        $condition = "<?php \$preAttr='{$preAttr}'; \$postAttr=''; ?>\n".$partList[0];
-        array_shift($partList);
-        foreach ($partList as $buff) {
+        $condition = "<?php \$preAttr='{$attributePrefix}'; \$postAttr=''; ?>\n".$attributeParts[0];
+        array_shift($attributeParts);
+
+        foreach ($attributeParts as $partBuffer) {
             $condition .= '<?php if';
             if ($ifDepth) {
-                $condition .= $buff;
-                $buff = explode(': ?>', $buff, 2);
+                $condition .= $partBuffer;
+                $partBuffer = explode(': ?>', $partBuffer, 2);
             } else {
-                $buff = explode(': ?>', $buff, 2);
-                $condition .= $buff[0].": ?>\n<?php echo(\$preAttr); \$preAttr=''; \$postAttr='{$postAttr}'; ?>".$buff[1];
+                $partBuffer = explode(': ?>', $partBuffer, 2);
+                $condition .= $partBuffer[0].": ?>\n<?php echo(\$preAttr); \$preAttr=''; \$postAttr='{$attributeSuffix}'; ?>".$partBuffer[1];
             }
             $ifDepth++;
 
-            if (strpos($buff[1], BLOCS_ENDIF_SCRIPT) !== false) {
-                $buff = explode(BLOCS_ENDIF_SCRIPT, $buff[1]);
-                foreach ($buff as $endif) {
-                    if (! $ifDepth && preg_replace("/\s/", '', $endif)) {
+            if (strpos($partBuffer[1], BLOCS_ENDIF_SCRIPT) !== false) {
+                $endifBuffers = explode(BLOCS_ENDIF_SCRIPT, $partBuffer[1]);
+                foreach ($endifBuffers as $endifBuffer) {
+                    if (! $ifDepth && preg_replace('/\s/', '', $endifBuffer)) {
                         return '';
                     }
-                    $ifDepth && $ifDepth--;
+
+                    if ($ifDepth) {
+                        $ifDepth--;
+                    }
                 }
             }
         }
 
         return $condition."<?php echo(\$postAttr); ?>\n";
+    }
+
+    private static function buildAttributeWrapper(bool $isValueLess)
+    {
+        if ($isValueLess) {
+            return ['', ''];
+        }
+
+        return ['="', '"'];
+    }
+
+    private static function replaceExistingAttributeValue($compiledTag, $attributeName, &$attributeBuffer, $existingAttributeValue)
+    {
+        if (substr($attributeBuffer, -16) === BLOCS_ENDIF_SCRIPT && strpos($attributeBuffer, '<?php else: ?>') === false) {
+            $attributeBuffer = substr($attributeBuffer, 0, -16)."<?php else: ?>\n".$existingAttributeValue.BLOCS_ENDIF_SCRIPT;
+        }
+
+        $pattern = '/(\s+'.$attributeName.'\s*=\s*["\']{0,1})'.str_replace('/', '\/', preg_quote($existingAttributeValue)).'((\[\]){0,1}["\']{0,1}[\s<>\/]+)/si';
+
+        return preg_replace($pattern, '${1}'.$attributeBuffer.'${2}', $compiledTag);
+    }
+
+    private static function isSelfClosingTag($compiledTag)
+    {
+        return substr($compiledTag, -2) === '/>';
+    }
+
+    private static function appendAttributeToSelfClosingTag($compiledTag, $attributeName, $attributeBuffer, $attributePrefix, $attributeSuffix)
+    {
+        $conditionalAttribute = self::buildConditionalAttributeValue($attributeBuffer, " {$attributeName}{$attributePrefix}", $attributeSuffix);
+
+        if ($conditionalAttribute !== '') {
+            return rtrim(substr($compiledTag, 0, -2))."{$conditionalAttribute} />";
+        }
+
+        return rtrim(substr($compiledTag, 0, -2))." {$attributeName}{$attributePrefix}{$attributeBuffer}{$attributeSuffix} />";
+    }
+
+    private static function appendAttributeToStandardTag($compiledTag, $attributeName, $attributeBuffer, $attributePrefix, $attributeSuffix)
+    {
+        $conditionalAttribute = self::buildConditionalAttributeValue($attributeBuffer, " {$attributeName}{$attributePrefix}", $attributeSuffix);
+
+        if ($conditionalAttribute !== '') {
+            return rtrim(substr($compiledTag, 0, -1))."{$conditionalAttribute}>";
+        }
+
+        return rtrim(substr($compiledTag, 0, -1))." {$attributeName}{$attributePrefix}{$attributeBuffer}{$attributeSuffix}>";
     }
 
     public static function findConvertFunc($convertClass, $convertFunc)

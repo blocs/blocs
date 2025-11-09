@@ -6,25 +6,25 @@ class Parser
 {
     use ParserTrait;
 
-    // データ属性名のエイリアス
-    private static array $aliasAttrName = [
+    // データ属性名のエイリアス定義
+    private static array $attributeAliasMap = [
         BLOCS_DATA_LANG => BLOCS_DATA_NOTICE,
         BLOCS_DATA_REPEAT => BLOCS_DATA_LOOP,
         BLOCS_DATA_ENDREPEAT => BLOCS_DATA_ENDLOOP,
     ];
 
-    private static array $escapeOperatorList = [
+    private static array $operatorMaskList = [
         '->',
         '=>',
     ];
 
     private static $htmlString;
 
-    // HTMLをタグ単位で配列に分解
+    // HTMLをタグ単位で分割して解析用の配列へ整形
     public static function parse($htmlString, $commentParse = false)
     {
         self::$htmlString = $htmlString;
-        $htmlString = self::escepeOperator($htmlString);
+        $htmlString = self::maskOperators($htmlString);
         $htmlList = preg_split('/([<>="\'])/s', $htmlString, -1, PREG_SPLIT_DELIM_CAPTURE);
 
         $parsedHtml = [];
@@ -41,7 +41,7 @@ class Parser
         $isQuote = '';
 
         foreach ($htmlList as $htmlNum => $htmlBuff) {
-            $htmlBuff = self::backOperator($htmlBuff);
+            $htmlBuff = self::unmaskOperators($htmlBuff);
 
             if ($htmlBuff === '<' && isset($htmlList[$htmlNum + 1])) {
                 $nextHtmlBuff = $htmlList[$htmlNum + 1];
@@ -52,10 +52,10 @@ class Parser
 
                 if (! strlen($tagName) && empty($isQuote) && ! $isPhp) {
                     if (preg_match('/^('.BLOCS_TAG_NAME_REGREX.')/s', $nextHtmlBuff, $matchList) || preg_match('/^(\/\s*'.BLOCS_TAG_NAME_REGREX.')/s', $nextHtmlBuff, $matchList)) {
-                        // タグ処理を開始
+                        // タグ解析を開始
                         $tagName = strtolower($matchList[0]);
 
-                        // テキストを格納
+                        // テキストを解析結果へ格納
                         strlen($rawString) && $parsedHtml[] = $rawString;
                         $rawString = '';
                     }
@@ -69,30 +69,30 @@ class Parser
             strlen($htmlBuff) && $rawString .= $htmlBuff;
 
             if (! strlen($tagName) || $isPhp) {
-                // タグ処理でない
+                // タグ解析の対象外
                 continue;
             }
 
             if ($htmlBuff === '>' && empty($isQuote)) {
                 if ($tagName === '!--' && ! $commentParse) {
-                    // コメントをパースしない
+                    // コメントは解析対象外
                     strlen($rawString) && $parsedHtml[] = $rawString;
                 } else {
-                    $attrString = self::deleteTagName($attrString, $tagName);
-                    $attrString = self::replaceAliasAttrName($attrString);
+                    $attrString = self::removeTagNamePrefix($attrString, $tagName);
+                    $attrString = self::applyAttributeAliases($attrString);
                     $attrValueList = preg_split("/(\s)/", trim($attrString), -1, PREG_SPLIT_DELIM_CAPTURE);
 
-                    self::addAttrList($attrList, $quotesList, $rawString, $parsedHtml, $attrName, $attrValueList, $commentParse);
+                    self::appendAttributeEntry($attrList, $quotesList, $rawString, $parsedHtml, $attrName, $attrValueList, $commentParse);
 
                     array_push($parsedHtml, [
-                        'raw' => self::replaceAliasAttrName($rawString),
+                        'raw' => self::applyAttributeAliases($rawString),
                         'tag' => $tagName,
                         'attribute' => $attrList,
                         'quotes' => $quotesList,
                     ]);
                 }
 
-                // タグ処理を終了
+                // タグ解析を終了
                 $rawString = '';
                 $tagName = '';
                 $attrList = [];
@@ -107,16 +107,16 @@ class Parser
             }
 
             if ($htmlBuff === '=' && empty($isQuote) && ! ($tagName === '!--' && ! $commentParse)) {
-                $attrString = self::deleteTagName($attrString, $tagName);
-                $attrString = self::replaceAliasAttrName($attrString);
+                $attrString = self::removeTagNamePrefix($attrString, $tagName);
+                $attrString = self::applyAttributeAliases($attrString);
                 $attrValueList = preg_split("/(\s)/", trim($attrString), -1, PREG_SPLIT_DELIM_CAPTURE);
 
                 $nextAttrName = array_pop($attrValueList);
 
-                self::addAttrList($attrList, $quotesList, $rawString, $parsedHtml, $attrName, $attrValueList, $commentParse);
+                self::appendAttributeEntry($attrList, $quotesList, $rawString, $parsedHtml, $attrName, $attrValueList, $commentParse);
 
-                // =の前は次の属性名とする
-                $attrName = self::replaceAliasAttrName($nextAttrName);
+                // '=' の直前を次の属性名として扱う
+                $attrName = self::applyAttributeAliases($nextAttrName);
                 $attrString = '';
 
                 continue;
@@ -125,13 +125,13 @@ class Parser
             if ($htmlBuff === '"' || $htmlBuff === "'") {
                 if (! empty($isQuote)) {
                     if ($isQuote === $htmlBuff) {
-                        // quoteを無効にする
+                        // クォートを無効化
                         strlen($attrName) && $quotesList[$attrName] = $isQuote;
                         $isQuote = '';
                     }
                 } else {
                     if (isset($htmlList[$htmlNum - 1]) && ! trim($htmlList[$htmlNum - 1]) && isset($htmlList[$htmlNum - 2]) && $htmlList[$htmlNum - 2] === '=') {
-                        // quoteを有効にする
+                        // クォートを有効化
                         $isQuote = $htmlBuff;
                     }
                 }
@@ -145,11 +145,11 @@ class Parser
         return $parsedHtml;
     }
 
-    private static function escepeOperator($htmlString)
+    private static function maskOperators($htmlString)
     {
         $htmlString = str_replace('-->', 'REPLACE_TO_COMMENT_OPERATOR', $htmlString);
 
-        foreach (self::$escapeOperatorList as $num => $escapeOperator) {
+        foreach (self::$operatorMaskList as $num => $escapeOperator) {
             $htmlString = str_replace($escapeOperator, "REPLACE_TO_OPERATOR_{$num}", $htmlString);
         }
 
@@ -158,26 +158,26 @@ class Parser
         return $htmlString;
     }
 
-    private static function backOperator($htmlString)
+    private static function unmaskOperators($htmlString)
     {
-        foreach (self::$escapeOperatorList as $num => $escapeOperator) {
+        foreach (self::$operatorMaskList as $num => $escapeOperator) {
             $htmlString = str_replace("REPLACE_TO_OPERATOR_{$num}", $escapeOperator, $htmlString);
         }
 
         return $htmlString;
     }
 
-    private static function deleteTagName($attrString, $tagName)
+    private static function removeTagNamePrefix($attrString, $tagName)
     {
         strncmp($attrString, '<'.$tagName, strlen('<'.$tagName)) || $attrString = substr($attrString, strlen('<'.$tagName));
 
         return $attrString;
     }
 
-    private static function replaceAliasAttrName($rawString)
+    private static function applyAttributeAliases($rawString)
     {
-        // エイリアス名を変換
-        foreach (self::$aliasAttrName as $aliasName => $attrName) {
+        // エイリアス名を本来の属性名へ変換
+        foreach (self::$attributeAliasMap as $aliasName => $attrName) {
             $rawString = str_replace($aliasName, $attrName, $rawString);
         }
 

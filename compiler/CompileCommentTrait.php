@@ -11,10 +11,10 @@ trait CompileCommentTrait
 {
     use Comment\IncludeTrait;
 
-    // コメントタグをパーシングしてコメント記法を処理
-    private function compileComment(&$htmlBuff, &$htmlArray)
+    // コメントタグを解析してコメント記法を処理する
+    private function processCommentDirective(&$htmlBuff, &$htmlArray)
     {
-        // コメントタグをパース
+        // コメントタグを解析する
         [$includeBuff] = Parser::parse($htmlBuff, true);
         if (! isset($includeBuff['attribute'])) {
             return;
@@ -24,8 +24,8 @@ trait CompileCommentTrait
         $attrList = $includeBuff['attribute'];
         $quotesList = $includeBuff['quotes'];
 
-        // 変数の代入だけの時は簡単に記述できるように
-        $isAssignValue = $attrList;
+        // 変数の代入のみの場合は簡易記法を許可する
+        $isAssignValue = (array) $attrList;
         unset($isAssignValue['--'], $isAssignValue[BLOCS_DATA_EXIST], $isAssignValue[BLOCS_DATA_NONE], $isAssignValue[BLOCS_DATA_IF], $isAssignValue[BLOCS_DATA_UNLESS]);
 
         foreach ($isAssignValue as $key => $value) {
@@ -36,24 +36,24 @@ trait CompileCommentTrait
         }
 
         if (count($isAssignValue)) {
-            $htmlBuff = $this->assignValue($attrList, $quotesList);
+            $htmlBuff = $this->buildAssignmentScript($attrList, $quotesList);
 
             return;
         }
 
-        /* コメント記法のデータ属性処理 */
+        /* コメント記法のデータ属性を処理する */
 
         if (isset($attrList[BLOCS_DATA_BLOC])) {
-            // コメント記法でのdata-bloc開始処理
+            // コメント記法によるdata-bloc開始を処理する
             $this->partDepth++;
 
             if ($this->partDepth === 1) {
-                // ブロック処理開始
+                // ブロック処理を開始する
                 if (strncmp($attrList[BLOCS_DATA_BLOC], '+', 1)) {
                     $this->partName = $attrList[BLOCS_DATA_BLOC];
                     $this->partInclude[$this->partName] = [];
                 } else {
-                    // append
+                    // append指定
                     $this->partName = substr($attrList[BLOCS_DATA_BLOC], 1);
                 }
                 $htmlBuff = '';
@@ -62,12 +62,12 @@ trait CompileCommentTrait
             return;
         }
         if (isset($attrList[BLOCS_DATA_ENDBLOC])) {
-            // コメント記法でのdata-bloc終了処理
+            // コメント記法によるdata-bloc終了を処理する
             $this->partDepth--;
             $this->partDepth < 0 && $this->partDepth = 0;
 
             if ($this->partDepth === 0) {
-                // ブロック処理終了
+                // ブロック処理を終了する
                 $this->partName = '';
                 $htmlBuff = '';
             }
@@ -75,7 +75,7 @@ trait CompileCommentTrait
             return;
         }
         // ブロック処理中なので後続の処理は不要
-        if ($this->isPart()) {
+        if ($this->getPartProcessingState()) {
             return;
         }
 
@@ -83,7 +83,7 @@ trait CompileCommentTrait
             chdir($attrList[BLOCS_DATA_CHDIR]);
             $htmlBuff = '';
 
-            // 引数継承のために属性値を保持
+            // 引数を継承するために属性値を保持する
             isset($attrList[BLOCS_DATA_ASSIGN]) && array_pop($this->assignedValue);
 
             return;
@@ -123,10 +123,10 @@ trait CompileCommentTrait
 
         if (isset($attrList[BLOCS_DATA_VALIDATE]) && isset($attrList[BLOCS_DATA_FORM])) {
             foreach (explode('|', $attrList[BLOCS_DATA_VALIDATE]) as $validate) {
-                self::checkDataValidate($this->validate, $attrList[BLOCS_DATA_FORM], $validate) && $this->validate[$attrList[BLOCS_DATA_FORM]][] = $validate;
+                self::isUniqueValidationRule($this->validate, $attrList[BLOCS_DATA_FORM], $validate) && $this->validate[$attrList[BLOCS_DATA_FORM]][] = $validate;
 
                 if (isset($attrList[BLOCS_DATA_NOTICE])) {
-                    $validateMethod = self::getValidateMethod($validate);
+                    $validateMethod = self::extractValidationMethod($validate);
                     $this->validateMessage[$attrList[BLOCS_DATA_FORM]][$validateMethod] = $attrList[BLOCS_DATA_NOTICE];
                 }
             }
@@ -162,7 +162,7 @@ trait CompileCommentTrait
         }
 
         if (isset($attrList[BLOCS_DATA_LOOP])) {
-            // loop内のform名を置換するか
+            // loop内のform名を置換するかどうか
             if (isset($attrList[BLOCS_DATA_FORM])) {
                 $this->arrayFormName = $attrList[BLOCS_DATA_FORM];
             } else {
@@ -173,7 +173,7 @@ trait CompileCommentTrait
             $htmlBuff = Loop::loop($attrList, count($this->tagCounter));
             $this->endloop[] = $attrList;
 
-            $this->setTagCounter([
+            $this->registerTagCounter([
                 'tag' => BLOCS_DATA_LOOP,
                 'array_form' => substr($attrList[BLOCS_DATA_LOOP], 1),
             ], false);
@@ -195,8 +195,8 @@ trait CompileCommentTrait
         }
     }
 
-    // 変数を定義
-    private function assignValue($attrList, $quotesList, $assigned = false)
+    // コメント記法での変数定義を生成する
+    private function buildAssignmentScript($attrList, $quotesList, $assigned = false)
     {
         $htmlBuff = '';
         $assignedValue = [];
@@ -221,35 +221,35 @@ trait CompileCommentTrait
             }
 
             if (isset($attrList[BLOCS_DATA_NONE]) && ! strlen($attrList[BLOCS_DATA_NONE]) && ! isset($attrList[BLOCS_DATA_INCLUDE])) {
-                // 値の上書き禁止
+                // 値の上書きを禁止する
                 $assignedValue[$key] = "<?php if(empty({$key})): ?>\n".$assignedValue[$key].BLOCS_ENDIF_SCRIPT;
             }
 
             $htmlBuff .= $assignedValue[$key];
         }
 
-        // 引数継承のために属性値を保持
+        // 引数を継承するために属性値を保持する
         $assigned && $this->assignedValue[] = $assignedValue;
 
         Condition::partInclude($this->partInclude);
         if (! (isset($attrList[BLOCS_DATA_NONE]) && ! strlen($attrList[BLOCS_DATA_NONE])) && $condition = Condition::condition('', $attrList, $quotesList)) {
-            // 値をセットする条件
+            // 値をセットする条件を追加する
             $htmlBuff = $condition.$htmlBuff.BLOCS_ENDIF_SCRIPT;
         }
 
         return $htmlBuff;
     }
 
-    // data-validateの重複を確認
-    private static function checkDataValidate($checkValidate, $dataForm, $dataValidate)
+    // data-validateの重複を確認する
+    private static function isUniqueValidationRule($checkValidate, $dataForm, $dataValidate)
     {
         if (empty($checkValidate[$dataForm])) {
             return true;
         }
 
-        $validateMethod = self::getValidateMethod($dataValidate);
+        $validateMethod = self::extractValidationMethod($dataValidate);
         foreach ($checkValidate[$dataForm] as $validate) {
-            if (BlocsCompiler::getValidateMethod($validate) === $validateMethod) {
+            if (self::extractValidationMethod($validate) === $validateMethod) {
                 return false;
             }
         }
@@ -258,7 +258,7 @@ trait CompileCommentTrait
     }
 
     // バリデーションから引数を除く
-    private static function getValidateMethod($dataValidate)
+    private static function extractValidationMethod($dataValidate)
     {
         [$validateMethod] = explode(':', $dataValidate, 2);
         $validateMethod === 'maxlength' && $validateMethod = 'max';
