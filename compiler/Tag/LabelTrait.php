@@ -22,16 +22,26 @@ trait LabelTrait
 
         if (isset($this->labelArray['label'])) {
             if ($tagName === '/label') {
-                preg_match('/<br>$/si', $this->labelArray['label']) && $this->labelArray['label'] = substr($this->labelArray['label'], 0, -4);
-                preg_match('/<br \/>$/si', $this->labelArray['label']) && $this->labelArray['label'] = substr($this->labelArray['label'], 0, -6);
+                if (preg_match('/<br>$/si', $this->labelArray['label'])) {
+                    $this->labelArray['label'] = substr($this->labelArray['label'], 0, -4);
+                }
+                if (preg_match('/<br \/>$/si', $this->labelArray['label'])) {
+                    $this->labelArray['label'] = substr($this->labelArray['label'], 0, -6);
+                }
                 $this->labelArray['label'] = trim($this->labelArray['label']);
 
-                (count($this->labelArray) > 2) ? $this->option[] = $this->labelArray : array_unshift($this->option, $this->labelArray);
+                if (count($this->labelArray) > 2) {
+                    $this->option[] = $this->labelArray;
+                } else {
+                    array_unshift($this->option, $this->labelArray);
+                }
 
-                isset($this->labelArray['id']) && strlen($this->labelArray['label']) && $this->label[$this->labelArray['id']] = $this->labelArray['label'];
+                if (isset($this->labelArray['id']) && strlen($this->labelArray['label'])) {
+                    $this->label[$this->labelArray['id']] = $this->labelArray['label'];
+                }
                 $this->labelArray = [];
             } elseif ($tagName === 'input') {
-                // ラベルに含めない
+                // ラベル内に含めない
             } else {
                 $this->labelArray['label'] .= $compiledTag;
             }

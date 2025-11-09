@@ -4,7 +4,7 @@ namespace Blocs;
 
 function setTemplateCacheDir()
 {
-    define('BLOCS_VIEW', true);
+    define('BLOCS_NO_LARAVEL', true);
 
     $key = '/tmp';
     if (($key = str_replace(DIRECTORY_SEPARATOR, '/', realpath($key))) && is_dir($key) && is_writable($key)) {
@@ -52,97 +52,105 @@ class View
         $this->config = Common::readConfig($this->getPath());
     }
 
-    // HTMLを生成
+    // HTML文字列を生成
     public function generate($val = [], $withFixer = false)
     {
         empty($val) && $val = [];
 
-        // キャッシュをチェック
-        $compiledPath = $this->checkCache();
+        // キャッシュを確認してコンパイル済みテンプレートのパスを取得
+        $compiledPath = $this->resolveCompiledPath();
 
         // 引数をセット
         extract($val);
 
         ob_start();
         include $compiledPath;
-        $writeBuff = ob_get_clean();
+        $renderedHtml = ob_get_clean();
 
-        // HTMLを整形
-        $withFixer && $writeBuff = $this->fixerOutput($writeBuff);
+        // HTMLの整形処理を実行
+        $withFixer && $renderedHtml = $this->formatHtmlOutput($renderedHtml);
 
-        return $writeBuff;
+        return $renderedHtml;
     }
 
-    // HTMLを出力
+    // HTMLを即時出力
     public function output($val = [], $withFixer = false)
     {
         empty($val) && $val = [];
 
-        echo $this->generate($val, $withFixer);
+        $renderedHtml = $this->generate($val, $withFixer);
+        echo $renderedHtml;
         exit;
     }
 
-    // テンプレートのパスを取得
+    // テンプレートの実ファイルパスを取得
     public function getPath()
     {
         return str_replace(DIRECTORY_SEPARATOR, '/', realpath($this->filename));
     }
 
-    private function checkCache()
+    private function resolveCompiledPath()
     {
         $path = $this->getPath();
         $compiledPath = BLOCS_CACHE_DIR.'/'.md5($path).'.php';
 
         (is_file($this->filename) && strlen($path)) || trigger_error('B003: Can not find template ('.getcwd().'/'.$this->filename.')', E_USER_ERROR);
 
-        // タイムスタンプをチェック
-        $updateCache = false;
-        if (! file_exists($compiledPath)) {
-            // キャッシュがない
-            $updateCache = true;
-        } elseif (isset($this->config['include'][$path]) && is_array($this->config['include'][$path])) {
-            foreach ($this->config['include'][$path] as $includeFile) {
-                if (! file_exists($includeFile) || filemtime($includeFile) > $this->config['timestamp'][$path]) {
-                    $updateCache = true;
-                    break;
-                }
-            }
-        }
-
-        if (! $updateCache) {
-            // 更新なし
+        $shouldUpdateCache = $this->shouldUpdateCache($compiledPath, $path);
+        if (! $shouldUpdateCache) {
+            // 更新なしのため既存キャッシュを利用
             return $compiledPath;
         }
 
-        // Blocsを適用
+        // Blocsのコンパイラを実行
         $blocsCompiler = new Compiler\BlocsCompiler;
-        $contents = $blocsCompiler->compile($path);
+        $compiledContents = $blocsCompiler->compile($path);
 
-        // 設定ファイルを作成
+        // 設定ファイルを作成してキャッシュ情報を保持
         $blocsConfig = $blocsCompiler->getConfig();
         Common::writeConfig($path, $blocsConfig);
 
-        file_put_contents($compiledPath, $contents) && chmod($compiledPath, 0666);
+        file_put_contents($compiledPath, $compiledContents) && chmod($compiledPath, 0666);
 
         return $compiledPath;
     }
 
-    private function fixerOutput($writeBuff)
+    private function shouldUpdateCache($compiledPath, $path)
     {
-        $head = strtolower(substr(trim($writeBuff), 0, 9));
-        if ($head != '<!doctype' && substr($head, 0, 5) != '<html') {
-            // HTML以外は整形しない
-            return $writeBuff;
+        if (! file_exists($compiledPath)) {
+            // キャッシュが未生成
+            return true;
         }
 
-        // コメントの削除、不要な改行を削除
-        $contents = preg_split("/<\s*(textarea|pre)/si", $writeBuff, -1, PREG_SPLIT_DELIM_CAPTURE);
+        if (! isset($this->config['include'][$path]) || ! is_array($this->config['include'][$path])) {
+            return false;
+        }
 
-        $writeBuff = '';
+        foreach ($this->config['include'][$path] as $includeFile) {
+            if (! file_exists($includeFile) || filemtime($includeFile) > $this->config['timestamp'][$path]) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function formatHtmlOutput($outputHtml)
+    {
+        $head = strtolower(substr(trim($outputHtml), 0, 9));
+        if ($head != '<!doctype' && substr($head, 0, 5) != '<html') {
+            // HTML以外は整形対象外
+            return $outputHtml;
+        }
+
+        // コメントと余分な改行を整理
+        $contents = preg_split("/<\s*(textarea|pre)/si", $outputHtml, -1, PREG_SPLIT_DELIM_CAPTURE);
+
+        $formattedHtml = '';
         $replaceTag = '';
         foreach ($contents as $content) {
             if (in_array(strtolower($content), ['textarea', 'pre'])) {
-                $writeBuff .= '<'.$content;
+                $formattedHtml .= '<'.$content;
                 empty($replaceTag) && $replaceTag = $content;
 
                 continue;
@@ -151,12 +159,12 @@ class View
             if (! empty($replaceTag)) {
                 $buffList = preg_split("/<\s*\/\s*{$replaceTag}/si", $content, 2);
                 if (count($buffList) < 2) {
-                    // 特定のタグでは整形しない
-                    $writeBuff .= $content;
+                    // 特定のタグでは整形処理をスキップ
+                    $formattedHtml .= $content;
 
                     continue;
                 } else {
-                    $writeBuff .= $buffList[0];
+                    $formattedHtml .= $buffList[0];
                     $content = '</'.$replaceTag.$buffList[1];
                     $replaceTag = '';
                 }
@@ -165,9 +173,9 @@ class View
             $content = preg_replace('/<!--[\s\S]*?-->/s', '', $content);
             $content = preg_replace("/\n[\s\n]+\n/", "\n\n", $content);
 
-            $writeBuff .= $content;
+            $formattedHtml .= $content;
         }
 
-        return $writeBuff;
+        return $formattedHtml;
     }
 }

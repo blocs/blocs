@@ -12,7 +12,7 @@ trait BlocsCompilerTrait
 
     private array $option;
 
-    // バリデーション変数
+    // バリデーション関連の設定
     private array $validate;
 
     private array $validateMessage;
@@ -30,42 +30,42 @@ trait BlocsCompilerTrait
 
     private $arrayFormName;
 
-    // 処理中のdata-bloc
+    // 処理中のdata-bloc名
     private $partName;
 
-    // ファイル、ブロックごとにタグを保持
+    // ファイルおよびブロックごとにタグを保持する
     private array $partInclude;
 
     // partDepth=0の時に$compiledTemplateに書き出す
     private int $partDepth;
 
-    // classでincludeするテンプレート
+    // クラス経由でincludeされるテンプレート候補
     private array $autoincludeClass;
 
     private array $autoincluded;
 
-    // autoincludeのコンパイル後の文字列
+    // autoincludeの深さ
     private $autoincludeDepth;
 
     private $autoincludeTemplate;
 
     private array $assignedValue;
 
-    // オプション変数
+    // オプション関連の情報
     private array $label;
 
     private array $optionArray;
 
     private array $labelArray;
 
-    // dummyを付与済フラグ
+    // dummy付与済みかどうかのフラグ
     private array $dummyArray;
 
     private $scriptCounter;
 
     private $selectName;
 
-    // コンパイル後の文字列
+    // コンパイル済みテンプレート
     private $compiledTemplate;
 
     public function init()
@@ -108,30 +108,30 @@ trait BlocsCompilerTrait
         $this->compiledTemplate = '';
     }
 
-    private function isPart()
+    private function getPartProcessingState()
     {
         if (strlen($this->partName)) {
             if ($this->partDepth) {
-                // コメント記法でブロック処理中
+                // コメント記法でブロックを処理している
                 return 1;
             } else {
-                // タグ記法でブロック処理中
+                // タグ記法でブロックを処理している
                 return 2;
             }
         }
 
-        // ブロック処理中ではない
+        // ブロック処理の対象ではない
         return 0;
     }
 
-    private function addAutoincludeClass(&$htmlArray)
+    private function appendAutoincludeCandidates(&$htmlArray)
     {
-        $autoincludeDir = self::getAutoincludeDir();
+        $autoincludeDir = self::resolveAutoincludeDirectory();
         if ($autoincludeDir === false) {
             return;
         }
 
-        // auto includeの候補
+        // auto include対象の候補一覧を正規化する
         if (! count($this->autoincludeClass)) {
             return;
         }
@@ -150,12 +150,12 @@ trait BlocsCompilerTrait
             $autoinclude = pathinfo($targetFile, PATHINFO_FILENAME);
 
             if (! in_array($autoinclude, $this->autoincludeClass)) {
-                // classでのコールされていないのでauto includeしない
+                // クラスから呼び出されていないのでauto includeしない
                 continue;
             }
 
             if (isset($this->autoincluded[$autoinclude])) {
-                // すでにincludeされている
+                // すでにinclude済みのためスキップする
                 continue;
             }
 
@@ -164,7 +164,7 @@ trait BlocsCompilerTrait
 
     }
 
-    private function getAutoincludeDir()
+    private function resolveAutoincludeDirectory()
     {
         if (! empty($GLOBALS['BLOCS_AUTOINCLUDE_DIR'])) {
             $autoincludeDir = $GLOBALS['BLOCS_AUTOINCLUDE_DIR'];
@@ -183,15 +183,15 @@ trait BlocsCompilerTrait
         return str_replace(DIRECTORY_SEPARATOR, '/', $autoincludeDir);
     }
 
-    // テンプレートの初期処理
-    private static function getInitialScript()
+    // テンプレート実行前の初期処理を組み立てる
+    private static function buildInitialScript()
     {
         return <<< END_of_HTML
 <?php
     \$_appendOption = \\Blocs\\Option::append();
     extract(\$_appendOption, EXTR_PREFIX_ALL, 'option');
 
-    if (! defined('BLOCS_VIEW')) {
+    if (! defined('BLOCS_NO_LARAVEL')) {
         \$_oldValue = old();
         !empty(\$_oldValue) && is_array(\$_oldValue) && extract(\$_oldValue, EXTR_SKIP);
 
@@ -207,7 +207,7 @@ trait BlocsCompilerTrait
 END_of_HTML;
     }
 
-    private static function cleanupOption(&$thisOption)
+    private static function normalizeOptionConfig(&$thisOption)
     {
         $idList = [];
         foreach ($thisOption as $num => $buff) {
@@ -247,7 +247,7 @@ END_of_HTML;
         $thisOption = $optionItemList;
     }
 
-    private static function escapeQuestionTag($rawString)
+    private static function escapePhpShortTag($rawString)
     {
         $rawString = explode('<?', $rawString);
         $resultBuff = array_shift($rawString);

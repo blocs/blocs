@@ -25,7 +25,7 @@ class BlocsCompiler
     use CompileCommentTrait;
     use CompileTagTrait;
 
-    // コンパイル
+    // テンプレートファイルをコンパイルする
     public function compile($templatePath)
     {
         $this->init();
@@ -36,32 +36,32 @@ class BlocsCompiler
         return $this->compiledTemplate;
     }
 
-    // コンパイルしてレンダリング
+    // バッファをコンパイルしてレンダリングする
     public function render($writeBuff, $val = [])
     {
         $this->init();
 
-        // Bladeディレクティブを使わない
+        // Bladeディレクティブを無効化する
         defined('BLOCS_BLADE_OFF') || define('BLOCS_BLADE_OFF', true);
 
         $this->compileTemplate($writeBuff, __FILE__);
 
-        // 引数をセット
+        // 渡された引数を展開する
         extract($val);
 
         ob_start();
         eval(substr($this->compiledTemplate, 5));
         $writeBuff = ob_get_clean();
 
-        // 不要な改行を削除
+        // 余分な改行を削除する
         $writeBuff = preg_replace("/\n[\s\n]+\n/", "\n\n", $writeBuff);
 
         return $writeBuff;
     }
 
-    // テンプレートの設定を取得
-    // テンプレートの設定はディレクトリごとにまとめて保持
-    // optionなどを同じディレクトリのテンプレートで共有するため
+    // テンプレートの設定を取得する
+    // テンプレートの設定はディレクトリ単位でまとめて保持する
+    // optionなどを同じディレクトリ配下のテンプレートで共有するため
     public function getConfig()
     {
         foreach ($this->validate as $formName => $validate) {
@@ -96,15 +96,15 @@ class BlocsCompiler
             $htmlBuff = array_shift($htmlArray);
 
             if (! count($htmlArray) && ! isset($autoincludeFlg)) {
-                // classでのauto includeは最後に一回だけ
-                $this->addAutoincludeClass($htmlArray);
+                // classでのauto includeは最後に一度だけ処理する
+                $this->appendAutoincludeCandidates($htmlArray);
                 $autoincludeFlg = true;
             }
 
             if (! is_array($htmlBuff)) {
-                /* テキストとコメントを処理 */
+                /* テキストとコメントを処理する */
 
-                // autoincludeの深さを取得
+                // autoincludeの深さを追跡する
                 if ($htmlBuff === '{{AUTOINCLUDE_START_FROM}}') {
                     $this->autoincludeDepth++;
 
@@ -120,37 +120,37 @@ class BlocsCompiler
                     continue;
                 }
 
-                // ラベルを取得
+                // ラベル文字列を蓄積する
                 isset($this->optionArray['label']) && $this->optionArray['label'] .= $htmlBuff;
                 isset($this->labelArray['label']) && $this->labelArray['label'] .= $htmlBuff;
 
-                if (! strncmp($htmlBuff, '<!', 2) && $this->isPart() < 2) {
-                    // タグ記法でブロック処理中は実行しない
-                    // コメント記法を処理
-                    $this->compileComment($htmlBuff, $htmlArray);
+                if (! strncmp($htmlBuff, '<!', 2) && $this->getPartProcessingState() < 2) {
+                    // タグ記法でブロック処理中はコメント記法を実行しない
+                    // コメント記法の指示を処理する
+                    $this->processCommentDirective($htmlBuff, $htmlArray);
                 }
 
-                // ブロックごとにタグを保持
-                if ($this->isPart()) {
+                // ブロック単位でタグを保持する
+                if ($this->getPartProcessingState()) {
                     $this->partInclude[$this->partName][] = $htmlBuff;
 
                     continue;
                 }
 
-                // 結果出力
+                // コンパイル結果へ書き込む
                 if ($this->autoincludeDepth) {
-                    $this->autoincludeTemplate .= self::escapeQuestionTag($htmlBuff);
+                    $this->autoincludeTemplate .= self::escapePhpShortTag($htmlBuff);
                 } else {
-                    $this->compiledTemplate .= self::escapeQuestionTag($htmlBuff);
+                    $this->compiledTemplate .= self::escapePhpShortTag($htmlBuff);
                 }
 
                 continue;
             }
 
-            // タグ記法を処理
-            $compiledTag = $this->compileTag($htmlBuff, $htmlArray);
+            // タグ記法を処理する
+            $compiledTag = $this->processTagDirective($htmlBuff, $htmlArray);
 
-            // 結果出力
+            // コンパイル結果へ書き込む
             if ($this->autoincludeDepth) {
                 $this->autoincludeTemplate .= $compiledTag;
             } else {
@@ -158,7 +158,7 @@ class BlocsCompiler
             }
         }
 
-        // auto includeを呼び出された場所に移動
+        // auto includeの結果を呼び出し箇所に差し込む
         if ($this->autoincludeTemplate) {
             if (strpos($this->compiledTemplate, '{{REPLACE_TO_AUTOINCLUDE}}') !== false) {
                 $this->compiledTemplate = str_replace('{{REPLACE_TO_AUTOINCLUDE}}', $this->autoincludeTemplate, $this->compiledTemplate);
@@ -167,14 +167,14 @@ class BlocsCompiler
             $this->compiledTemplate = str_replace('{{REPLACE_TO_AUTOINCLUDE}}', '', $this->compiledTemplate);
         }
 
-        // 開始スクリプトを追加
-        $initScript = self::getInitialScript();
+        // 初期化用スクリプトを冒頭に追加する
+        $initScript = self::buildInitialScript();
         $this->compiledTemplate = $initScript.$this->compiledTemplate;
 
-        // タグを削除してキャッシュを整形
+        // PHPタグの間の改行を調整する
         $this->compiledTemplate = preg_replace("/\?\>\n\<\?php/", "\n", $this->compiledTemplate);
 
-        self::cleanupOption($this->option);
+        self::normalizeOptionConfig($this->option);
 
         return $this->compiledTemplate;
     }

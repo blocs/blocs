@@ -8,29 +8,15 @@ class Validate
 
     private static $config;
 
-    /**
-     * テンプレートで指定したバリデーションとメッセージを取得する
-     * 取得したバリデーションとメッセージはLaravelのvalidateに渡す
-     * $requestを渡すと指定したフィルターをかける
-     *
-     * list($rules, $messages) = \Blocs\Validate::get('insert', $request);
-     * empty($rules) || $request->validate($rules, $messages);
-     *
-     * @param  string  $templateName  テンプレート名
-     * @param  Request  $request  リクエスト
-     * @return array テンプレートで指定したバリデーション
-     * @return array テンプレートで指定したメッセージ
-     */
     public static function get($templateName, $request = null)
     {
-        // 設定ファイルを読み込み
-        self::$path = Common::getPath($templateName);
-        self::$config = Common::readConfig(self::$path);
+        // 設定ファイルを読み込みテンプレートの検証設定を確定
+        self::initializeTemplateConfig($templateName);
 
         if (isset($request)) {
-            $requestAll = $request->all();
-            $requestAll = self::filter($templateName, $requestAll);
-            empty($requestAll) || $request->merge($requestAll);
+            $requestPayload = $request->all();
+            $requestPayload = self::filter($templateName, $requestPayload);
+            empty($requestPayload) || $request->merge($requestPayload);
         }
 
         if (empty(self::$config['validate'][self::$path])) {
@@ -51,7 +37,7 @@ class Validate
             }
         }
 
-        $configValidate = self::checkRules($configValidate, $validateMessage);
+        $configValidate = self::resolveRuleInstances($configValidate, $validateMessage);
 
         return [$configValidate, $validateMessage];
     }
@@ -70,20 +56,6 @@ class Validate
         return $messages;
     }
 
-    /**
-     * テンプレートで指定したバリデーションとメッセージを取得する
-     * 取得したバリデーションとメッセージはLaravelのvalidateに渡す
-     * 新規入力、編集など複数のテンプレートで同じバリデーションを使うケースが多いので
-     * テンプレートではなくディレクトリを指定する
-     *
-     * list($rules, $messages) = \Blocs\Validate::upload('/', 'upload');
-     * empty($rules) || $request->validate($rules, $messages);
-     *
-     * @param  string  $templateDir  テンプレートのあるディレクトリ
-     * @param  string  $formName  フォーム名
-     * @return array テンプレートで指定したバリデーション
-     * @return array テンプレートで指定したメッセージ
-     */
     public static function upload($templateDir, $formName)
     {
         $templateDir = Common::getPath($templateDir);
@@ -111,29 +83,26 @@ class Validate
             }
         }
 
-        $uploadValidate = self::checkRules($uploadValidate, $uploadMessage);
+        $uploadValidate = self::resolveRuleInstances($uploadValidate, $uploadMessage);
 
         return [$uploadValidate, $uploadMessage];
     }
 
-    /**
-     * $requestAllにテンプレートで指定したフィルターをかける
-     *
-     * $requestAll = \Blocs\Validate::filter('insert', $requestAll);
-     *
-     * @param  string  $templateName  テンプレート名
-     * @return array フィルターをかけた配列
-     */
     public static function filter($templateName, $requestAll)
     {
-        // 設定ファイルを読み込み
-        self::$path = Common::getPath($templateName);
-        self::$config = Common::readConfig(self::$path);
+        // 設定ファイルを読み込みテンプレートの検証設定を確定
+        self::initializeTemplateConfig($templateName);
 
-        return self::filterArray($requestAll);
+        return self::applyFiltersRecursively($requestAll);
     }
 
-    private static function filterArray($requestArray)
+    private static function initializeTemplateConfig($templateName)
+    {
+        self::$path = Common::getPath($templateName);
+        self::$config = Common::readConfig(self::$path);
+    }
+
+    private static function applyFiltersRecursively($requestArray)
     {
         if (empty(self::$config['filter'][self::$path])) {
             return $requestArray;
@@ -142,7 +111,7 @@ class Validate
 
         foreach ($requestArray as $key => $value) {
             if (is_array($value)) {
-                $requestArray[$key] = self::filterArray($value);
+                $requestArray[$key] = self::applyFiltersRecursively($value);
 
                 continue;
             }
@@ -158,25 +127,25 @@ class Validate
         return $requestArray;
     }
 
-    private static function checkRules($configValidate, $validateMessage)
+    private static function resolveRuleInstances($configValidate, $validateMessage)
     {
         foreach ($configValidate as $formName => $validateList) {
             foreach ($validateList as $validateNum => $validate) {
-                $msgArgList = explode(':', $validate);
-                $className = $msgArgList[0];
-                $msgArgList = array_slice($msgArgList, 1);
+                $ruleArguments = explode(':', $validate);
+                $className = $ruleArguments[0];
+                $ruleArguments = array_slice($ruleArguments, 1);
 
                 if (! class_exists('\App\Rules\\'.$className)) {
                     continue;
                 }
 
                 if (isset($validateMessage[$formName.'.'.$className])) {
-                    array_push($msgArgList, $validateMessage[$formName.'.'.$className]);
+                    $ruleArguments[] = $validateMessage[$formName.'.'.$className];
                 }
 
-                if (! defined('BLOCS_VIEW')) {
+                if (! defined('BLOCS_NO_LARAVEL')) {
                     $reflClass = new \ReflectionClass('\App\Rules\\'.$className);
-                    $configValidate[$formName][$validateNum] = call_user_func_array([$reflClass, 'newInstance'], $msgArgList);
+                    $configValidate[$formName][$validateNum] = call_user_func_array([$reflClass, 'newInstance'], $ruleArguments);
                 }
             }
         }
