@@ -8,27 +8,27 @@ trait ParserTrait
 {
     private static $deleteAttribute = [];
 
-    private static function addAttrList(&$attrList, &$quotesList, &$rawString, &$parsedHtml, $attrName, $attrValueList, $commentParse)
+    private static function appendAttributeEntry(&$attrList, &$quotesList, &$rawString, &$parsedHtml, $attrName, $attrValueList, $commentParse)
     {
-        // 属性値を取得
+        // 属性値を抽出
         $attrValue = '';
 
-        // 一つ目は必ず属性値とする
+        // 先頭要素は必ず属性値とみなす
         ! empty($attrName) && count($attrValueList) && $attrValue = array_shift($attrValueList);
 
         foreach (array_reverse($attrValueList) as $attrBuff) {
             if (! strlen(trim($attrBuff))) {
-                // 空白
+                // 空白トークン
                 array_pop($attrValueList);
-            } elseif (self::checkAttrName($attrBuff)) {
-                // 値のない属性
+            } elseif (self::isAttributeNameToken($attrBuff)) {
+                // 値を伴わない属性
                 $attrList[$attrBuff] = '';
 
                 // data-attributeの省略記法（:readonly）
                 strncmp($attrBuff, ':', 1) || $attrList[BLOCS_DATA_ATTRIBUTE] = substr($attrBuff, 1);
 
                 array_pop($attrValueList);
-            } elseif (self::checkAttrValue($attrBuff)) {
+            } elseif (self::isBindableValue($attrBuff)) {
                 // data-valの省略記法
                 $attrList[BLOCS_DATA_VAL] = $attrBuff;
                 $rawString = preg_replace('/\s+\\'.$attrBuff.'([\s>\/]+)/si', '${1}', $rawString);
@@ -55,7 +55,7 @@ trait ParserTrait
                 return;
             }
 
-            if (self::checkAttrValue($attrValue)) {
+            if (self::isBindableValue($attrValue)) {
                 // data-valの省略記法
                 $attrList[BLOCS_DATA_VAL] = $attrValue;
             } else {
@@ -98,9 +98,9 @@ trait ParserTrait
 
             // データ属性を削除
             if (isset($quotesList[$attrName])) {
-                $rawString = self::deleteDataAttribute($attrName, $quotesList[$attrName].$attrValue.$quotesList[$attrName], $rawString);
+                $rawString = self::removeDataAttributeString($attrName, $quotesList[$attrName].$attrValue.$quotesList[$attrName], $rawString);
             } else {
-                $rawString = self::deleteDataAttribute($attrName, $attrValue, $rawString);
+                $rawString = self::removeDataAttributeString($attrName, $attrValue, $rawString);
             }
 
             // 属性値をクリア
@@ -138,8 +138,8 @@ trait ParserTrait
         $attrList[$attrName] = $attrValue;
     }
 
-    // 属性値かをチェック
-    private static function checkAttrName($attrName)
+    // 属性名トークンかをチェック
+    private static function isAttributeNameToken($attrName)
     {
         if (preg_match('/^'.BLOCS_ATTR_NAME_REGREX.'$/s', $attrName)) {
             return true;
@@ -148,8 +148,8 @@ trait ParserTrait
         return false;
     }
 
-    // 変数かをチェック
-    private static function checkAttrValue($attrName)
+    // 変数トークンかをチェック
+    private static function isBindableValue($attrName)
     {
         // $object->method()
         substr($attrName, -2) === '()' && $attrName = substr($attrName, 0, -2);
@@ -158,7 +158,7 @@ trait ParserTrait
         return Common::checkValueName($attrName);
     }
 
-    private static function deleteDataAttribute($attrName, $attrValue, $rawString)
+    private static function removeDataAttributeString($attrName, $attrValue, $rawString)
     {
         $attrValue = preg_quote($attrValue);
         $attrValue = str_replace('/', '\/', $attrValue);

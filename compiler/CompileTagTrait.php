@@ -12,25 +12,24 @@ trait CompileTagTrait
 
     private static $allAttrName;
 
-    // コメントタグをパーシングしてコメント記法を処理
-    private function compileTag($htmlBuff, &$htmlArray)
+    // タグを解析してタグ記法を処理する
+    private function processTagDirective($htmlBuff, &$htmlArray)
     {
         $tagName = $htmlBuff['tag'];
         $attrList = $htmlBuff['attribute'];
         $quotesList = $htmlBuff['quotes'];
         $type = isset($attrList['type']) ? strtolower($attrList['type']) : '';
 
-        // データ属性削除
-        // タグのコンパイル後の文字列
-        $compiledTag = self::deleteDataAttribute($htmlBuff['raw'], $attrList);
+        // データ属性を取り除いたタグの文字列を生成する
+        $compiledTag = self::removeDataAttributes($htmlBuff['raw'], $attrList);
 
-        // optionの値のためにラベルを取得
+        // optionの値に利用するラベルを取得する
         $this->compileTagLabel($tagName, $compiledTag);
 
-        // タグ記法のためのカウンター
-        $endTagCounterList = $this->checkTagCounter($tagName);
+        // タグ記法用のカウンターを更新する
+        $endTagCounterList = $this->collectClosingTagCounters($tagName);
 
-        // カウンターの終了処理
+        // カウンターの終了処理を行う
         foreach ($endTagCounterList as $endTagCounter) {
             empty($endTagCounter['before']) || $compiledTag = $endTagCounter['before'].$compiledTag;
             empty($endTagCounter['after']) || array_unshift($htmlArray, $endTagCounter['after']);
@@ -41,8 +40,8 @@ trait CompileTagTrait
 
             $endTagCounter['type'] === 'ignore' && $this->ignoreFlg = false;
 
-            if ($endTagCounter['type'] === 'part' && $this->isPart()) {
-                // タグ記法でのdata-bloc終了処理
+            if ($endTagCounter['type'] === 'part' && $this->getPartProcessingState()) {
+                // タグ記法によるdata-bloc終了を処理する
                 $this->partInclude[$this->partName][] = $compiledTag;
                 $this->partName = '';
                 $compiledTag = '';
@@ -53,21 +52,21 @@ trait CompileTagTrait
             return '';
         }
 
-        // ブロックごとにタグを保持
-        if ($this->isPart()) {
+        // ブロック単位でタグを保持する
+        if ($this->getPartProcessingState()) {
             $this->partInclude[$this->partName][] = $htmlBuff;
 
             return '';
         }
 
-        /* タグ記法のデータ属性処理 */
+        /* タグ記法のデータ属性を処理する */
 
         if (isset($attrList[BLOCS_DATA_BLOC])) {
-            // タグ記法でのdata-bloc開始処理
+            // タグ記法によるdata-bloc開始を処理する
             $this->partName = $attrList[BLOCS_DATA_BLOC];
             $this->partInclude[$this->partName] = [$compiledTag];
 
-            $this->setTagCounter([
+            $this->registerTagCounter([
                 'tag' => $tagName,
                 'type' => 'part',
             ]);
@@ -77,10 +76,10 @@ trait CompileTagTrait
 
         $this->compileTagAttribute($htmlBuff, $htmlArray, $attrList, $compiledTag);
 
-        // data_attributeをタグに反映
-        $compiledTag = $this->mergeDataAttribute($compiledTag, $attrList);
+        // data-attributeで集めた属性を反映する
+        $compiledTag = $this->mergeDeferredDataAttributes($compiledTag, $attrList);
 
-        // スクリプトの中のタグを無効化
+        // script/style内ではタグ処理を無効化する
         if ($tagName === 'script' || $tagName === 'style') {
             $this->scriptCounter++;
         } elseif ($tagName === '/script' || $tagName === '/style') {
@@ -110,17 +109,17 @@ trait CompileTagTrait
 
             isset($attrList['data-bs-toggle']) && $classList[] = $attrList['data-bs-toggle'];
 
-            // auto includeの候補に追加
+            // auto include候補にクラスを追加する
             $this->autoincludeClass = array_merge($this->autoincludeClass, $classList);
         }
 
-        /* フォーム部品の処理 */
+        /* フォーム部品の処理を行う */
         $this->compileTagForm($htmlBuff, $htmlArray, $attrList, $compiledTag);
 
         return $compiledTag;
     }
 
-    private static function deleteDataAttribute($rawString, $attrList)
+    private static function removeDataAttributes($rawString, $attrList)
     {
         if (! isset(self::$allAttrName)) {
             $allConstant = get_defined_constants();
@@ -143,7 +142,7 @@ trait CompileTagTrait
 
     /* タグ記法カウンターのメソッド */
 
-    private function setTagCounter($tagCounter, $unshift = true)
+    private function registerTagCounter($tagCounter, $unshift = true)
     {
         isset($tagCounter['type']) && $tagCounter['type'] === 'ignore' && $this->ignoreFlg = true;
 
@@ -156,7 +155,7 @@ trait CompileTagTrait
         array_unshift($this->tagCounter, $tagCounter);
     }
 
-    private function checkTagCounter($tagName)
+    private function collectClosingTagCounters($tagName)
     {
         $endTagCounterList = [];
 
@@ -166,7 +165,7 @@ trait CompileTagTrait
             $tagName === '/'.$tagCounter['tag'] && $this->tagCounter[$num]['num']--;
 
             if ($this->tagCounter[$num]['num']) {
-                // カウントが残っている時は何もしない
+                // カウントが残っている場合は処理を継続する
                 continue;
             }
 
@@ -178,9 +177,9 @@ trait CompileTagTrait
         return $endTagCounterList;
     }
 
-    private function mergeDataAttribute($compiledTag, &$attrList)
+    private function mergeDeferredDataAttributes($compiledTag, &$attrList)
     {
-        // data-attributeで属性書き換え
+        // data-attributeで保持した属性を適用する
         if (empty($this->dataAttribute)) {
             return $compiledTag;
         }

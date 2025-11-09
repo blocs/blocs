@@ -1,26 +1,31 @@
 <?php
 
-// テンプレートのキャッシュを保存するディレクトリ
-defined('BLOCS_CACHE_DIR') || define('BLOCS_CACHE_DIR', config('view.compiled'));
-
-(realpath(BLOCS_CACHE_DIR) && is_writable(BLOCS_CACHE_DIR)) || trigger_error('B001: Can not write cache file into directory', E_USER_ERROR);
-
-// テンプレートのルートディレクトリ
-if (! defined('BLOCS_ROOT_DIR')) {
-    $viewPathList = config('view.paths');
-    define('BLOCS_ROOT_DIR', $viewPathList[0]);
+// テンプレートのキャッシュ保存先ディレクトリを設定
+if (! defined('BLOCS_CACHE_DIR')) {
+    $compiledDirectory = config('view.compiled');
+    define('BLOCS_CACHE_DIR', $compiledDirectory);
 }
 
-// optionをつなぐ文字列
+$isWritableCacheDirectory = realpath(BLOCS_CACHE_DIR) && is_writable(BLOCS_CACHE_DIR);
+$isWritableCacheDirectory || trigger_error('B001: Can not write cache file into directory', E_USER_ERROR);
+
+// テンプレートのルートディレクトリを設定
+if (! defined('BLOCS_ROOT_DIR')) {
+    $viewPathList = config('view.paths');
+    $defaultViewDirectory = $viewPathList[0] ?? '';
+    define('BLOCS_ROOT_DIR', $defaultViewDirectory);
+}
+
+// optionを連結するセパレーターを定義
 defined('BLOCS_OPTION_SEPARATOR') || define('BLOCS_OPTION_SEPARATOR', ', ');
 
-// includeの上限設定
+// includeの上限値を定義
 defined('BLOCS_INCLUDE_MAX') || define('BLOCS_INCLUDE_MAX', 50);
 
-// compilerで使う定数
+// compilerで利用する基本スクリプト
 define('BLOCS_ENDIF_SCRIPT', "<?php endif; ?>\n");
 
-// データ属性
+// データ属性のキーを定義
 define('BLOCS_DATA_INCLUDE', 'data-include');
 define('BLOCS_DATA_BLOC', 'data-bloc');
 define('BLOCS_DATA_ENDBLOC', 'data-endbloc');
@@ -52,7 +57,7 @@ define('BLOCS_DATA_FILTER', 'data-filter');
 
 define('BLOCS_DATA_CHDIR', 'data-chdir');
 
-// データ属性のエイリアス
+// データ属性のエイリアスを定義
 define('BLOCS_DATA_LANG', 'data-lang');
 define('BLOCS_DATA_REPEAT', 'data-repeat');
 define('BLOCS_DATA_ENDREPEAT', 'data-endrepeat');

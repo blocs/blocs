@@ -2,38 +2,57 @@
 
 namespace Blocs;
 
+use Illuminate\Support\Facades\Lang as LaravelLang;
+
 class Lang
 {
-    // data-langで指定されたコードのメッセージを取得
+    // data-langで指定されたコードからメッセージ文字列を取得
     public static function get($messageCode)
     {
-        $langStringList = explode(':', $messageCode);
-        if (count($langStringList) < 2) {
+        $messageParts = self::parseMessageCode($messageCode);
+        if (is_null($messageParts)) {
             return $messageCode;
         }
 
-        $category = $langStringList[0];
-        $code = $langStringList[1];
-        $msgArgList = array_slice($langStringList, 2);
+        [$categoryCode, $args] = $messageParts;
+        $messageTemplate = self::resolveMessageTemplate($categoryCode);
 
-        if (defined('BLOCS_ROOT_DIR') && is_file(BLOCS_ROOT_DIR.'/lang.json')) {
-            $message = json_decode(file_get_contents(BLOCS_ROOT_DIR.'/lang.json'), true);
+        return is_null($messageTemplate)
+            ? $messageCode
+            : self::replaceMessageArguments($messageTemplate, $args);
+    }
 
-            if (! isset($message[$category.':'.$code])) {
-                return $messageCode;
-            }
-            $message = $message[$category.':'.$code];
-        } else {
-            $message = \Lang::get($category.':'.$code);
-
-            if ($message === $category.':'.$code) {
-                return $messageCode;
-            }
+    private static function parseMessageCode($messageCode)
+    {
+        $messageChunks = explode(':', $messageCode);
+        if (count($messageChunks) < 2) {
+            return null;
         }
 
-        foreach ($msgArgList as $num => $msgArg) {
-            // メッセージの置換
-            $message = str_replace('{'.($num + 1).'}', $msgArg, $message);
+        $categoryCode = $messageChunks[0].':'.$messageChunks[1];
+        $argumentList = array_slice($messageChunks, 2);
+
+        return [$categoryCode, $argumentList];
+    }
+
+    private static function resolveMessageTemplate($categoryCode)
+    {
+        if (defined('BLOCS_ROOT_DIR') && is_file(BLOCS_ROOT_DIR.'/lang.json')) {
+            $messageCatalog = json_decode(file_get_contents(BLOCS_ROOT_DIR.'/lang.json'), true);
+
+            return is_array($messageCatalog) ? ($messageCatalog[$categoryCode] ?? null) : null;
+        }
+
+        $message = LaravelLang::get($categoryCode);
+
+        return $message === $categoryCode ? null : $message;
+    }
+
+    private static function replaceMessageArguments($message, array $msgArgList)
+    {
+        foreach ($msgArgList as $index => $argument) {
+            // メッセージ内のプレースホルダーを差し替え
+            $message = str_replace('{'.($index + 1).'}', $argument, $message);
         }
 
         return $message;
