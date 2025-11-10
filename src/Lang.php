@@ -2,6 +2,8 @@
 
 namespace Blocs;
 
+use Illuminate\Support\Facades\Lang as LaravelLang;
+
 class Lang
 {
     // data-langで指定されたコードからメッセージ文字列を取得
@@ -41,7 +43,7 @@ class Lang
             return is_array($messageCatalog) ? ($messageCatalog[$categoryCode] ?? null) : null;
         }
 
-        $message = __($categoryCode);
+        $message = LaravelLang::get($categoryCode);
 
         return $message === $categoryCode ? null : $message;
     }
