@@ -128,11 +128,8 @@ trait ParserTrait
             return;
         }
 
-        if (strpos($attrName, 'data-') !== false && in_array($attrName, [
-            BLOCS_DATA_VAL, BLOCS_DATA_PREFIX, BLOCS_DATA_POSTFIX, BLOCS_DATA_CONVERT, BLOCS_DATA_LANG,
-            BLOCS_DATA_ENDIF, BLOCS_DATA_ENDUNLESS,
-        ])) {
-            $attrValue = stripslashes($attrValue);
+        if (strpos($attrName, 'data-') !== false) {
+            $attrValue = str_replace(['\\\\', '\\"', "\\'"], ['\\', '"', "'"], $attrValue);
         }
 
         $attrList[$attrName] = $attrValue;
