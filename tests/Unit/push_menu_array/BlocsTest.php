@@ -2,6 +2,8 @@
 
 namespace push_menu_array;
 
+use Blocs\Option;
+use Blocs\View;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -27,25 +29,25 @@ class BlocsTest extends TestCase
     #[Test, RunInSeparateProcess]
     public function test(): void
     {
-        $blocs = new \Blocs\View($this->testDir.'/test.html');
+        $blocs = new View($this->testDir.'/test.html');
 
-        \Blocs\Option::add('type', [
+        Option::add('type', [
             'sales' => 'sales',
             'service' => 'サービス',
         ]);
 
-        \Blocs\Option::add('sex2', [
+        Option::add('sex2', [
             'sales' => 'sales',
             'service' => 'サービス',
             'part' => '品番',
         ]);
 
-        \Blocs\Option::add('size', ['xl' => 'XL']);
-        \Blocs\Option::add('size', ['xxl' => 'XXL']);
+        Option::add('size', ['xl' => 'XL']);
+        Option::add('size', ['xxl' => 'XXL']);
 
         $this->actual = $blocs->generate(null, true);
-        $this->actual .= json_encode(\Blocs\Option::get($this->testDir.'/test.html', 'type')).'<br />';
-        $this->actual .= json_encode(\Blocs\Option::get($this->testDir.'/test.html', 'sex2')).'<br />';
+        $this->actual .= json_encode(Option::get($this->testDir.'/test.html', 'type')).'<br />';
+        $this->actual .= json_encode(Option::get($this->testDir.'/test.html', 'sex2')).'<br />';
 
         isset($this->expected) || $this->expected = $this->actual;
         $this->assertSame($this->expected, $this->actual);

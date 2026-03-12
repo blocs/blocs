@@ -2,6 +2,8 @@
 
 namespace Blocs\Compiler\Cache;
 
+use Illuminate\Support\Str;
+
 class Loop
 {
     // data-loop属性からスクリプトを生成する
@@ -146,7 +148,7 @@ END_of_HTML;
         }
         $dataLoop = str_replace('()', '', $dataLoop);
 
-        $singularName = \Illuminate\Support\Str::singular($dataLoop);
+        $singularName = Str::singular($dataLoop);
         if ($singularName == $dataLoop) {
             // 既存の変数名と重複しないように一意の名前を生成する
             return '_'.md5($attrList[BLOCS_DATA_LOOP]);
