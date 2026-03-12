@@ -2,6 +2,7 @@
 
 namespace data_include;
 
+use Blocs\View;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -29,7 +30,7 @@ class BlocsTest extends TestCase
     {
         define('BLOCS_ROOT_DIR', __DIR__);
 
-        $blocs = new \Blocs\View($this->testDir.'/test.html');
+        $blocs = new View($this->testDir.'/test.html');
         $this->actual = $blocs->generate(null, true);
 
         isset($this->expected) || $this->expected = $this->actual;

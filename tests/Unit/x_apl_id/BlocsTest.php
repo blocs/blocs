@@ -2,6 +2,8 @@
 
 namespace x_apl_id;
 
+use Blocs\Option;
+use Blocs\View;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -27,10 +29,10 @@ class BlocsTest extends TestCase
     #[Test, RunInSeparateProcess]
     public function test(): void
     {
-        $blocs = new \Blocs\View($this->testDir.'/test.html');
+        $blocs = new View($this->testDir.'/test.html');
 
-        \Blocs\Option::set($this->testDir.'/../single_input/test.html', 'type');
-        \Blocs\Option::set($this->testDir.'/../single_input/test.html', 'size');
+        Option::set($this->testDir.'/../single_input/test.html', 'type');
+        Option::set($this->testDir.'/../single_input/test.html', 'size');
 
         $val = [
             'name' => 'yada',

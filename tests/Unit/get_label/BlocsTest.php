@@ -2,6 +2,8 @@
 
 namespace get_label;
 
+use Blocs\Option;
+use Blocs\View;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -27,13 +29,13 @@ class BlocsTest extends TestCase
     #[Test, RunInSeparateProcess]
     public function test(): void
     {
-        $blocs = new \Blocs\View($this->testDir.'/test.html');
+        $blocs = new View($this->testDir.'/test.html');
 
         $this->actual = $blocs->generate(null, true);
-        $this->actual .= json_encode(\Blocs\Option::get($this->testDir.'/test.html', 'type')).'<br />';
-        $this->actual .= json_encode(\Blocs\Option::get($this->testDir.'/test.html', 'size')).'<br />';
-        $this->actual .= json_encode(\Blocs\Option::get($this->testDir.'/test.html', 'sex')).'<br />';
-        $this->actual .= json_encode(\Blocs\Option::get($this->testDir.'/test.html', 'sex2')).'<br />';
+        $this->actual .= json_encode(Option::get($this->testDir.'/test.html', 'type')).'<br />';
+        $this->actual .= json_encode(Option::get($this->testDir.'/test.html', 'size')).'<br />';
+        $this->actual .= json_encode(Option::get($this->testDir.'/test.html', 'sex')).'<br />';
+        $this->actual .= json_encode(Option::get($this->testDir.'/test.html', 'sex2')).'<br />';
 
         isset($this->expected) || $this->expected = $this->actual;
         $this->assertSame($this->expected, $this->actual);
