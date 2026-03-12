@@ -2,6 +2,7 @@
 
 namespace B001;
 
+use Blocs\View;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -21,7 +22,7 @@ class BlocsTest extends TestCase
     {
         try {
             define('BLOCS_CACHE_DIR', '/tmpx');
-            $blocs = new \Blocs\View('test.html');
+            $blocs = new View('test.html');
         } catch (\ErrorException $e) {
             $this->assertStringContainsString('B001:', $e->getMessage());
         }

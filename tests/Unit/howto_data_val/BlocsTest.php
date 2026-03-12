@@ -2,6 +2,7 @@
 
 namespace howto_data_val;
 
+use Blocs\View;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -27,7 +28,7 @@ class BlocsTest extends TestCase
     #[Test, RunInSeparateProcess]
     public function test(): void
     {
-        $blocs = new \Blocs\View($this->testDir.'/hello.html');
+        $blocs = new View($this->testDir.'/hello.html');
 
         $val = ['price' => 100];
         $this->actual = $blocs->generate($val, true);

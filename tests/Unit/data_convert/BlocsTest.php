@@ -2,6 +2,8 @@
 
 namespace data_convert;
 
+use Blocs\Validate;
+use Blocs\View;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -29,9 +31,9 @@ class BlocsTest extends TestCase
     #[Test, RunInSeparateProcess]
     public function test(): void
     {
-        $blocs = new \Blocs\View($this->testDir.'/test.html');
+        $blocs = new View($this->testDir.'/test.html');
 
-        $val = \Blocs\Validate::filter($blocs->getPath(), ['name' => '     あいうえお     ']);
+        $val = Validate::filter($blocs->getPath(), ['name' => '     あいうえお     ']);
         $this->actual = $blocs->generate($val, true);
 
         isset($this->expected) || $this->expected = $this->actual;
