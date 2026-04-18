@@ -215,6 +215,6 @@ class Common
             return $convertFunc;
         }
 
-        trigger_error('B008: Can not find convert function ('.$convertFunc.')', E_USER_ERROR);
+        throw new \RuntimeException('B008: Can not find convert function ('.$convertFunc.')');
     }
 }

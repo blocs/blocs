@@ -15,9 +15,9 @@ trait IncludeTrait
             if ($autoincludeDir === false) {
                 if (isset($attrList[BLOCS_DATA_EXIST])) {
                     return;
-                } else {
-                    trigger_error('B003: Can not find template (autoinclude)', E_USER_ERROR);
                 }
+
+                throw new \RuntimeException('B003: Can not find template (autoinclude)');
             }
 
             // 引数を渡せるようにする
@@ -87,11 +87,11 @@ trait IncludeTrait
                 return [];
             }
 
-            trigger_error('B003: Can not find template ('.getcwd().'/'.$attrList[BLOCS_DATA_INCLUDE].')', E_USER_ERROR);
+            throw new \RuntimeException('B003: Can not find template ('.getcwd().'/'.$attrList[BLOCS_DATA_INCLUDE].')');
         }
 
         if (count($this->include) > BLOCS_INCLUDE_MAX) {
-            trigger_error('B004: Template loop error (over '.BLOCS_INCLUDE_MAX.')', E_USER_ERROR);
+            throw new \RuntimeException('B004: Template loop error (over '.BLOCS_INCLUDE_MAX.')');
         }
         $this->include[] = $realpath;
 
@@ -185,7 +185,7 @@ trait IncludeTrait
         if (function_exists('mb_detect_encoding')) {
             $encoding = mb_detect_encoding($viewBuff, 'UTF-8', true);
             if ($encoding !== 'UTF-8') {
-                trigger_error('B011: Can not permit this encoding ('.$encoding.') and have to convert to "UTF-8"', E_USER_ERROR);
+                throw new \RuntimeException('B011: Can not permit this encoding ('.$encoding.') and have to convert to "UTF-8"');
             }
         }
 
