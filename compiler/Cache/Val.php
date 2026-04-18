@@ -25,7 +25,7 @@ class Val
         }
 
         if ($usesAssignment) {
-            Common::checkValueName($attrList[BLOCS_DATA_ASSIGN]) || trigger_error('B012: Invalid condition "'.BLOCS_DATA_ASSIGN.'" ('.$attrList[BLOCS_DATA_ASSIGN].')', E_USER_ERROR);
+            Common::checkValueName($attrList[BLOCS_DATA_ASSIGN]) || throw new \RuntimeException('B012: Invalid condition "'.BLOCS_DATA_ASSIGN.'" ('.$attrList[BLOCS_DATA_ASSIGN].')');
 
             $outputBuffer .= "<?php \$dataVal = ''; ?>\n";
         }
@@ -115,7 +115,7 @@ class Val
             }
         } else {
             if (! Common::checkValueName($attrList[BLOCS_DATA_ASSIGN])) {
-                trigger_error('B012: Invalid condition "'.BLOCS_DATA_ASSIGN.'" ('.$attrList[BLOCS_DATA_ASSIGN].')', E_USER_ERROR);
+                throw new \RuntimeException('B012: Invalid condition "'.BLOCS_DATA_ASSIGN.'" ('.$attrList[BLOCS_DATA_ASSIGN].')');
             }
 
             $outputBuffer .= "<?php {$attrList[BLOCS_DATA_ASSIGN]} = ";

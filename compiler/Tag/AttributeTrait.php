@@ -48,7 +48,7 @@ trait AttributeTrait
             }
 
             if (! Common::checkValueName($attrList[BLOCS_DATA_LOOP])) {
-                trigger_error('B002: Invalid condition "'.BLOCS_DATA_LOOP.'" ('.$attrList[BLOCS_DATA_LOOP].')', E_USER_ERROR);
+                throw new \RuntimeException('B002: Invalid condition "'.BLOCS_DATA_LOOP.'" ('.$attrList[BLOCS_DATA_LOOP].')');
             }
 
             $compiledTag = Loop::loop($attrList, count($this->tagCounter)).$compiledTag;
@@ -90,6 +90,6 @@ trait AttributeTrait
             return $filterFunc;
         }
 
-        trigger_error('B010: Can not find filter function ('.$filterFunc.')', E_USER_ERROR);
+        throw new \RuntimeException('B010: Can not find filter function ('.$filterFunc.')');
     }
 }

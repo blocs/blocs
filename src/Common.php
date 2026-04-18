@@ -32,7 +32,7 @@ class Common
     // rawを指定すると適用されない
     public static function convertDefault($str, $key = null)
     {
-        if (! empty(self::$config['menu'][$key])) {
+        if ($key !== null && ! empty(self::$config['menu'][$key])) {
             // 選択項目をラベルで置き換える
             $values = is_array($str) ? $str : explode("\t", (string) $str);
 

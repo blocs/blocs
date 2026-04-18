@@ -29,7 +29,7 @@ class BlocsTest extends TestCase
         try {
             $blocs = new View($this->testDir.'/test.html');
             $this->actual = $blocs->generate(null, true);
-        } catch (\ErrorException $e) {
+        } catch (\Exception $e) {
             $this->assertStringContainsString('B010:', $e->getMessage());
         }
     }
