@@ -23,7 +23,7 @@ class BlocsTest extends TestCase
         try {
             define('BLOCS_CACHE_DIR', '/tmpx');
             $blocs = new View('test.html');
-        } catch (\ErrorException $e) {
+        } catch (\Exception $e) {
             $this->assertStringContainsString('B001:', $e->getMessage());
         }
     }

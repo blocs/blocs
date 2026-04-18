@@ -7,7 +7,7 @@ if (! defined('BLOCS_CACHE_DIR')) {
 }
 
 $isWritableCacheDirectory = realpath(BLOCS_CACHE_DIR) && is_writable(BLOCS_CACHE_DIR);
-$isWritableCacheDirectory || trigger_error('B001: Can not write cache file into directory', E_USER_ERROR);
+$isWritableCacheDirectory || throw new RuntimeException('B001: Can not write cache file into directory');
 
 // テンプレートのルートディレクトリを設定
 if (! defined('BLOCS_ROOT_DIR')) {

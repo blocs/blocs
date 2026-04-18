@@ -28,7 +28,7 @@ function setTemplateCacheDir()
         return;
     }
 
-    trigger_error('B001: Can not write cache file into directory', E_USER_ERROR);
+    throw new \RuntimeException('B001: Can not write cache file into directory');
 }
 
 defined('BLOCS_CACHE_DIR') || setTemplateCacheDir();
@@ -94,7 +94,7 @@ class View
         $path = $this->getPath();
         $compiledPath = BLOCS_CACHE_DIR.'/'.md5($path).'.php';
 
-        (is_file($this->filename) && strlen($path)) || trigger_error('B003: Can not find template ('.getcwd().'/'.$this->filename.')', E_USER_ERROR);
+        (is_file($this->filename) && strlen($path)) || throw new \RuntimeException('B003: Can not find template ('.getcwd().'/'.$this->filename.')');
 
         $shouldUpdateCache = $this->shouldUpdateCache($compiledPath, $path);
         if (! $shouldUpdateCache) {
