@@ -2,46 +2,27 @@
 
 namespace tutorial_2;
 
-use Blocs\View;
-use PHPUnit\Framework\Attributes\RunInSeparateProcess;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
+require_once dirname(__DIR__, 2).'/BlocsTestCase.php';
 
-class BlocsTest extends TestCase
+use Blocs\Tests\BlocsTestCase;
+
+class BlocsTest extends BlocsTestCase
 {
-    protected $testDir;
-
-    protected $expected;
-
-    protected $actual;
-
-    protected function setUp(): void
+    protected function templateFile(): string
     {
-        $this->testDir = __DIR__;
-
-        touch($this->testDir.'/hello.html');
-        if (is_file($this->testDir.'/expected.html')) {
-            $this->expected = file_get_contents($this->testDir.'/expected.html');
-        }
+        return 'hello.html';
     }
 
-    #[Test, RunInSeparateProcess]
-    public function test(): void
+    protected function values(): mixed
     {
-        $blocs = new View($this->testDir.'/hello.html');
-
-        $val = [
+        return [
             'name' => 'Linear',
             'url' => 'http://www.linear.com/',
         ];
-        $this->actual = $blocs->generate($val);
-
-        isset($this->expected) || $this->expected = $this->actual;
-        $this->assertSame($this->expected, $this->actual);
     }
 
-    protected function tearDown(): void
+    protected function withFixer(): bool
     {
-        is_file($this->testDir.'/expected.html') || file_put_contents($this->testDir.'/expected.html', $this->actual);
+        return false;
     }
 }

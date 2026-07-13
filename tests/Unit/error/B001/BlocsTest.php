@@ -2,31 +2,26 @@
 
 namespace B001;
 
+require_once dirname(__DIR__, 3).'/ErrorTestCase.php';
+
+use Blocs\Tests\ErrorTestCase;
 use Blocs\View;
-use PHPUnit\Framework\Attributes\RunInSeparateProcess;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
 
-class BlocsTest extends TestCase
+class BlocsTest extends ErrorTestCase
 {
-    protected function setUp(): void
+    protected function errorCode(): string
     {
-        // エラーを例外に変換
-        set_error_handler(function ($severity, $message, $filename, $lineno) {
-            throw new \ErrorException($message, 0, $severity, $filename, $lineno);
-        });
+        return 'B001';
     }
 
-    #[Test, RunInSeparateProcess]
-    public function test(): void
+    protected function prepareEnvironment(): void
     {
-        try {
-            define('BLOCS_CACHE_DIR', '/tmpx');
-            $blocs = new View('test.html');
-        } catch (\Exception $e) {
-            $this->assertStringContainsString('B001:', $e->getMessage());
-        }
+        // BLOCS_CACHE_DIR は triggerError で無効パスを先に定義する
     }
 
-    protected function tearDown(): void {}
+    protected function triggerError(): void
+    {
+        define('BLOCS_CACHE_DIR', '/tmpx');
+        new View('test.html');
+    }
 }
