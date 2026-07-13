@@ -2,53 +2,24 @@
 
 namespace table_input;
 
-use Blocs\View;
-use PHPUnit\Framework\Attributes\RunInSeparateProcess;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
+require_once dirname(__DIR__, 2).'/BlocsTestCase.php';
 
-class BlocsTest extends TestCase
+use Blocs\Tests\BlocsTestCase;
+
+class BlocsTest extends BlocsTestCase
 {
-    protected $testDir;
-
-    protected $expected;
-
-    protected $actual;
-
-    protected function setUp(): void
+    protected function values(): mixed
     {
-        $this->testDir = __DIR__;
-
-        touch($this->testDir.'/test.html');
-        if (is_file($this->testDir.'/expected.html')) {
-            $this->expected = file_get_contents($this->testDir.'/expected.html');
-        }
-    }
-
-    #[Test, RunInSeparateProcess]
-    public function test(): void
-    {
-        $blocs = new View($this->testDir.'/test.html');
-
-        $val['matrix2'] = [[], [
-            'text' => 'yada',
-            'size' => "s\tl",
-            'area' => 'テストです。',
-        ]];
-
-        $val['matrix'] = [[
-            'text' => 'yada',
-            'sex' => 'f',
-        ], []];
-
-        $this->actual = $blocs->generate($val, true);
-
-        isset($this->expected) || $this->expected = $this->actual;
-        $this->assertSame($this->expected, $this->actual);
-    }
-
-    protected function tearDown(): void
-    {
-        is_file($this->testDir.'/expected.html') || file_put_contents($this->testDir.'/expected.html', $this->actual);
+        return [
+            'matrix2' => [[], [
+                'text' => 'yada',
+                'size' => "s\tl",
+                'area' => 'テストです。',
+            ]],
+            'matrix' => [[
+                'text' => 'yada',
+                'sex' => 'f',
+            ], []],
+        ];
     }
 }

@@ -26,7 +26,8 @@
         "psr-4": {
             "Blocs\\": "src\/",
             "Blocs\\Compiler\\": "compiler\/",
-            "Blocs\\Data\\": "data\/"
+            "Blocs\\Data\\": "data\/",
+            "Blocs\\Tests\\": "tests\/"
         }
     }
 }
