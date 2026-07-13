@@ -2,46 +2,23 @@
 
 namespace data_convert;
 
+use Blocs\Tests\BlocsTestCase;
 use Blocs\Validate;
 use Blocs\View;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
 
-require_once 'convert_func.php';
+require_once dirname(__DIR__, 2).'/BlocsTestCase.php';
+require_once __DIR__.'/convert_func.php';
 
-class BlocsTest extends TestCase
+class BlocsTest extends BlocsTestCase
 {
-    protected $testDir;
-
-    protected $expected;
-
-    protected $actual;
-
-    protected function setUp(): void
-    {
-        $this->testDir = __DIR__;
-
-        touch($this->testDir.'/test.html');
-        if (is_file($this->testDir.'/expected.html')) {
-            $this->expected = file_get_contents($this->testDir.'/expected.html');
-        }
-    }
-
     #[Test, RunInSeparateProcess]
     public function test(): void
     {
-        $blocs = new View($this->testDir.'/test.html');
-
+        $blocs = new View($this->templatePath());
         $val = Validate::filter($blocs->getPath(), ['name' => '     あいうえお     ']);
-        $this->actual = $blocs->generate($val, true);
 
-        isset($this->expected) || $this->expected = $this->actual;
-        $this->assertSame($this->expected, $this->actual);
-    }
-
-    protected function tearDown(): void
-    {
-        is_file($this->testDir.'/expected.html') || file_put_contents($this->testDir.'/expected.html', $this->actual);
+        $this->assertSnapshot($blocs->generate($val, true));
     }
 }
