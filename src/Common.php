@@ -103,17 +103,15 @@ class Common
 
         $configPath = self::getConfigPath(dirname($path));
         if (! is_file($configPath)) {
-            // 設定ファイルが見つからないためコンパイルを実行する
-            $blocsCompiler = new Compiler\BlocsCompiler;
-            $blocsCompiler->compile($path);
-
-            // 設定ファイルを作成する
-            $blocsConfig = $blocsCompiler->getConfig();
-
-            return self::writeConfig($path, $blocsConfig);
+            return self::rebuildConfig($path);
         }
 
-        self::$config = json_decode(file_get_contents($configPath), true);
+        self::$config = self::decodeConfigFile($configPath);
+        if (self::$config === null) {
+            @unlink($configPath);
+
+            return self::rebuildConfig($path);
+        }
 
         // 動的メニューの取り込みを実施する
         $appendOption = Option::append();
@@ -131,7 +129,7 @@ class Common
         $path = self::normalizeRealPath($path);
         $configPath = self::getConfigPath(dirname($path));
         if (is_file($configPath)) {
-            $config = json_decode(file_get_contents($configPath), true);
+            $config = self::decodeConfigFile($configPath) ?? [];
         } else {
             // 設定ファイルが見つからない場合は新規作成する
             $config = [];
@@ -182,6 +180,33 @@ class Common
     public static function getConfigPath($path)
     {
         return BLOCS_CACHE_DIR.'/'.md5($path).'.json';
+    }
+
+    private static function decodeConfigFile(string $configPath): ?array
+    {
+        $contents = file_get_contents($configPath);
+        if ($contents === false || $contents === '') {
+            return null;
+        }
+
+        $config = json_decode($contents, true);
+        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($config)) {
+            return null;
+        }
+
+        return $config;
+    }
+
+    private static function rebuildConfig(string $path): array
+    {
+        // 設定ファイルが見つからない、または不備があるためコンパイルを実行する
+        $blocsCompiler = new Compiler\BlocsCompiler;
+        $blocsCompiler->compile($path);
+
+        // 設定ファイルを作成する
+        $blocsConfig = $blocsCompiler->getConfig();
+
+        return self::writeConfig($path, $blocsConfig);
     }
 
     private static function syncConfigSection($config, $configName, $path, $blocsConfig)
