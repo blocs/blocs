@@ -6,6 +6,18 @@ class Option
 {
     private static array $appendOption = [];
 
+    /**
+     * addOption() で登録した動的な選択肢をすべて破棄する。
+     *
+     * 常駐ワーカーでは登録がリクエストをまたいで蓄積し、以降に描画される全テンプレートの
+     * 設定へマージされてしまう（同名の変数出力が別画面の選択肢ラベルで変換される）。
+     * リクエスト開始時（Octane の RequestReceived）に呼び出す。
+     */
+    public static function flush(): void
+    {
+        self::$appendOption = [];
+    }
+
     public static function get($templateName, $formName)
     {
         $path = Common::getPath($templateName);
