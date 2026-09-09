@@ -10,6 +10,19 @@ class Common
 
     private static $config;
 
+    /**
+     * 直近に読み込んだテンプレートのパスと設定を破棄する。
+     *
+     * Octane / RoadRunner のような常駐ワーカーでは静的プロパティがリクエストをまたいで残り、
+     * 引数なしの readConfig() が前リクエストのテンプレート設定を返してしまう。
+     * リクエスト開始時（Octane の RequestReceived）に呼び出す。
+     */
+    public static function flush(): void
+    {
+        self::$path = null;
+        self::$config = null;
+    }
+
     // テンプレート名から対象ファイルのフルパスを取得する
     public static function getPath($name)
     {
