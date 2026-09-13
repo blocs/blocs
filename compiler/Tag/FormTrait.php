@@ -215,22 +215,22 @@ trait FormTrait
         }
 
         if (isset($attrList['type']) && $attrList['type'] === 'number') {
-            if (isset($attrList['min']) && isset($attrList['max'])) {
-                isset($required) || $dataValidate[$attrList['name']][] = 'nullable';
-                if (isset($attrList['step'])) {
-                    $dataValidate[$attrList['name']][] = 'numeric';
-                } else {
-                    $dataValidate[$attrList['name']][] = 'integer';
-                }
-
-                isset($attrList['min']) && $dataValidate[$attrList['name']][] = 'min:'.$attrList['min'];
-                isset($attrList['max']) && $dataValidate[$attrList['name']][] = 'max:'.$attrList['max'];
+            isset($required) || $dataValidate[$attrList['name']][] = 'nullable';
+            if (isset($attrList['step'])) {
+                $dataValidate[$attrList['name']][] = 'numeric';
+            } else {
+                $dataValidate[$attrList['name']][] = 'integer';
             }
+
+            isset($attrList['min']) && $dataValidate[$attrList['name']][] = 'min:'.$attrList['min'];
+            isset($attrList['max']) && $dataValidate[$attrList['name']][] = 'max:'.$attrList['max'];
         }
 
         if (isset($attrList['pattern'])) {
             isset($required) || $dataValidate[$attrList['name']][] = 'nullable';
-            $dataValidate[$attrList['name']][] = 'regex:/'.$attrList['pattern'].'/';
+            // 区切り文字の / だけをエスケープする（すでに \/ と書かれていれば二重化しない）
+            $pattern = preg_replace('~(?<!\\\\)((?:\\\\\\\\)*)/~', '$1\\\\/', $attrList['pattern']);
+            $dataValidate[$attrList['name']][] = 'regex:/'.$pattern.'/';
         }
     }
 }

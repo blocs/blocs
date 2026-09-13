@@ -110,7 +110,7 @@ class View
         $blocsConfig = $blocsCompiler->getConfig();
         Common::writeConfig($path, $blocsConfig);
 
-        file_put_contents($compiledPath, $compiledContents) && chmod($compiledPath, 0666);
+        file_put_contents($compiledPath, $compiledContents) && chmod($compiledPath, 0644);
 
         return $compiledPath;
     }
@@ -122,12 +122,16 @@ class View
             return true;
         }
 
+        if (! file_exists($this->filename) || filemtime($this->filename) > filemtime($compiledPath)) {
+            return true;
+        }
+
         if (! isset($this->config['include'][$path]) || ! is_array($this->config['include'][$path])) {
-            return false;
+            return true;
         }
 
         foreach ($this->config['include'][$path] as $includeFile) {
-            if (! file_exists($includeFile) || filemtime($includeFile) > $this->config['timestamp'][$path]) {
+            if (! file_exists($includeFile) || filemtime($includeFile) > ($this->config['timestamp'][$path] ?? 0)) {
                 return true;
             }
         }

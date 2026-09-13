@@ -5,8 +5,10 @@ namespace flush;
 require_once dirname(__DIR__, 2).'/TestEnvironment.php';
 
 use Blocs\Common;
+use Blocs\Compiler\BlocsCompiler;
 use Blocs\Option;
 use Blocs\Tests\TestEnvironment;
+use Blocs\Validate;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -40,7 +42,7 @@ class FlushTest extends TestCase
     #[Test, RunInSeparateProcess]
     public function common_flush_discards_last_template_config(): void
     {
-        $templatePath = dirname(__DIR__).'/get_label/test.html';
+        $templatePath = __DIR__.'/test.html';
         $config = Common::readConfig($templatePath);
         $this->assertNotEmpty($config);
 
@@ -51,5 +53,29 @@ class FlushTest extends TestCase
 
         // 破棄後は「テンプレート未指定」として空配列になる
         $this->assertSame([], Common::readConfig());
+    }
+
+    #[Test, RunInSeparateProcess]
+    public function validate_flush_discards_cached_template_config(): void
+    {
+        $templatePath = __DIR__.'/test.html';
+        Common::readConfig($templatePath);
+
+        $configProperty = new \ReflectionProperty(Validate::class, 'config');
+        $configProperty->setValue(null, ['stale' => true]);
+
+        Validate::flush();
+
+        $this->assertNull($configProperty->getValue());
+    }
+
+    #[Test, RunInSeparateProcess]
+    public function render_does_not_leave_blade_off_enabled(): void
+    {
+        $compiler = new BlocsCompiler;
+        $compiler->render('hi');
+
+        $this->assertFalse(defined('BLOCS_BLADE_OFF'));
+        $this->assertFalse(BlocsCompiler::isBladeOff());
     }
 }

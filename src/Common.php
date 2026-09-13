@@ -12,10 +12,7 @@ class Common
 
     /**
      * 直近に読み込んだテンプレートのパスと設定を破棄する。
-     *
-     * Octane / RoadRunner のような常駐ワーカーでは静的プロパティがリクエストをまたいで残り、
-     * 引数なしの readConfig() が前リクエストのテンプレート設定を返してしまう。
-     * リクエスト開始時（Octane の RequestReceived）に呼び出す。
+     * 常駐ワーカー（Octane）でリクエストをまたいで残らないよう、リクエスト開始時に呼ぶ。
      */
     public static function flush(): void
     {
@@ -64,7 +61,7 @@ class Common
                 strlen($query) && $query .= BLOCS_OPTION_SEPARATOR;
 
                 if (strpos($menuLabel[$buff], 'data-') === false) {
-                    $query .= $menuLabel[$buff];
+                    $query .= htmlspecialchars($menuLabel[$buff], ENT_QUOTES, 'UTF-8');
                 } else {
                     isset($blocsCompiler) || $blocsCompiler = new Compiler\BlocsCompiler;
                     $query .= $blocsCompiler->render($menuLabel[$buff]);
@@ -74,8 +71,12 @@ class Common
             return $query;
         }
 
+        if ($str === null || is_array($str) || is_object($str)) {
+            return '';
+        }
+
         // 文字列のエスケープを実施する
-        $escaped = htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
+        $escaped = htmlspecialchars((string) $str, ENT_QUOTES, 'UTF-8');
         $escaped = nl2br($escaped);
 
         return $escaped;
@@ -141,8 +142,30 @@ class Common
     {
         $path = self::normalizeRealPath($path);
         $configPath = self::getConfigPath(dirname($path));
+
+        // ロック用の別ファイルを作らず、設定ファイル自身をロック対象にする
+        $lockHandle = fopen($configPath, 'c');
+        if ($lockHandle === false) {
+            throw new \RuntimeException('B001: Can not write cache file into directory');
+        }
+
+        flock($lockHandle, LOCK_EX);
+        try {
+            self::writeConfigLocked($path, $configPath, $blocsConfig);
+        } finally {
+            flock($lockHandle, LOCK_UN);
+            fclose($lockHandle);
+        }
+
+        // readConfig() は再生成のため writeConfig() を呼び戻すことがあるので、ロックの外で実行する
+        return self::readConfig($path);
+    }
+
+    private static function writeConfigLocked(string $path, string $configPath, $blocsConfig): void
+    {
         if (is_file($configPath)) {
-            $config = self::decodeConfigFile($configPath) ?? [];
+            // 排他ロック保持中のため、ここでは共有ロックを取らずに読む
+            $config = self::decodeConfigFile($configPath, false) ?? [];
         } else {
             // 設定ファイルが見つからない場合は新規作成する
             $config = [];
@@ -164,7 +187,7 @@ class Common
         // Optionをフォーム名ごとに集約してmenuを生成する
         $existValueList = [];
         $config['menu'] = [];
-        foreach ($config['option'] as $path => $configOption) {
+        foreach ($config['option'] as $configOption) {
             foreach ($configOption as $formName => $optionList) {
                 foreach ($optionList as $option) {
                     if (! isset($option['value'])) {
@@ -184,10 +207,7 @@ class Common
         }
 
         // 設定ファイルはディレクトリごとに作成する
-        file_put_contents($configPath, json_encode($config, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)."\n") && chmod($configPath, 0666);
-
-        // 設定ファイルを読み込みキャッシュを更新する
-        return self::readConfig($path);
+        file_put_contents($configPath, json_encode($config, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)."\n") && chmod($configPath, 0644);
     }
 
     public static function getConfigPath($path)
@@ -195,9 +215,14 @@ class Common
         return BLOCS_CACHE_DIR.'/'.md5($path).'.json';
     }
 
-    private static function decodeConfigFile(string $configPath): ?array
+    /**
+     * 設定ファイルを読み込んで配列へ復元する。
+     * 書き込み中の中途半端な内容を読まないよう、既定では共有ロックを取得する。
+     * すでに排他ロックを保持している writeConfigLocked() からは $useLock = false で呼ぶ。
+     */
+    private static function decodeConfigFile(string $configPath, bool $useLock = true): ?array
     {
-        $contents = file_get_contents($configPath);
+        $contents = $useLock ? self::readConfigFileShared($configPath) : file_get_contents($configPath);
         if ($contents === false || $contents === '') {
             return null;
         }
@@ -208,6 +233,29 @@ class Common
         }
 
         return $config;
+    }
+
+    /**
+     * 共有ロックを取得して設定ファイルを読む（書き込み完了まで待つ）
+     *
+     * @return string|false
+     */
+    private static function readConfigFileShared(string $configPath)
+    {
+        $handle = fopen($configPath, 'r');
+        if ($handle === false) {
+            return false;
+        }
+
+        flock($handle, LOCK_SH);
+        try {
+            $contents = stream_get_contents($handle);
+        } finally {
+            flock($handle, LOCK_UN);
+            fclose($handle);
+        }
+
+        return $contents;
     }
 
     private static function rebuildConfig(string $path): array
