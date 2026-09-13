@@ -78,4 +78,41 @@ class FlushTest extends TestCase
         $this->assertFalse(defined('BLOCS_BLADE_OFF'));
         $this->assertFalse(BlocsCompiler::isBladeOff());
     }
+
+    #[Test, RunInSeparateProcess]
+    public function compile_restores_blade_off_depth_and_matches_blade_on_output(): void
+    {
+        $templatePath = dirname(__DIR__).'/data_loop/test.html';
+        $compiler = new BlocsCompiler;
+        $expected = $compiler->compile($templatePath);
+
+        $depth = new \ReflectionProperty(BlocsCompiler::class, 'bladeOffDepth');
+        $depth->setValue(null, 2);
+
+        $compiled = (new BlocsCompiler)->compile($templatePath);
+
+        $this->assertSame(2, $depth->getValue());
+        $this->assertSame($expected, $compiled);
+    }
+
+    #[Test, RunInSeparateProcess]
+    public function compile_restores_working_directory_when_include_is_missing(): void
+    {
+        $original = getcwd();
+        $this->assertNotFalse($original);
+
+        $templateDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'blocs-chdir-'.uniqid('', true);
+        mkdir($templateDir);
+        $templatePath = $templateDir.DIRECTORY_SEPARATOR.'test.html';
+        file_put_contents($templatePath, '<!-- data-include="missing.html" -->');
+
+        try {
+            (new BlocsCompiler)->compile($templatePath);
+            $this->fail('missing include で例外になりませんでした');
+        } catch (\Throwable $exception) {
+            $this->assertStringContainsString('B003:', $exception->getMessage());
+        }
+
+        $this->assertSame($original, getcwd());
+    }
 }

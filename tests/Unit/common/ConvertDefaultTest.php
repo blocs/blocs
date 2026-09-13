@@ -44,4 +44,40 @@ class ConvertDefaultTest extends TestCase
         );
         $this->assertStringNotContainsString('<script>', Common::convertDefault('1', 'status'));
     }
+
+    #[Test, RunInSeparateProcess]
+    public function convert_default_escapes_menu_labels_that_only_contain_data_substring(): void
+    {
+        $config = new ReflectionProperty(Common::class, 'config');
+        $config->setValue(null, [
+            'menu' => [
+                'status' => [
+                    ['value' => '1', 'label' => '<b>x</b> data-y'],
+                ],
+            ],
+        ]);
+
+        $this->assertSame(
+            '&lt;b&gt;x&lt;/b&gt; data-y',
+            Common::convertDefault('1', 'status')
+        );
+        $this->assertStringNotContainsString('<b>', Common::convertDefault('1', 'status'));
+    }
+
+    #[Test, RunInSeparateProcess]
+    public function convert_default_renders_menu_labels_that_use_data_repeat(): void
+    {
+        $config = new ReflectionProperty(Common::class, 'config');
+        $config->setValue(null, [
+            'menu' => [
+                'status' => [
+                    ['value' => '1', 'label' => '<span data-repeat="$items">ok</span>'],
+                ],
+            ],
+        ]);
+
+        $html = Common::convertDefault('1', 'status');
+
+        $this->assertStringNotContainsString('&lt;span data-repeat', $html);
+    }
 }

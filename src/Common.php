@@ -48,10 +48,6 @@ class Common
 
             $menuLabel = self::buildMenuLabelMap($key);
 
-            if (empty($key) || empty(self::$config['menu'][$key])) {
-                return '';
-            }
-
             $query = '';
             foreach ($values as $buff) {
                 if (! isset($menuLabel[$buff])) {
@@ -60,7 +56,7 @@ class Common
 
                 strlen($query) && $query .= BLOCS_OPTION_SEPARATOR;
 
-                if (strpos($menuLabel[$buff], 'data-') === false) {
+                if (! self::menuLabelContainsTemplateMarkup($menuLabel[$buff])) {
                     $query .= htmlspecialchars($menuLabel[$buff], ENT_QUOTES, 'UTF-8');
                 } else {
                     isset($blocsCompiler) || $blocsCompiler = new Compiler\BlocsCompiler;
@@ -144,14 +140,14 @@ class Common
         $configPath = self::getConfigPath(dirname($path));
 
         // ロック用の別ファイルを作らず、設定ファイル自身をロック対象にする
-        $lockHandle = fopen($configPath, 'c');
+        $lockHandle = fopen($configPath, 'c+');
         if ($lockHandle === false) {
             throw new \RuntimeException('B001: Can not write cache file into directory');
         }
 
         flock($lockHandle, LOCK_EX);
         try {
-            self::writeConfigLocked($path, $configPath, $blocsConfig);
+            self::writeConfigLocked($path, $configPath, $blocsConfig, $lockHandle);
         } finally {
             flock($lockHandle, LOCK_UN);
             fclose($lockHandle);
@@ -161,14 +157,28 @@ class Common
         return self::readConfig($path);
     }
 
-    private static function writeConfigLocked(string $path, string $configPath, $blocsConfig): void
+    /**
+     * 設定 JSON を共有ロック付きで読む
+     */
+    public static function loadConfigFile(string $configPath): ?array
     {
-        if (is_file($configPath)) {
-            // 排他ロック保持中のため、ここでは共有ロックを取らずに読む
-            $config = self::decodeConfigFile($configPath, false) ?? [];
-        } else {
-            // 設定ファイルが見つからない場合は新規作成する
-            $config = [];
+        if (! is_file($configPath)) {
+            return null;
+        }
+
+        return self::decodeConfigFile($configPath);
+    }
+
+    private static function writeConfigLocked(string $path, string $configPath, $blocsConfig, $lockHandle): void
+    {
+        rewind($lockHandle);
+        $contents = stream_get_contents($lockHandle);
+        $config = [];
+        if ($contents !== false && $contents !== '') {
+            $decoded = json_decode($contents, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $config = $decoded;
+            }
         }
 
         // ファイルアップロードのバリデーション設定を整理する
@@ -206,8 +216,19 @@ class Common
             }
         }
 
-        // 設定ファイルはディレクトリごとに作成する
-        file_put_contents($configPath, json_encode($config, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)."\n") && chmod($configPath, 0644);
+        $encoded = json_encode($config, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        if ($encoded === false || ftruncate($lockHandle, 0) === false) {
+            throw new \RuntimeException('B001: Can not write cache file into directory');
+        }
+
+        $payload = $encoded."\n";
+        rewind($lockHandle);
+        $written = fwrite($lockHandle, $payload);
+        if ($written === false || $written < strlen($payload) || fflush($lockHandle) === false) {
+            throw new \RuntimeException('B001: Can not write cache file into directory');
+        }
+
+        chmod($configPath, 0644);
     }
 
     public static function getConfigPath($path)
@@ -216,13 +237,35 @@ class Common
     }
 
     /**
-     * 設定ファイルを読み込んで配列へ復元する。
-     * 書き込み中の中途半端な内容を読まないよう、既定では共有ロックを取得する。
-     * すでに排他ロックを保持している writeConfigLocked() からは $useLock = false で呼ぶ。
+     * include されたテンプレートが、キャッシュ生成時より新しければ true
      */
-    private static function decodeConfigFile(string $configPath, bool $useLock = true): ?array
+    public static function includesAreStale(string $path, array $config): bool
     {
-        $contents = $useLock ? self::readConfigFileShared($configPath) : file_get_contents($configPath);
+        if (! isset($config['include'][$path]) || ! is_array($config['include'][$path])) {
+            return true;
+        }
+
+        $timestamp = $config['timestamp'][$path] ?? null;
+        if (! isset($timestamp)) {
+            return true;
+        }
+
+        foreach ($config['include'][$path] as $includeFile) {
+            if (! file_exists($includeFile) || filemtime($includeFile) > $timestamp) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * 設定ファイルを読み込んで配列へ復元する。
+     * 書き込み中の中途半端な内容を読まないよう、共有ロックを取得する。
+     */
+    private static function decodeConfigFile(string $configPath): ?array
+    {
+        $contents = self::readConfigFileShared($configPath);
         if ($contents === false || $contents === '') {
             return null;
         }
@@ -327,6 +370,14 @@ class Common
         return '';
     }
 
+    private static function menuLabelContainsTemplateMarkup(string $label): bool
+    {
+        return (bool) preg_match(
+            '/\bdata-(?:val|exist|none|if|unless|loop|include|assign|attribute|convert|prefix|postfix|lang|notice|form|validate|filter|repeat|bloc|chdir|end(?:exist|none|if|unless|loop|repeat|bloc))\b/',
+            $label
+        );
+    }
+
     private static function buildMenuLabelMap($key)
     {
         $menuLabel = [];
@@ -388,11 +439,11 @@ class Common
 
     private static function pullValidateByFormName(&$validateConfig, $formName)
     {
+        // 戻り値は必ず配列キーとして使われるため、照合できない場合もフォーム名を返す
         if (! is_array($validateConfig) || ! strlen($formName)) {
-            return [];
+            return $formName;
         }
 
-        $pulled = [];
         $suffix = '.'.$formName;
         $suffixLength = strlen($suffix);
 

@@ -33,9 +33,17 @@ class BlocsCompiler
         $this->init();
         $this->include = [str_replace(DIRECTORY_SEPARATOR, '/', $templatePath)];
 
-        $this->compileTemplate(self::checkEncoding($templatePath), $templatePath);
+        // render() 中でもキャッシュ用コンパイルは Blade を有効にする
+        $previousDepth = self::$bladeOffDepth;
+        self::$bladeOffDepth = 0;
 
-        return $this->compiledTemplate;
+        try {
+            $this->compileTemplate(self::checkEncoding($templatePath), $templatePath);
+
+            return $this->compiledTemplate;
+        } finally {
+            self::$bladeOffDepth = $previousDepth;
+        }
     }
 
     // バッファをコンパイルしてレンダリングする
@@ -51,12 +59,7 @@ class BlocsCompiler
         try {
             $this->compileTemplate($writeBuff, __FILE__);
 
-            // 渡された引数を展開する
-            extract($val);
-
-            ob_start();
-            eval(substr($this->compiledTemplate, 5));
-            $writeBuff = ob_get_clean();
+            $writeBuff = self::evaluateCompiledTemplate($val, $this->compiledTemplate);
         } finally {
             self::$bladeOffDepth--;
 
@@ -69,6 +72,20 @@ class BlocsCompiler
         $writeBuff = preg_replace("/\n[\s\n]+\n/", "\n\n", $writeBuff);
 
         return $writeBuff;
+    }
+
+    /**
+     * extract() が呼び出し元のローカル変数を上書きしないよう、別スコープで評価する
+     */
+    private static function evaluateCompiledTemplate(array $val, string $compiledTemplate): string
+    {
+        return (static function (array $__blocs_val, string $__blocs_compiled): string {
+            extract($__blocs_val, EXTR_SKIP);
+            ob_start();
+            eval(substr($__blocs_compiled, 5));
+
+            return (string) ob_get_clean();
+        })($val, $compiledTemplate);
     }
 
     /**
@@ -117,6 +134,19 @@ class BlocsCompiler
 
     private function compileTemplate($writeBuff, $realpath)
     {
+        $previousCwd = getcwd();
+
+        try {
+            return $this->compileTemplateContents($writeBuff, $realpath);
+        } finally {
+            if (is_string($previousCwd) && $previousCwd !== '' && is_dir($previousCwd)) {
+                chdir($previousCwd);
+            }
+        }
+    }
+
+    private function compileTemplateContents($writeBuff, $realpath)
+    {
         $this->partInclude[$realpath] = $this->parseTemplate($writeBuff, $realpath, false);
         $htmlArray = $this->partInclude[$realpath];
         $htmlArray[] = '<!-- '.BLOCS_DATA_CHDIR.'="'.getcwd().'" -->';
@@ -141,6 +171,13 @@ class BlocsCompiler
                 }
                 if ($htmlBuff === '{{AUTOINCLUDE_END_TO}}') {
                     $this->autoincludeDepth--;
+
+                    continue;
+                }
+
+                // selectの処理範囲の終わりを検知して、後続のoptionが前のselectに紐付かないようにする
+                if ($htmlBuff === '{{SELECT_END}}') {
+                    $this->selectName = '';
 
                     continue;
                 }

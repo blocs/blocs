@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+<style>
+/* <!-- style の中身は整形しない --> */
+.sample { color: red; }
+</style>
+<script>
+var open = "<!--";
+var keep = 1;
+var close = "-->";
+</script>
+</head>
+<body>
+
+<precious>preで始まるだけのタグは保護しない</precious>
+<pre>
+pre の中の <!-- コメント --> は残す
+</pre>
+</body>
+</html>

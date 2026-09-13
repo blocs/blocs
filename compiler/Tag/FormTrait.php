@@ -34,30 +34,25 @@ trait FormTrait
                     $compiledTag = Form::value($compiledTag, $attrList);
                 }
                 if ($type === 'hidden' && isset($attrList['class'])) {
-                    $classList = [];
-                    if (isset($attrList['class'])) {
-                        $classNameList = preg_split("/\s/", $attrList['class']);
-                        foreach ($classNameList as $className) {
-                            [$className] = preg_split("/\<\?php/", $className, 2);
-                            if (! strncmp($className, 'ai-', 3)) {
-                                $classList[] = substr($className, 3);
-                            }
-                        }
-                    }
-
+                    $classList = Common::extractAiClassNames($attrList['class']);
                     in_array(substr(BLOCS_CLASS_UPLOAD, 3), $classList) && $this->validateUpload[] = $attrList['name'];
                 }
             }
         }
 
-        if ($tagName === 'select' && isset($attrList['name']) && strlen($attrList['name'])) {
-            $formName = Common::checkFormName($attrList['name']);
-            if ($formName !== false) {
-                $attrList['name'] = $formName;
-                $this->selectName = $attrList['name'];
+        if ($tagName === 'select') {
+            // 名前のないselectで前のselect名が残らないように、開始タグで必ず入れ替える
+            $this->selectName = '';
 
-                if (isset($attrList['multiple'])) {
-                    $this->ensureDummyFormField($attrList['name'], $compiledTag);
+            if (isset($attrList['name']) && strlen($attrList['name'])) {
+                $formName = Common::checkFormName($attrList['name']);
+                if ($formName !== false) {
+                    $attrList['name'] = $formName;
+                    $this->selectName = $attrList['name'];
+
+                    if (isset($attrList['multiple'])) {
+                        $this->ensureDummyFormField($attrList['name'], $compiledTag);
+                    }
                 }
             }
         } elseif ($tagName === 'option' && strlen($this->selectName) && isset($attrList['value'])) {
@@ -103,24 +98,25 @@ trait FormTrait
         }
 
         if (($tagName === 'input' || $tagName === 'select' || $tagName === 'textarea') && isset($attrList['name']) && strlen($attrList['name'])) {
+            $formFieldName = $attrList['name'];
+
             if ($arrayForm = $this->buildArrayFormName()) {
-                $compiledTag = Common::mergeAttribute($compiledTag, 'name', $arrayForm.'['.$attrList['name'].']', $attrList);
-                $arrayPath = $this->buildArrayFormName(1);
-                $arrayMsg = $this->buildArrayFormName(2);
-            } else {
-                $arrayPath = $arrayMsg = '';
+                $compiledTag = Common::mergeAttribute($compiledTag, 'name', $arrayForm.'['.$formFieldName.']', $attrList);
             }
-            $arrayMsg .= "['{$attrList['name']}']";
+
+            $validateName = $this->buildArrayFormName(3).$formFieldName;
 
             if (isset($attrList[BLOCS_DATA_VALIDATE])) {
                 // バリデーション設定を蓄積する
                 foreach (explode('|', $attrList[BLOCS_DATA_VALIDATE]) as $validate) {
-                    $this->validate[$attrList['name']][] = $validate;
+                    $this->validate[$validateName][] = $validate;
                 }
             }
 
             // HTML5のフォームバリデーションに対応する
-            self::addHtml5Validation($this->validate, $attrList);
+            $html5AttrList = $attrList;
+            $html5AttrList['name'] = $formFieldName;
+            self::addHtml5Validation($this->validate, $html5AttrList);
         }
     }
 
@@ -165,7 +161,7 @@ trait FormTrait
                 $formName .= "_<?php echo(\$loopIndex{$num}); ?>";
             } elseif ($format === 2) {
                 $formName .= '[$loopIndex'.$num.']';
-            } else {
+            } elseif ($format !== 3) {
                 $formName .= "[<?php echo(\$loopIndex{$num}); ?>]";
             }
         }
@@ -199,38 +195,55 @@ trait FormTrait
     // HTML5属性からバリデーションルールを組み立てる
     private function addHtml5Validation(&$dataValidate, $attrList)
     {
-        $attrList['name'] = $this->buildArrayFormName(3).$attrList['name'];
+        $normalized = [];
+        foreach ($attrList as $key => $value) {
+            $normalized[strtolower((string) $key)] = $value;
+        }
+        if (isset($normalized['type'])) {
+            $normalized['type'] = strtolower((string) $normalized['type']);
+        }
 
-        if (isset($attrList['required'])) {
-            $dataValidate[$attrList['name']][] = 'required';
+        $normalized['name'] = $this->buildArrayFormName(3).($normalized['name'] ?? $attrList['name']);
+
+        if (isset($normalized['required'])) {
+            $dataValidate[$normalized['name']][] = 'required';
             $required = true;
         }
 
-        if (isset($attrList['minlength']) || isset($attrList['maxlength'])) {
-            isset($required) || $dataValidate[$attrList['name']][] = 'nullable';
-            $dataValidate[$attrList['name']][] = 'string';
+        if (isset($normalized['minlength']) || isset($normalized['maxlength'])) {
+            isset($required) || $dataValidate[$normalized['name']][] = 'nullable';
+            $dataValidate[$normalized['name']][] = 'string';
 
-            isset($attrList['minlength']) && $dataValidate[$attrList['name']][] = 'min:'.$attrList['minlength'];
-            isset($attrList['maxlength']) && $dataValidate[$attrList['name']][] = 'max:'.$attrList['maxlength'];
+            isset($normalized['minlength']) && $dataValidate[$normalized['name']][] = 'min:'.$normalized['minlength'];
+            isset($normalized['maxlength']) && $dataValidate[$normalized['name']][] = 'max:'.$normalized['maxlength'];
         }
 
-        if (isset($attrList['type']) && $attrList['type'] === 'number') {
-            isset($required) || $dataValidate[$attrList['name']][] = 'nullable';
-            if (isset($attrList['step'])) {
-                $dataValidate[$attrList['name']][] = 'numeric';
-            } else {
-                $dataValidate[$attrList['name']][] = 'integer';
-            }
+        if (isset($normalized['type']) && $normalized['type'] === 'number') {
+            isset($required) || $dataValidate[$normalized['name']][] = 'nullable';
+            $dataValidate[$normalized['name']][] = 'numeric';
 
-            isset($attrList['min']) && $dataValidate[$attrList['name']][] = 'min:'.$attrList['min'];
-            isset($attrList['max']) && $dataValidate[$attrList['name']][] = 'max:'.$attrList['max'];
+            isset($normalized['min']) && $dataValidate[$normalized['name']][] = 'min:'.$normalized['min'];
+            isset($normalized['max']) && $dataValidate[$normalized['name']][] = 'max:'.$normalized['max'];
         }
 
-        if (isset($attrList['pattern'])) {
-            isset($required) || $dataValidate[$attrList['name']][] = 'nullable';
-            // 区切り文字の / だけをエスケープする（すでに \/ と書かれていれば二重化しない）
-            $pattern = preg_replace('~(?<!\\\\)((?:\\\\\\\\)*)/~', '$1\\\\/', $attrList['pattern']);
-            $dataValidate[$attrList['name']][] = 'regex:/'.$pattern.'/';
+        if (isset($normalized['pattern'])) {
+            isset($required) || $dataValidate[$normalized['name']][] = 'nullable';
+            $dataValidate[$normalized['name']][] = 'regex:'.self::buildHtml5RegexRule($normalized['pattern']);
         }
+    }
+
+    /**
+     * HTML5 pattern を Laravel regex ルール用の正規表現へ変換する。
+     * # 区切りにし、末尾の奇数個のバックスラッシュが区切り文字をエスケープしないようにする。
+     */
+    private static function buildHtml5RegexRule(string $pattern): string
+    {
+        $pattern = str_replace('#', '\\#', $pattern);
+        $trailingBackslashes = strlen($pattern) - strlen(rtrim($pattern, '\\'));
+        if ($trailingBackslashes % 2 === 1) {
+            $pattern .= '\\';
+        }
+
+        return '#^(?:'.$pattern.')$#';
     }
 }

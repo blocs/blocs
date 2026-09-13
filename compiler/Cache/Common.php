@@ -7,22 +7,16 @@ class Common
     // attributeの置き換え: ビルド済みタグへ属性を統合する
     public static function mergeAttribute($compiledTag, $attrName, $attrBuff, &$attrList, $noValue = false)
     {
-        // data-attributeと空白のdata-val時（値のない属性）の処理
-        [$attributePrefix, $attributeSuffix] = self::buildAttributeWrapper((bool) $noValue);
+        $attributePrefix = $noValue ? '' : '="';
+        $attributeSuffix = $noValue ? '' : '"';
 
-        $attributeName = $attrName;
-        $attributeBuffer = $attrBuff;
-        $attributeList = &$attrList;
-
-        if (isset($attributeList[$attributeName])) {
-            $compiledTag = self::replaceExistingAttributeValue($compiledTag, $attributeName, $attributeBuffer, $attributeList[$attributeName]);
-        } elseif (self::isSelfClosingTag($compiledTag)) {
-            $compiledTag = self::appendAttributeToSelfClosingTag($compiledTag, $attributeName, $attributeBuffer, $attributePrefix, $attributeSuffix);
+        if (isset($attrList[$attrName])) {
+            $compiledTag = self::replaceExistingAttributeValue($compiledTag, $attrName, $attrBuff, $attrList[$attrName]);
         } else {
-            $compiledTag = self::appendAttributeToStandardTag($compiledTag, $attributeName, $attributeBuffer, $attributePrefix, $attributeSuffix);
+            $compiledTag = self::appendAttribute($compiledTag, $attrName, $attrBuff, $attributePrefix, $attributeSuffix);
         }
 
-        $attributeList[$attributeName] = $attributeBuffer;
+        $attrList[$attrName] = $attrBuff;
 
         return $compiledTag;
     }
@@ -92,6 +86,11 @@ class Common
         $normalizedValueName = preg_replace('/\[[^\]]+\]/', '', $valueName);
         $normalizedValueName = str_replace('->', '', $normalizedValueName);
 
+        // "$"だけでは変数名にならないため弾く
+        if (! strlen(substr($normalizedValueName, 1))) {
+            return false;
+        }
+
         if (is_numeric(substr($normalizedValueName, 1, 1)) || preg_match('/[^a-zA-Z0-9\_]/', substr($normalizedValueName, 1))) {
             return false;
         }
@@ -104,6 +103,11 @@ class Common
     public static function checkFormName($valueName)
     {
         $normalizedValueName = substr($valueName, -2) === '[]' ? substr($valueName, 0, -2) : $valueName;
+
+        // name="[]" のように中身が空になるものは変数名にできないので弾く
+        if (! strlen($normalizedValueName)) {
+            return false;
+        }
 
         if (is_numeric(substr($normalizedValueName, 0, 1)) || preg_match('/[^a-zA-Z0-9\_]/', $normalizedValueName)) {
             return false;
@@ -156,15 +160,6 @@ class Common
         return $condition."<?php echo(\$postAttr); ?>\n";
     }
 
-    private static function buildAttributeWrapper(bool $isValueLess)
-    {
-        if ($isValueLess) {
-            return ['', ''];
-        }
-
-        return ['="', '"'];
-    }
-
     private static function replaceExistingAttributeValue($compiledTag, $attributeName, &$attributeBuffer, $existingAttributeValue)
     {
         if (substr($attributeBuffer, -16) === BLOCS_ENDIF_SCRIPT && strpos($attributeBuffer, '<?php else: ?>') === false) {
@@ -176,45 +171,55 @@ class Common
         return preg_replace($pattern, '${1}'.$attributeBuffer.'${2}', $compiledTag);
     }
 
-    private static function isSelfClosingTag($compiledTag)
+    private static function appendAttribute($compiledTag, $attributeName, $attributeBuffer, $attributePrefix, $attributeSuffix)
     {
-        return substr($compiledTag, -2) === '/>';
-    }
+        $isSelfClosing = substr($compiledTag, -2) === '/>';
+        $trimLength = $isSelfClosing ? 2 : 1;
+        $close = $isSelfClosing ? ' />' : '>';
 
-    private static function appendAttributeToSelfClosingTag($compiledTag, $attributeName, $attributeBuffer, $attributePrefix, $attributeSuffix)
-    {
         $conditionalAttribute = self::buildConditionalAttributeValue($attributeBuffer, " {$attributeName}{$attributePrefix}", $attributeSuffix);
-
         if ($conditionalAttribute !== '') {
-            return rtrim(substr($compiledTag, 0, -2))."{$conditionalAttribute} />";
+            return rtrim(substr($compiledTag, 0, -$trimLength)).$conditionalAttribute.$close;
         }
 
-        return rtrim(substr($compiledTag, 0, -2))." {$attributeName}{$attributePrefix}{$attributeBuffer}{$attributeSuffix} />";
+        return rtrim(substr($compiledTag, 0, -$trimLength))." {$attributeName}{$attributePrefix}{$attributeBuffer}{$attributeSuffix}".$close;
     }
 
-    private static function appendAttributeToStandardTag($compiledTag, $attributeName, $attributeBuffer, $attributePrefix, $attributeSuffix)
+    public static function extractAiClassNames($classAttr): array
     {
-        $conditionalAttribute = self::buildConditionalAttributeValue($attributeBuffer, " {$attributeName}{$attributePrefix}", $attributeSuffix);
-
-        if ($conditionalAttribute !== '') {
-            return rtrim(substr($compiledTag, 0, -1))."{$conditionalAttribute}>";
+        $classList = [];
+        foreach (preg_split("/\s/", $classAttr) as $className) {
+            [$className] = preg_split("/\<\?php/", $className, 2);
+            if (! strncmp($className, 'ai-', 3)) {
+                $classList[] = substr($className, 3);
+            }
         }
 
-        return rtrim(substr($compiledTag, 0, -1))." {$attributeName}{$attributePrefix}{$attributeBuffer}{$attributeSuffix}>";
+        return $classList;
     }
 
     public static function findConvertFunc($convertClass, $convertFunc)
     {
-        if ($convertClass && method_exists($convertClass, $convertFunc)) {
-            return $convertClass.'::'.$convertFunc;
+        return self::findDataFunc($convertClass, $convertFunc, '\Blocs\Data\Convert', 'B008', 'convert');
+    }
+
+    public static function findFilterFunc($filterClass, $filterFunc)
+    {
+        return self::findDataFunc($filterClass, $filterFunc, '\Blocs\Data\Filter', 'B010', 'filter');
+    }
+
+    private static function findDataFunc($class, $func, $defaultClass, $errorCode, $kind)
+    {
+        if ($class && method_exists($class, $func)) {
+            return $class.'::'.$func;
         }
-        if (method_exists('\Blocs\Data\Convert', $convertFunc)) {
-            return '\Blocs\Data\Convert::'.$convertFunc;
+        if (method_exists($defaultClass, $func)) {
+            return $defaultClass.'::'.$func;
         }
-        if (function_exists($convertFunc)) {
-            return $convertFunc;
+        if (function_exists($func)) {
+            return $func;
         }
 
-        throw new \RuntimeException('B008: Can not find convert function ('.$convertFunc.')');
+        throw new \RuntimeException($errorCode.': Can not find '.$kind.' function ('.$func.')');
     }
 }
