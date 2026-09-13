@@ -173,22 +173,26 @@ trait CompileCommentTrait
             $htmlBuff = Loop::loop($attrList, count($this->tagCounter));
             $this->endloop[] = $attrList;
 
+            // buildArrayFormName()がarray_reverse()で外側から順に並べ直すため、
+            // タグ記法と同じく新しいループを先頭へ積む
             $this->registerTagCounter([
                 'tag' => BLOCS_DATA_LOOP,
                 'array_form' => substr($attrList[BLOCS_DATA_LOOP], 1),
-            ], false);
+            ]);
         }
         if (isset($attrList[BLOCS_DATA_ENDLOOP]) && ! empty($this->endloop)) {
             $htmlBuff = Loop::endloop(array_pop($this->endloop));
 
-            $target = '';
+            // 先頭へ積むようになったので、最初に見つかった内側のループを閉じる
+            $target = null;
             foreach ($this->tagCounter as $num => $buff) {
                 if (! isset($buff['array_form']) || $buff['tag'] !== BLOCS_DATA_LOOP) {
                     continue;
                 }
                 $target = $num;
+                break;
             }
-            if (strlen($target)) {
+            if (isset($target)) {
                 unset($this->tagCounter[$target]);
                 $this->tagCounter = array_merge($this->tagCounter);
             }

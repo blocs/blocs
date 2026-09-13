@@ -66,4 +66,24 @@ class ViewCacheTest extends TestCase
         $this->assertSame(0644, fileperms($configPath) & 0777);
         $this->assertIsArray(json_decode((string) file_get_contents($configPath), true));
     }
+
+    #[Test, RunInSeparateProcess]
+    public function generate_does_not_include_compiled_path_taken_from_template_values(): void
+    {
+        $dir = sys_get_temp_dir().'/blocs-view-extract-'.bin2hex(random_bytes(4));
+        mkdir($dir, 0755, true);
+        $template = $dir.'/extract.html';
+        file_put_contents($template, '<span data-val="$word">x</span>');
+
+        $hijack = $dir.'/hijack.php';
+        file_put_contents($hijack, '<?php echo "HIJACKED";');
+
+        $html = (new View($template))->generate([
+            'word' => 'OK',
+            'compiledPath' => $hijack,
+        ]);
+
+        $this->assertSame('<span>OK</span>', trim($html));
+        $this->assertStringNotContainsString('HIJACKED', $html);
+    }
 }

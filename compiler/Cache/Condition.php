@@ -43,15 +43,21 @@ class Condition
         }
 
         if (isset($attrList[BLOCS_DATA_NONE])) {
-            return self::generateDataNoneScript($attrList);
+            self::assertConditionValue(BLOCS_DATA_NONE, $attrList[BLOCS_DATA_NONE]);
+
+            return "<?php if(empty({$attrList[BLOCS_DATA_NONE]})): ?>\n";
         }
 
         if (isset($attrList[BLOCS_DATA_IF])) {
-            return self::generateDataIfScript($attrList);
+            self::assertConditionValue(BLOCS_DATA_IF, $attrList[BLOCS_DATA_IF]);
+
+            return "<?php if({$attrList[BLOCS_DATA_IF]}): ?>\n";
         }
 
         if (isset($attrList[BLOCS_DATA_UNLESS])) {
-            return self::generateDataUnlessScript($attrList);
+            self::assertConditionValue(BLOCS_DATA_UNLESS, $attrList[BLOCS_DATA_UNLESS]);
+
+            return "<?php if(!({$attrList[BLOCS_DATA_UNLESS]})): ?>\n";
         }
 
         return '';
@@ -66,21 +72,21 @@ class Condition
                 : "<?php if(true): ?>\n";
         }
 
+        self::assertConditionValue(BLOCS_DATA_EXIST, $attrList[BLOCS_DATA_EXIST]);
+
         return "<?php if(!empty({$attrList[BLOCS_DATA_EXIST]})): ?>\n";
     }
 
-    private static function generateDataNoneScript($attrList)
+    /**
+     * 条件が空のままスクリプトを組み立てると if() のような不正なPHPになるため、
+     * コンパイル時に data-loop などと同じ形式のエラーとして知らせる
+     */
+    private static function assertConditionValue($attrName, $attrValue): void
     {
-        return "<?php if(empty({$attrList[BLOCS_DATA_NONE]})): ?>\n";
-    }
+        if (strlen(trim((string) $attrValue))) {
+            return;
+        }
 
-    private static function generateDataIfScript($attrList)
-    {
-        return "<?php if({$attrList[BLOCS_DATA_IF]}): ?>\n";
-    }
-
-    private static function generateDataUnlessScript($attrList)
-    {
-        return "<?php if(!({$attrList[BLOCS_DATA_UNLESS]})): ?>\n";
+        throw new \RuntimeException('B002: Invalid condition "'.$attrName.'" ('.$attrValue.')');
     }
 }

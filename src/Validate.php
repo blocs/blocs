@@ -70,8 +70,8 @@ class Validate
             return [[], []];
         }
 
-        $config = json_decode(file_get_contents($configPath), true);
-        if (! isset($config['upload'][$formName])) {
+        $config = Common::loadConfigFile($configPath);
+        if (! is_array($config) || ! isset($config['upload'][$formName])) {
             return [[], []];
         }
 

@@ -254,7 +254,10 @@ END_of_HTML;
         foreach ($rawString as $buff) {
             $resultBuff .= '<?';
             if (strpos($buff, '?>') === false) {
+                // 閉じタグがないので囲み直せない。そのまま出力して次へ進む
                 $resultBuff .= $buff;
+
+                continue;
             }
 
             if (strncmp($buff, 'php', 3) && strncmp($buff, '=', 1)) {

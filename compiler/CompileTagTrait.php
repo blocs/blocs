@@ -17,8 +17,6 @@ trait CompileTagTrait
     {
         $tagName = $htmlBuff['tag'];
         $attrList = $htmlBuff['attribute'];
-        $quotesList = $htmlBuff['quotes'];
-        $type = isset($attrList['type']) ? strtolower($attrList['type']) : '';
 
         // データ属性を取り除いたタグの文字列を生成する
         $compiledTag = self::removeDataAttributes($htmlBuff['raw'], $attrList);
@@ -96,17 +94,7 @@ trait CompileTagTrait
         }
 
         if (isset($attrList['class']) || isset($attrList['data-bs-toggle'])) {
-            $classList = [];
-            if (isset($attrList['class'])) {
-                $classNameList = preg_split("/\s/", $attrList['class']);
-                foreach ($classNameList as $className) {
-                    [$className] = preg_split("/\<\?php/", $className, 2);
-                    if (! strncmp($className, 'ai-', 3)) {
-                        $classList[] = substr($className, 3);
-                    }
-                }
-            }
-
+            $classList = isset($attrList['class']) ? Common::extractAiClassNames($attrList['class']) : [];
             isset($attrList['data-bs-toggle']) && $classList[] = $attrList['data-bs-toggle'];
 
             // auto include候補にクラスを追加する
@@ -142,15 +130,9 @@ trait CompileTagTrait
 
     /* タグ記法カウンターのメソッド */
 
-    private function registerTagCounter($tagCounter, $unshift = true)
+    private function registerTagCounter($tagCounter)
     {
         isset($tagCounter['type']) && $tagCounter['type'] === 'ignore' && $this->ignoreFlg = true;
-
-        if (! $unshift) {
-            $this->tagCounter[] = $tagCounter;
-
-            return;
-        }
 
         array_unshift($this->tagCounter, $tagCounter);
     }

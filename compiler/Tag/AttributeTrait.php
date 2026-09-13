@@ -73,23 +73,8 @@ trait AttributeTrait
     private function buildFilterStatement($filter)
     {
         [$filterClass, $filterFunc, $filterArg] = Common::checkFunc($filter);
-        $filterFunc = self::resolveFilterCallable($filterClass, $filterFunc);
+        $filterFunc = Common::findFilterFunc($filterClass, $filterFunc);
 
         return "\$value = {$filterFunc}(\$value{$filterArg});\n";
-    }
-
-    private static function resolveFilterCallable($filterClass, $filterFunc)
-    {
-        if ($filterClass && method_exists($filterClass, $filterFunc)) {
-            return $filterClass.'::'.$filterFunc;
-        }
-        if (method_exists('\Blocs\Data\Filter', $filterFunc)) {
-            return '\Blocs\Data\Filter::'.$filterFunc;
-        }
-        if (function_exists($filterFunc)) {
-            return $filterFunc;
-        }
-
-        throw new \RuntimeException('B010: Can not find filter function ('.$filterFunc.')');
     }
 }

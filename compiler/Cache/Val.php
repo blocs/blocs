@@ -158,7 +158,7 @@ class Val
         if (empty($attrList[BLOCS_DATA_ASSIGN])) {
             if (empty($quotesList[$attrName])) {
                 // 変数パターンの固定値を追加
-                return $outputBuffer."<?php echo({$attrList[$attrName]}); ?>\n";
+                return $outputBuffer.'<?php echo(htmlspecialchars((string)('.$attrList[$attrName]."), ENT_QUOTES, 'UTF-8')); ?>\n";
             } else {
                 return $outputBuffer.$attrList[$attrName];
             }
