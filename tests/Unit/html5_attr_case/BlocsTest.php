@@ -17,6 +17,7 @@ class BlocsTest extends BlocsTestCase
         $this->generate();
         [$rules] = Validate::get($this->templatePath());
 
-        $this->assertSame(['required', 'numeric', 'min:1'], $rules['amount']);
+        // step 省略なので整数のみ（type/属性名の大文字小文字は無視される）
+        $this->assertSame(['required', 'integer', 'min:1'], $rules['amount']);
     }
 }
