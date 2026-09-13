@@ -8,6 +8,12 @@ class Validate
 
     private static $config;
 
+    public static function flush(): void
+    {
+        self::$path = null;
+        self::$config = null;
+    }
+
     public static function get($templateName, $request = null)
     {
         // 設定ファイルを読み込みテンプレートの検証設定を確定

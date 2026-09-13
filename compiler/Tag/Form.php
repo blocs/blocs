@@ -10,8 +10,8 @@ class Form
     // フォーム部品に値を設定する
     public static function value($compiledTag, &$attrList, $tagName = '', &$tagCounter = null, &$htmlArray = null)
     {
-        $valueBuff = "<?php if(isset(\${$attrList['name']})): ?>\n";
-        $valueBuff .= "<?php echo(htmlspecialchars(\${$attrList['name']}, ENT_QUOTES, 'UTF-8')); ?>\n";
+        $valueBuff = "<?php if(isset(\${$attrList['name']}) && !is_array(\${$attrList['name']}) && !is_object(\${$attrList['name']})): ?>\n";
+        $valueBuff .= "<?php echo(htmlspecialchars((string) \${$attrList['name']}, ENT_QUOTES, 'UTF-8')); ?>\n";
 
         if ($tagName) {
             // textareaの場合は閉じタグ直前にデフォルト値を差し込む

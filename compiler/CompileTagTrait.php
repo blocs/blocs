@@ -83,7 +83,7 @@ trait CompileTagTrait
         if ($tagName === 'script' || $tagName === 'style') {
             $this->scriptCounter++;
         } elseif ($tagName === '/script' || $tagName === '/style') {
-            $this->scriptCounter--;
+            $this->scriptCounter > 0 && $this->scriptCounter--;
         }
 
         if ($this->scriptCounter > 0) {
