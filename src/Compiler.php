@@ -18,11 +18,7 @@ class Compiler extends ViewCompiler implements CompilerInterface
         }
 
         // includeファイルの更新を確認し最新状態を担保する
-        if ($this->hasUpdatedInclude($path, $config)) {
-            return true;
-        }
-
-        return false;
+        return Common::includesAreStale($path, $config);
     }
 
     public function compile($path)
@@ -42,31 +38,6 @@ class Compiler extends ViewCompiler implements CompilerInterface
             $this->getCompiledPath($path),
             $compiledContents
         );
-    }
-
-    private function hasUpdatedInclude($path, array $config)
-    {
-        if (! isset($config['include'][$path]) || ! is_array($config['include'][$path])) {
-            return true;
-        }
-
-        $timestamp = $config['timestamp'][$path] ?? null;
-
-        foreach ($config['include'][$path] as $includeFile) {
-            if (! file_exists($includeFile)) {
-                return true;
-            }
-
-            if (! isset($timestamp)) {
-                return true;
-            }
-
-            if (filemtime($includeFile) > $timestamp) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**

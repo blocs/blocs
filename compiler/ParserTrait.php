@@ -6,8 +6,6 @@ use Blocs\Compiler\Cache\Common;
 
 trait ParserTrait
 {
-    private static $deleteAttribute = [];
-
     private static function appendAttributeEntry(&$attrList, &$quotesList, &$rawString, &$parsedHtml, $attrName, $attrValueList, $commentParse)
     {
         // 属性値を抽出

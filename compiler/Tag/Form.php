@@ -87,6 +87,10 @@ END_of_HTML;
 
         $optionArray = Parser::parse($optionBuff);
         $optionArray[] = $compiledTag;
+
+        // 差し込んだoptionの処理が終わったらselect名を破棄させる
+        $optionArray[] = '{{SELECT_END}}';
+
         $htmlArray = array_merge($optionArray, $htmlArray);
     }
 }

@@ -57,17 +57,16 @@ class View
     {
         empty($val) && $val = [];
 
-        // キャッシュを確認してコンパイル済みテンプレートのパスを取得
         $compiledPath = $this->resolveCompiledPath();
 
-        // 引数をセット
-        extract($val);
+        $renderedHtml = (static function (array $__blocs_val, string $__blocs_compiled): string {
+            extract($__blocs_val, EXTR_SKIP);
+            ob_start();
+            include $__blocs_compiled;
 
-        ob_start();
-        include $compiledPath;
-        $renderedHtml = ob_get_clean();
+            return (string) ob_get_clean();
+        })($val, $compiledPath);
 
-        // HTMLの整形処理を実行
         $withFixer && $renderedHtml = $this->formatHtmlOutput($renderedHtml);
 
         return $renderedHtml;
@@ -126,17 +125,7 @@ class View
             return true;
         }
 
-        if (! isset($this->config['include'][$path]) || ! is_array($this->config['include'][$path])) {
-            return true;
-        }
-
-        foreach ($this->config['include'][$path] as $includeFile) {
-            if (! file_exists($includeFile) || filemtime($includeFile) > ($this->config['timestamp'][$path] ?? 0)) {
-                return true;
-            }
-        }
-
-        return false;
+        return Common::includesAreStale($path, $this->config);
     }
 
     private function formatHtmlOutput($outputHtml)
@@ -148,12 +137,14 @@ class View
         }
 
         // コメントと余分な改行を整理
-        $contents = preg_split("/<\s*(textarea|pre)/si", $outputHtml, -1, PREG_SPLIT_DELIM_CAPTURE);
+        // script・styleの中身はHTMLコメントではないため、textarea・preと同じく整形の対象外にする
+        $keepTagList = ['textarea', 'pre', 'script', 'style'];
+        $contents = preg_split('/<\s*('.implode('|', $keepTagList).')\b/si', $outputHtml, -1, PREG_SPLIT_DELIM_CAPTURE);
 
         $formattedHtml = '';
         $replaceTag = '';
         foreach ($contents as $content) {
-            if (in_array(strtolower($content), ['textarea', 'pre'])) {
+            if (in_array(strtolower($content), $keepTagList, true)) {
                 $formattedHtml .= '<'.$content;
                 empty($replaceTag) && $replaceTag = $content;
 

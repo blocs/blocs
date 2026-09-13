@@ -41,6 +41,13 @@ class Convert
     // ファイルサイズを人が読みやすい単位に換算して表示
     public static function uploadsize($str)
     {
+        if (! is_numeric($str)) {
+            // 数値以外はそのまま返す（number()と同じ方針）
+            return $str;
+        }
+
+        $str = $str + 0;
+
         $label = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
         for ($i = 0; $str >= 1024 && $i < (count($label) - 1); $str /= 1024, $i++) {
         }

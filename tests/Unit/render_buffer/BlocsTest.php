@@ -24,6 +24,13 @@ class BlocsTest extends BlocsTestCase
         $this->assertSame('<span>OK</span>', trim($compiler->render('<span data-val="$word">x</span>', ['word' => 'OK'])));
         $this->assertSame($baseLevel, ob_get_level());
 
+        $prefixHtml = trim($compiler->render('<span data-val="$word" data-prefix=$prefix>x</span>', [
+            'word' => 'OK',
+            'prefix' => '<script>x</script>',
+        ]));
+        $this->assertStringNotContainsString('<script>', $prefixHtml);
+        $this->assertStringContainsString('&lt;script&gt;', $prefixHtml);
+
         // eval 中に例外が出てもバッファを積み残さない
         $thrown = null;
         try {
@@ -34,5 +41,15 @@ class BlocsTest extends BlocsTestCase
 
         $this->assertNotNull($thrown, 'render() が例外を投げませんでした');
         $this->assertSame($baseLevel, ob_get_level(), '出力バッファが積み残されています');
+
+        ob_start();
+        $this->assertSame('<span>OK</span>', trim($compiler->render('<span data-val="$word">x</span>', [
+            'word' => 'OK',
+            'baseObLevel' => 0,
+            '__blocs_compiled' => '<?php echo "hijacked";',
+        ])));
+        $this->assertSame($baseLevel + 1, ob_get_level(), 'extract() が出力バッファを破棄しています');
+        ob_end_clean();
+        $this->assertSame($baseLevel, ob_get_level());
     }
 }
