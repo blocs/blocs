@@ -220,7 +220,7 @@ trait FormTrait
 
         if (isset($normalized['type']) && $normalized['type'] === 'number') {
             isset($required) || $dataValidate[$normalized['name']][] = 'nullable';
-            $dataValidate[$normalized['name']][] = 'numeric';
+            $dataValidate[$normalized['name']][] = self::acceptsIntegerOnly($normalized['step'] ?? null) ? 'integer' : 'numeric';
 
             isset($normalized['min']) && $dataValidate[$normalized['name']][] = 'min:'.$normalized['min'];
             isset($normalized['max']) && $dataValidate[$normalized['name']][] = 'max:'.$normalized['max'];
@@ -230,6 +230,43 @@ trait FormTrait
             isset($required) || $dataValidate[$normalized['name']][] = 'nullable';
             $dataValidate[$normalized['name']][] = 'regex:'.self::buildHtml5RegexRule($normalized['pattern']);
         }
+    }
+
+    /**
+     * HTML5 の step から整数のみを受け付けるかを判定する。
+     * ブラウザの step 判定（HTML Standard）に合わせ、小数を許容するのは "any" と正の小数 step のときだけ。
+     * step 省略・空・解釈できない値・0以下は、いずれも既定の step=1 に戻るため整数のみになる。
+     *
+     * @param  string|int|float|null  $step
+     */
+    private static function acceptsIntegerOnly($step): bool
+    {
+        if (! isset($step)) {
+            // step を書かない場合の既定は step=1
+            return true;
+        }
+
+        $step = trim((string) $step);
+
+        if (strcasecmp($step, 'any') === 0) {
+            // "any" だけがステップの制約なし（大文字小文字は区別しない）
+            return false;
+        }
+
+        if (! is_numeric($step)) {
+            // 解釈できない値は既定の step=1 に戻る
+            return true;
+        }
+
+        $step = (float) $step;
+
+        if ($step <= 0) {
+            // 0 以下も既定の step=1 に戻る
+            return true;
+        }
+
+        // int へキャストすると巨大な step で桁あふれするため fmod で判定する
+        return fmod($step, 1.0) === 0.0;
     }
 
     /**

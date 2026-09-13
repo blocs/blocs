@@ -18,7 +18,7 @@ class BlocsTest extends BlocsTestCase
         [$rules] = Validate::get($this->templatePath());
 
         $this->assertArrayHasKey('rows.*.price', $rules);
-        $this->assertSame(['max:10', 'required', 'numeric', 'min:1'], $rules['rows.*.price']);
+        $this->assertSame(['max:10', 'required', 'integer', 'min:1'], $rules['rows.*.price']);
         foreach (array_keys($rules) as $formName) {
             $this->assertStringNotContainsString('<?php', $formName);
         }
