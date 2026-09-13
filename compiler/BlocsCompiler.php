@@ -25,6 +25,8 @@ class BlocsCompiler
     use CompileCommentTrait;
     use CompileTagTrait;
 
+    private static int $bladeOffDepth = 0;
+
     // テンプレートファイルをコンパイルする
     public function compile($templatePath)
     {
@@ -41,22 +43,49 @@ class BlocsCompiler
     {
         $this->init();
 
-        // Bladeディレクティブを無効化する
-        defined('BLOCS_BLADE_OFF') || define('BLOCS_BLADE_OFF', true);
+        self::$bladeOffDepth++;
 
-        $this->compileTemplate($writeBuff, __FILE__);
+        // eval 中に例外が出てもバッファを積み残さないよう、開始時の深さを覚えておく
+        $baseObLevel = ob_get_level();
 
-        // 渡された引数を展開する
-        extract($val);
+        try {
+            $this->compileTemplate($writeBuff, __FILE__);
 
-        ob_start();
-        eval(substr($this->compiledTemplate, 5));
-        $writeBuff = ob_get_clean();
+            // 渡された引数を展開する
+            extract($val);
+
+            ob_start();
+            eval(substr($this->compiledTemplate, 5));
+            $writeBuff = ob_get_clean();
+        } finally {
+            self::$bladeOffDepth--;
+
+            while (ob_get_level() > $baseObLevel) {
+                ob_end_clean();
+            }
+        }
 
         // 余分な改行を削除する
         $writeBuff = preg_replace("/\n[\s\n]+\n/", "\n\n", $writeBuff);
 
         return $writeBuff;
+    }
+
+    /**
+     * render() 中だけ Blade ディレクティブを無効化する。
+     * プロセス定数にしないことで、Octane でも後続のコンパイルが壊れない。
+     */
+    public static function isBladeOff(): bool
+    {
+        return self::$bladeOffDepth > 0;
+    }
+
+    /**
+     * 常駐ワーカーでリクエストをまたいで残らないよう、ネストカウンタを戻す
+     */
+    public static function flush(): void
+    {
+        self::$bladeOffDepth = 0;
     }
 
     // テンプレートの設定を取得する

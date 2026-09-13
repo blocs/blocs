@@ -2,6 +2,7 @@
 
 namespace Blocs\Compiler\Cache;
 
+use Blocs\Compiler\BlocsCompiler;
 use Illuminate\Support\Str;
 
 class Loop
@@ -85,7 +86,7 @@ END_of_HTML;
     // テーブルフォームのためにloopIndexを付与する
     private static function buildLoopOpening($attrList, $tagCounterNum, $singularName)
     {
-        if (! defined('BLOCS_NO_LARAVEL') && ! defined('BLOCS_BLADE_OFF')) {
+        if (! defined('BLOCS_NO_LARAVEL') && ! defined('BLOCS_BLADE_OFF') && ! BlocsCompiler::isBladeOff()) {
             // Laravelが利用可能な場合の処理
             return <<< END_of_HTML
     @foreach({$attrList[BLOCS_DATA_LOOP]} as \$loopIndex{$tagCounterNum} => \${$singularName})
@@ -110,7 +111,7 @@ END_of_HTML;
 
     private static function buildLoopClosing()
     {
-        if (! defined('BLOCS_NO_LARAVEL') && ! defined('BLOCS_BLADE_OFF')) {
+        if (! defined('BLOCS_NO_LARAVEL') && ! defined('BLOCS_BLADE_OFF') && ! BlocsCompiler::isBladeOff()) {
             // Laravelが利用可能な場合の終了処理
             return <<< 'END_of_HTML'
     @endforeach

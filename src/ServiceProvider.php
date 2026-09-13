@@ -4,6 +4,7 @@ namespace Blocs;
 
 use Illuminate\View\Engines\CompilerEngine;
 use Illuminate\View\ViewServiceProvider;
+use Laravel\Octane\Events\RequestReceived;
 
 class ServiceProvider extends ViewServiceProvider
 {
@@ -21,26 +22,6 @@ class ServiceProvider extends ViewServiceProvider
         $this->registerStaticStateFlush();
     }
 
-    /**
-     * 常駐ワーカー（Laravel Octane）でリクエスト開始時に静的な状態を初期化する。
-     *
-     * Common / Option はテンプレート設定と動的選択肢を静的プロパティに保持しており、
-     * PHP-FPM ではリクエスト終了とともに消えるが、Octane ではワーカーが生きている間残り続ける。
-     * Octane が導入されていない環境では何もしない。
-     */
-    protected function registerStaticStateFlush()
-    {
-        $requestReceived = 'Laravel\\Octane\\Events\\RequestReceived';
-        if (! class_exists($requestReceived)) {
-            return;
-        }
-
-        $this->app['events']->listen($requestReceived, function () {
-            Common::flush();
-            Option::flush();
-        });
-    }
-
     public function registerBlocsCompiler()
     {
         $this->app->singleton('blocs.compiler', fn ($app) => new Compiler($app['files'], $app['config']['view.compiled']));
@@ -53,5 +34,23 @@ class ServiceProvider extends ViewServiceProvider
             'blocs',
             fn () => new CompilerEngine($this->app['blocs.compiler'])
         );
+    }
+
+    /**
+     * 常駐ワーカー（Laravel Octane）ではリクエストをまたいで static が残るため、
+     * リクエスト開始時にテンプレート設定と動的選択肢を初期化する。Octane 未導入なら何もしない。
+     */
+    protected function registerStaticStateFlush()
+    {
+        if (! class_exists(RequestReceived::class)) {
+            return;
+        }
+
+        $this->app['events']->listen(RequestReceived::class, function () {
+            Common::flush();
+            Option::flush();
+            Validate::flush();
+            Compiler\BlocsCompiler::flush();
+        });
     }
 }

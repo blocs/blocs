@@ -35,8 +35,7 @@ class Compiler extends ViewCompiler implements CompilerInterface
         $blocsConfig = $blocsCompiler->getConfig();
         Common::writeConfig($path, $blocsConfig);
 
-        // Bladeを適用して最終的なPHPコードへ変換する
-        $bladeCompiler = new BladeCompiler($this->files, $this->cachePath);
+        $bladeCompiler = $this->resolveBladeCompiler();
         $compiledContents = $bladeCompiler->compileString($compiledContents);
 
         $this->files->put(
@@ -48,7 +47,7 @@ class Compiler extends ViewCompiler implements CompilerInterface
     private function hasUpdatedInclude($path, array $config)
     {
         if (! isset($config['include'][$path]) || ! is_array($config['include'][$path])) {
-            return false;
+            return true;
         }
 
         $timestamp = $config['timestamp'][$path] ?? null;
@@ -68,5 +67,17 @@ class Compiler extends ViewCompiler implements CompilerInterface
         }
 
         return false;
+    }
+
+    /**
+     * アプリに登録された Blade コンパイラを使う（カスタムディレクティブ / @vite などを引き継ぐ）
+     */
+    private function resolveBladeCompiler(): BladeCompiler
+    {
+        if (function_exists('app') && app()->bound('blade.compiler')) {
+            return app('blade.compiler');
+        }
+
+        return new BladeCompiler($this->files, $this->cachePath);
     }
 }

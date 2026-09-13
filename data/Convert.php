@@ -2,6 +2,8 @@
 
 namespace Blocs\Data;
 
+use Blocs\Common;
+
 // data-convertを指定して、プログラムから渡されたデータを表示前に指定した形式に変換
 class Convert
 {
@@ -18,7 +20,7 @@ class Convert
     // 文字列全体を伏字に変換
     public static function hidden($str)
     {
-        return str_repeat('*', strlen($str));
+        return str_repeat('*', mb_strlen((string) $str));
     }
 
     // 日付をフォーマットし、日本語の曜日名に置き換えて表示
@@ -56,12 +58,13 @@ class Convert
 
         $prefix = self::resolvePrefix($prefix);
         $classAttribute = self::buildClassAttribute($class);
-        $downloadUrl = route($prefix.'.download', ['filename' => $file['filename']]).'?'.time();
+        $downloadUrl = htmlspecialchars(route($prefix.'.download', ['filename' => $file['filename']]).'?'.time(), ENT_QUOTES, 'UTF-8');
+        $displayName = htmlspecialchars((string) ($file['name'] ?? ''), ENT_QUOTES, 'UTF-8');
         if (! empty($file['thumbnail'])) {
-            $file['name'] = "<img src='{$downloadUrl}' {$classAttribute}/>";
+            $displayName = "<img src='{$downloadUrl}' {$classAttribute}/>";
         }
 
-        return "<a href='{$downloadUrl}' {$classAttribute}>{$file['name']}</a>";
+        return "<a href='{$downloadUrl}' {$classAttribute}>{$displayName}</a>";
     }
 
     // アップロードファイルのサムネイル画像を生成して表示
@@ -74,7 +77,7 @@ class Convert
 
         $prefix = self::resolvePrefix($prefix);
         $classAttribute = self::buildClassAttribute($class);
-        $thumbnailUrl = route($prefix.'.thumbnail', ['filename' => $file['filename'], 'size' => 'thumbnail']);
+        $thumbnailUrl = htmlspecialchars(route($prefix.'.thumbnail', ['filename' => $file['filename'], 'size' => 'thumbnail']), ENT_QUOTES, 'UTF-8');
 
         return "<img src='{$thumbnailUrl}' {$classAttribute}/>";
     }
@@ -99,6 +102,7 @@ class Convert
         $str = str_replace(["\r\n", "\r", "\n"], '<br />', $str);
 
         if ($target) {
+            $target = htmlspecialchars((string) $target, ENT_QUOTES, 'UTF-8');
             $replace = "<a href='$1' target='{$target}'>$1</a>";
         } else {
             $replace = "<a href='$1'>$1</a>";
@@ -117,13 +121,6 @@ class Convert
     private static function translateWeekdayLabels($date)
     {
         $week = [
-            'Sun' => '日',
-            'Mon' => '月',
-            'Tue' => '火',
-            'Wed' => '水',
-            'Thu' => '木',
-            'Fri' => '金',
-            'Sat' => '土',
             'Sunday' => '日曜日',
             'Monday' => '月曜日',
             'Tuesday' => '火曜日',
@@ -131,6 +128,13 @@ class Convert
             'Thursday' => '木曜日',
             'Friday' => '金曜日',
             'Saturday' => '土曜日',
+            'Sun' => '日',
+            'Mon' => '月',
+            'Tue' => '火',
+            'Wed' => '水',
+            'Thu' => '木',
+            'Fri' => '金',
+            'Sat' => '土',
         ];
 
         foreach ($week as $key => $value) {
@@ -152,7 +156,15 @@ class Convert
 
     private static function resolvePrefix($prefix)
     {
-        return $prefix ?: prefix();
+        if ($prefix) {
+            return $prefix;
+        }
+
+        if (function_exists('prefix')) {
+            return prefix();
+        }
+
+        return Common::routePrefix();
     }
 
     private static function buildClassAttribute($class)
@@ -161,6 +173,6 @@ class Convert
             return '';
         }
 
-        return 'class="'.$class.'"';
+        return 'class="'.htmlspecialchars((string) $class, ENT_QUOTES, 'UTF-8').'"';
     }
 }

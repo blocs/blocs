@@ -56,7 +56,7 @@ class Filter
     {
         $normalized = self::convertKanaByOption($str, 'ras');
         $normalized = self::normalizeHyphenVariants($normalized);
-        if (strlen($normalized) == 7 || preg_match('/^[0-9]+$/', $normalized)) {
+        if (preg_match('/^[0-9]{7}$/', $normalized)) {
             $normalized = substr($normalized, 0, 3).'-'.substr($normalized, 3);
         }
 

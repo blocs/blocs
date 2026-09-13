@@ -121,7 +121,7 @@ class Val
             $outputBuffer .= "<?php {$attrList[BLOCS_DATA_ASSIGN]} = ";
         }
 
-        $outputBuffer .= '\Blocs\Lang::get("'.$attrList[BLOCS_DATA_NOTICE].'")';
+        $outputBuffer .= '\Blocs\Lang::get('.implode(" . ':' . ", $noticeArgList).')';
 
         if (! $usesAssignment) {
             if (! (isset($attrList[BLOCS_DATA_CONVERT]) && $attrList[BLOCS_DATA_CONVERT] === 'raw')) {
