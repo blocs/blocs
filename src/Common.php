@@ -411,7 +411,9 @@ class Common
     {
         $validateUpload = [];
         foreach ($blocsConfig->upload as $formName) {
+            // ai-upload は validate 無しでも upload に登録する（未宣言フィールド拒否と区別するため）
             unset($validateUpload[$formName]);
+            $validateUpload[$formName] = [];
             $matchedValidate = self::pullValidateByFormName($blocsConfig->validate, $formName);
 
             if (isset($blocsConfig->validate[$matchedValidate])) {

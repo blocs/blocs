@@ -62,17 +62,22 @@ class Validate
         return $messages;
     }
 
-    public static function upload($templateDir, $formName)
+    /**
+     * アップロード項目のバリデーションを返す。
+     *
+     * @return array{0: array, 1: array}|null 未宣言の name は null（呼び出し側で拒否）。宣言済みで validate 無しは [[], []]。
+     */
+    public static function upload($templateName, $formName)
     {
-        $templateDir = Common::getPath($templateDir);
-        $configPath = Common::getConfigPath($templateDir);
-        if (! is_file($configPath)) {
-            return [[], []];
+        $resolvedDir = Common::getPath($templateName);
+        if ($resolvedDir === '') {
+            return null;
         }
 
-        $config = Common::loadConfigFile($configPath);
-        if (! is_array($config) || ! isset($config['upload'][$formName])) {
-            return [[], []];
+        $configPath = Common::getConfigPath($resolvedDir);
+        $config = self::resolveUploadConfig($templateName, $configPath, $formName);
+        if ($config === null) {
+            return null;
         }
 
         if (isset($config['upload'][$formName]['validate'])) {
@@ -92,6 +97,45 @@ class Validate
         $uploadValidate = self::resolveRuleInstances($uploadValidate, $uploadMessage);
 
         return [$uploadValidate, $uploadMessage];
+    }
+
+    /**
+     * viewPrefix 配下の設定 JSON を取得する。未生成・対象 upload 未登録なら create/edit をコンパイルして再取得する。
+     */
+    private static function resolveUploadConfig(string $templateName, string $configPath, string $formName): ?array
+    {
+        $config = is_file($configPath) ? Common::loadConfigFile($configPath) : null;
+        if (is_array($config) && isset($config['upload'][$formName])) {
+            return $config;
+        }
+
+        self::ensureUploadTemplatesCompiled($templateName);
+
+        $config = Common::loadConfigFile($configPath);
+        if (! is_array($config) || ! isset($config['upload'][$formName])) {
+            return null;
+        }
+
+        return $config;
+    }
+
+    private static function ensureUploadTemplatesCompiled(string $templateName): void
+    {
+        foreach ([$templateName.'.create', $templateName.'.edit', $templateName.'.index'] as $candidate) {
+            $path = Common::getPath($candidate);
+            if ($path === '' || ! is_file($path)) {
+                continue;
+            }
+
+            $config = Common::readConfig($path);
+            if (isset($config['timestamp'][$path])) {
+                continue;
+            }
+
+            $compiler = new Compiler\BlocsCompiler;
+            $compiler->compile($path);
+            Common::writeConfig($path, $compiler->getConfig());
+        }
     }
 
     public static function filter($templateName, $requestAll)
