@@ -11,6 +11,34 @@ class Validate
     // メッセージコードは「:」区切りのため、:attribute を直接は渡せない
     private const ATTRIBUTE_TOKEN = '{attribute}';
 
+    // カスタムルールのクラスを探す名前空間
+    private static string $ruleNamespace = 'App\\Rules';
+
+    /**
+     * アップロード項目を宣言しているテンプレート名（viewPrefix からの相対名）
+     *
+     * @var list<string>
+     */
+    private static array $uploadTemplateNames = ['create', 'edit', 'index'];
+
+    /**
+     * カスタムルールのクラスを探す名前空間を変更する（既定は App\Rules）
+     */
+    public static function useRuleNamespace(string $namespace): void
+    {
+        self::$ruleNamespace = trim($namespace, '\\');
+    }
+
+    /**
+     * アップロード項目を宣言しているテンプレート名を変更する（既定は create / edit / index）
+     *
+     * @param  list<string>  $templateNames
+     */
+    public static function useUploadTemplateNames(array $templateNames): void
+    {
+        self::$uploadTemplateNames = array_values($templateNames);
+    }
+
     public static function flush(): void
     {
         self::$path = null;
@@ -141,37 +169,24 @@ class Validate
      */
     private static function resolveUploadConfig(string $templateName, string $configPath, string $formName): ?array
     {
-        $config = is_file($configPath) ? Common::loadConfigFile($configPath) : null;
-        if (is_array($config) && isset($config['upload'][$formName])) {
+        $config = Common::loadConfigFile($configPath);
+        if (isset($config['upload'][$formName])) {
             return $config;
         }
 
         self::ensureUploadTemplatesCompiled($templateName);
 
         $config = Common::loadConfigFile($configPath);
-        if (! is_array($config) || ! isset($config['upload'][$formName])) {
-            return null;
-        }
 
-        return $config;
+        return isset($config['upload'][$formName]) ? $config : null;
     }
 
     private static function ensureUploadTemplatesCompiled(string $templateName): void
     {
-        foreach ([$templateName.'.create', $templateName.'.edit', $templateName.'.index'] as $candidate) {
-            $path = Common::getPath($candidate);
-            if ($path === '' || ! is_file($path)) {
-                continue;
-            }
-
-            $config = Common::readConfig($path);
-            if (isset($config['timestamp'][$path])) {
-                continue;
-            }
-
-            $compiler = new Compiler\BlocsCompiler;
-            $compiler->compile($path);
-            Common::writeConfig($path, $compiler->getConfig());
+        foreach (self::$uploadTemplateNames as $uploadTemplateName) {
+            $path = Common::getPath($templateName.'.'.$uploadTemplateName);
+            // 設定がまだ無いテンプレートは、readConfig() がコンパイルして設定を作る
+            $path !== '' && is_file($path) && Common::readConfig($path);
         }
     }
 
@@ -197,21 +212,48 @@ class Validate
         $configFilter = self::$config['filter'][self::$path];
 
         foreach ($requestArray as $key => $value) {
+            $filterList = $configFilter[$key] ?? [];
+            is_array($filterList) || $filterList = [];
+
             if (is_array($value)) {
-                $requestArray[$key] = self::applyFiltersRecursively($value);
+                $value = self::applyFiltersRecursively($value);
+
+                // name="tags[]" のような複数値は、各値にフィルターを適用する
+                foreach ($filterList ? $value : [] as $index => $item) {
+                    is_int($index) && ! is_array($item) && $value[$index] = self::applyFilters($filterList, $item);
+                }
+
+                $requestArray[$key] = $value;
 
                 continue;
             }
 
-            if (empty($configFilter[$key])) {
+            if (empty($filterList)) {
                 continue;
             }
 
-            eval($configFilter[$key]);
-            $requestArray[$key] = $value;
+            $requestArray[$key] = self::applyFilters($filterList, $value);
         }
 
         return $requestArray;
+    }
+
+    /**
+     * @param  list<array{func: string, args: list<mixed>}>  $filterList
+     * @param  mixed  $value
+     * @return mixed
+     */
+    private static function applyFilters(array $filterList, $value)
+    {
+        foreach ($filterList as $filter) {
+            if (! is_array($filter) || ! isset($filter['func']) || ! is_callable($filter['func'])) {
+                continue;
+            }
+
+            $value = call_user_func($filter['func'], $value, ...array_values($filter['args'] ?? []));
+        }
+
+        return $value;
     }
 
     private static function resolveRuleInstances($configValidate, $validateMessage)
@@ -222,7 +264,8 @@ class Validate
                 $className = $ruleArguments[0];
                 $ruleArguments = array_slice($ruleArguments, 1);
 
-                if (! class_exists('\App\Rules\\'.$className)) {
+                $ruleClass = '\\'.self::$ruleNamespace.'\\'.$className;
+                if (! preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $className) || ! class_exists($ruleClass)) {
                     continue;
                 }
 
@@ -231,7 +274,7 @@ class Validate
                 }
 
                 if (! defined('BLOCS_NO_LARAVEL')) {
-                    $reflClass = new \ReflectionClass('\App\Rules\\'.$className);
+                    $reflClass = new \ReflectionClass($ruleClass);
                     $configValidate[$formName][$validateNum] = call_user_func_array([$reflClass, 'newInstance'], $ruleArguments);
                 }
             }

@@ -26,16 +26,23 @@ class Convert
     // 日付をフォーマットし、日本語の曜日名に置き換えて表示
     public static function jdate($str, $format = 'Y/m/d')
     {
-        $date = self::formatDateString($str, $format);
-        $date = self::translateWeekdayLabels($date);
-
-        return $date;
+        return self::translateWeekdayLabels(self::date($str, $format));
     }
 
     // 日付を指定したフォーマットで表示
     public static function date($str, $format = 'Y/m/d')
     {
-        return self::formatDateString($str, $format);
+        if ($str === null || $str === '') {
+            return '';
+        }
+
+        $timestamp = is_int($str) ? $str : strtotime((string) $str);
+        if ($timestamp === false) {
+            // 日付として解釈できない値は 1970/01/01 にせず、そのまま返す（number()と同じ方針）
+            return $str;
+        }
+
+        return date($format, $timestamp);
     }
 
     // ファイルサイズを人が読みやすい単位に換算して表示
@@ -120,11 +127,6 @@ class Convert
         return $str;
     }
 
-    private static function formatDateString($str, $format)
-    {
-        return date($format, strtotime($str));
-    }
-
     private static function translateWeekdayLabels($date)
     {
         $week = [
@@ -144,11 +146,7 @@ class Convert
             'Sat' => '土',
         ];
 
-        foreach ($week as $key => $value) {
-            $date = str_replace($key, $value, $date);
-        }
-
-        return $date;
+        return str_replace(array_keys($week), array_values($week), $date);
     }
 
     private static function decodeFileInfo($str)

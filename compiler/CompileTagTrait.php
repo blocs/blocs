@@ -57,6 +57,10 @@ trait CompileTagTrait
             return '';
         }
 
+        // このタグで開始したカウンターを、閉じタグを持たないタグではその場で閉じるために覚えておく
+        $openCounterCount = count($this->tagCounter);
+        $pendingHtmlCount = count($htmlArray);
+
         /* タグ記法のデータ属性を処理する */
 
         if (isset($attrList[BLOCS_DATA_BLOC])) {
@@ -85,6 +89,8 @@ trait CompileTagTrait
         }
 
         if ($this->scriptCounter > 0) {
+            $this->closeVoidTagCounters($htmlBuff, $openCounterCount, $pendingHtmlCount, $htmlArray);
+
             return $compiledTag;
         }
 
@@ -104,7 +110,37 @@ trait CompileTagTrait
         /* フォーム部品の処理を行う */
         $this->compileTagForm($htmlBuff, $htmlArray, $attrList, $compiledTag);
 
+        $this->closeVoidTagCounters($htmlBuff, $openCounterCount, $pendingHtmlCount, $htmlArray);
+
         return $compiledTag;
+    }
+
+    /**
+     * <img> や <input> のように閉じタグを持たないタグでは、閉じタグを待たずに
+     * data-exist や data-loop などの終了処理をタグの直後へ差し込む
+     */
+    private function closeVoidTagCounters($htmlBuff, $openCounterCount, $pendingHtmlCount, &$htmlArray): void
+    {
+        $registeredCount = count($this->tagCounter) - $openCounterCount;
+        if ($registeredCount <= 0 || ! Common::isVoidTag($htmlBuff['tag'], $htmlBuff['raw'])) {
+            return;
+        }
+
+        // 新しく登録したカウンターは先頭に積まれている
+        $closingCounterList = array_splice($this->tagCounter, 0, $registeredCount);
+
+        $beforeList = [];
+        $afterList = [];
+        foreach ($closingCounterList as $closingCounter) {
+            empty($closingCounter['before']) || array_unshift($beforeList, $closingCounter['before']);
+            empty($closingCounter['after']) || array_unshift($afterList, $closingCounter['after']);
+
+            isset($closingCounter['type']) && $closingCounter['type'] === 'ignore' && $this->ignoreFlg = false;
+        }
+
+        // このタグが差し込んだ内容の後ろに終了処理を置く
+        $insertPosition = max(0, count($htmlArray) - $pendingHtmlCount);
+        array_splice($htmlArray, $insertPosition, 0, array_merge($beforeList, $afterList));
     }
 
     private static function removeDataAttributes($rawString, $attrList)

@@ -30,6 +30,7 @@ class Common
             "\r" => '\r',
             "\t" => '\t',
             '"' => '\"',
+            '$' => '\$',
             "\v" => '\v',
             "\f" => '\f',
             "\e" => '\e',
@@ -38,41 +39,137 @@ class Common
         return '"'.$escapedString.'"';
     }
 
-    // 文字列からクラス、メソッド、引数を取得: data-call指定をパースする
+    /**
+     * スクリプトが endif で終わっていれば、endif を取り除いたスクリプトを返す（終わっていなければ null）
+     */
+    public static function stripEndif($script): ?string
+    {
+        return str_ends_with($script, BLOCS_ENDIF_SCRIPT) ? substr($script, 0, -strlen(BLOCS_ENDIF_SCRIPT)) : null;
+    }
+
+    /**
+     * 文字列からクラス、メソッド、引数を取得する（data-convert）
+     * 引数はPHPコードの断片（", 引数1, 引数2"）で返す
+     *
+     * @return array{0: string, 1: string, 2: string}
+     */
     public static function checkFunc($funcQuery)
+    {
+        [$class, $function, $argumentList] = self::splitFunc($funcQuery);
+
+        return [$class, $function, implode('', array_map(fn ($argument) => ', '.$argument, $argumentList))];
+    }
+
+    /**
+     * 文字列からクラス、メソッド、引数の値を取得する。
+     * 引数をPHPコードとしてではなく値として扱いたい場合（data-filter）に使う。
+     *
+     * @return array{0: string, 1: string, 2: list<mixed>}
+     */
+    public static function checkFuncValues($funcQuery): array
+    {
+        [$class, $function, $argumentList] = self::splitFunc($funcQuery);
+
+        return [$class, $function, array_map([self::class, 'literalValue'], $argumentList)];
+    }
+
+    /**
+     * 「クラス::メソッド:引数1:引数2」をクラス、メソッド、引数（表記のまま）に分ける
+     *
+     * @return array{0: string, 1: string, 2: list<string>}
+     */
+    private static function splitFunc($funcQuery): array
     {
         $class = '';
         $functionQuery = $funcQuery;
 
-        if (strpos($functionQuery, '::') !== false) {
+        if (str_contains($functionQuery, '::')) {
             [$class, $functionQuery] = explode('::', $functionQuery, 2);
         }
 
-        if (strpos($functionQuery, ':') === false) {
-            $function = $functionQuery;
-            $arguments = '';
-        } else {
-            [$function, $arguments] = explode(':', $functionQuery, 2);
-            $argumentFragments = preg_split('/([:"\'])/s', $arguments, -1, PREG_SPLIT_DELIM_CAPTURE);
-            $quoteBuffer = '';
-            $resultBuffer = '';
-
-            foreach ($argumentFragments as $fragment) {
-                if ($fragment === "'" || $fragment === '"') {
-                    if ($quoteBuffer === '') {
-                        $quoteBuffer = $fragment;
-                    } elseif ($quoteBuffer === $fragment) {
-                        $quoteBuffer = '';
-                    }
-                }
-
-                $resultBuffer .= ($quoteBuffer === '' && $fragment === ':') ? ', ' : $fragment;
-            }
-
-            $arguments = ', '.$resultBuffer;
+        if (! str_contains($functionQuery, ':')) {
+            return [$class, $functionQuery, []];
         }
 
-        return [$class, $function, $arguments];
+        [$function, $arguments] = explode(':', $functionQuery, 2);
+
+        return [$class, $function, self::splitArguments($arguments)];
+    }
+
+    /**
+     * 「:」区切りの引数を分割する（クォートの中の「:」では分割しない）
+     *
+     * @return list<string>
+     */
+    private static function splitArguments(string $arguments): array
+    {
+        $argumentFragments = preg_split('/([:"\'])/s', $arguments, -1, PREG_SPLIT_DELIM_CAPTURE);
+        $quoteBuffer = '';
+        $argumentList = [''];
+
+        foreach ($argumentFragments as $fragment) {
+            if ($fragment === "'" || $fragment === '"') {
+                if ($quoteBuffer === '') {
+                    $quoteBuffer = $fragment;
+                } elseif ($quoteBuffer === $fragment) {
+                    $quoteBuffer = '';
+                }
+            }
+
+            if ($quoteBuffer === '' && $fragment === ':') {
+                $argumentList[] = '';
+
+                continue;
+            }
+
+            $argumentList[count($argumentList) - 1] .= $fragment;
+        }
+
+        return $argumentList;
+    }
+
+    /**
+     * 引数のリテラル表記を値に変換する
+     *
+     * @return mixed
+     */
+    private static function literalValue(string $literal)
+    {
+        $literal = trim($literal);
+
+        if (strlen($literal) >= 2 && ($literal[0] === '"' || $literal[0] === "'") && substr($literal, -1) === $literal[0]) {
+            $inner = substr($literal, 1, -1);
+
+            return $literal[0] === '"' ? stripcslashes($inner) : str_replace(['\\\\', "\\'"], ['\\', "'"], $inner);
+        }
+
+        if (is_numeric($literal)) {
+            return $literal + 0;
+        }
+
+        return match (strtolower($literal)) {
+            'true' => true,
+            'false' => false,
+            'null' => null,
+            default => $literal,
+        };
+    }
+
+    /**
+     * 閉じタグを持たないタグか（HTMLの空要素、または /> で閉じたタグ）
+     */
+    public static function isVoidTag($tagName, $rawTag): bool
+    {
+        $tagName = strtolower((string) $tagName);
+        if ($tagName === '' || $tagName[0] === '/' || $tagName[0] === '!') {
+            return false;
+        }
+
+        if (in_array($tagName, ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'], true)) {
+            return true;
+        }
+
+        return substr(rtrim((string) $rawTag), -2) === '/>';
     }
 
     // 変数として使用できる文字列かチェック: data-assignの値がPHP変数として妥当か検証する
@@ -162,13 +259,15 @@ class Common
 
     private static function replaceExistingAttributeValue($compiledTag, $attributeName, &$attributeBuffer, $existingAttributeValue)
     {
-        if (substr($attributeBuffer, -16) === BLOCS_ENDIF_SCRIPT && strpos($attributeBuffer, '<?php else: ?>') === false) {
-            $attributeBuffer = substr($attributeBuffer, 0, -16)."<?php else: ?>\n".$existingAttributeValue.BLOCS_ENDIF_SCRIPT;
+        $conditionalBuffer = self::stripEndif($attributeBuffer);
+        if ($conditionalBuffer !== null && ! str_contains($attributeBuffer, '<?php else: ?>')) {
+            $attributeBuffer = $conditionalBuffer."<?php else: ?>\n".$existingAttributeValue.BLOCS_ENDIF_SCRIPT;
         }
 
         $pattern = '/(\s+'.$attributeName.'\s*=\s*["\']{0,1})'.str_replace('/', '\/', preg_quote($existingAttributeValue)).'((\[\]){0,1}["\']{0,1}[\s<>\/]+)/si';
 
-        return preg_replace($pattern, '${1}'.$attributeBuffer.'${2}', $compiledTag);
+        // 値に含まれる $1 や \1 が後方参照として解釈されないよう、コールバックで置き換える
+        return preg_replace_callback($pattern, fn ($matchList) => $matchList[1].$attributeBuffer.$matchList[2], $compiledTag);
     }
 
     private static function appendAttribute($compiledTag, $attributeName, $attributeBuffer, $attributePrefix, $attributeSuffix)

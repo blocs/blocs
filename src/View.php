@@ -6,35 +6,64 @@ function setTemplateCacheDir()
 {
     define('BLOCS_NO_LARAVEL', true);
 
-    $key = '/tmp';
-    if (($key = str_replace(DIRECTORY_SEPARATOR, '/', realpath($key))) && is_dir($key) && is_writable($key)) {
-        define('BLOCS_CACHE_DIR', $key.'/');
-
-        return;
-    }
-
+    $baseCandidates = ['/tmp'];
     foreach (['TMPDIR', 'TMP', 'TEMP', 'USERPROFILE'] as $key) {
-        if (! empty($_ENV[$key]) && ($key = str_replace(DIRECTORY_SEPARATOR, '/', realpath($_ENV[$key]))) && is_dir($key) && is_writable($key)) {
-            define('BLOCS_CACHE_DIR', $key.'/');
+        empty($_ENV[$key]) || $baseCandidates[] = $_ENV[$key];
+    }
+    $baseCandidates[] = ini_get('upload_tmp_dir');
+
+    foreach ($baseCandidates as $baseCandidate) {
+        if (empty($baseCandidate) || ! ($baseDir = realpath($baseCandidate)) || ! is_dir($baseDir) || ! is_writable($baseDir)) {
+            continue;
+        }
+
+        $cacheDir = resolvePrivateCacheDir(str_replace(DIRECTORY_SEPARATOR, '/', $baseDir));
+        if ($cacheDir !== null) {
+            define('BLOCS_CACHE_DIR', $cacheDir.'/');
 
             return;
         }
     }
 
-    $key = ini_get('upload_tmp_dir');
-    if (! empty($key) && ($key = str_replace(DIRECTORY_SEPARATOR, '/', realpath($key))) && is_dir($key) && is_writable($key)) {
-        define('BLOCS_CACHE_DIR', $key.'/');
+    throw Common::cacheWriteException();
+}
 
-        return;
+/**
+ * 共用の一時ディレクトリに直接キャッシュを置くと、他のユーザーにコンパイル済みファイルを
+ * 差し替えられる余地があるため、実行ユーザー専用のディレクトリ（0700）を使う
+ */
+function resolvePrivateCacheDir(string $baseDir): ?string
+{
+    $owner = function_exists('posix_geteuid') ? posix_geteuid() : null;
+    $cacheDir = $baseDir.'/blocs-'.($owner ?? substr(md5(get_current_user()), 0, 8));
+
+    if (! is_dir($cacheDir)) {
+        try {
+            @mkdir($cacheDir, 0700);
+        } catch (\Throwable) {
+        }
     }
 
-    throw new \RuntimeException('B001: Can not write cache file into directory');
+    if (! is_dir($cacheDir)) {
+        return null;
+    }
+
+    if (is_link($cacheDir) || ! is_writable($cacheDir)) {
+        return null;
+    }
+
+    if ($owner !== null && fileowner($cacheDir) !== $owner) {
+        // 他のユーザーが先回りして作ったディレクトリは使わない
+        return null;
+    }
+
+    return $cacheDir;
 }
 
 defined('BLOCS_CACHE_DIR') || setTemplateCacheDir();
-defined('BLOCS_ROOT_DIR') || define('BLOCS_ROOT_DIR', $_SERVER['DOCUMENT_ROOT']);
+defined('BLOCS_ROOT_DIR') || define('BLOCS_ROOT_DIR', $_SERVER['DOCUMENT_ROOT'] ?? '');
 
-require_once 'Consts.php';
+require_once __DIR__.'/Consts.php';
 
 class View
 {
@@ -47,6 +76,8 @@ class View
         function_exists('mb_internal_encoding') && mb_internal_encoding('UTF-8');
 
         $this->filename = $filename;
+
+        Common::ensureCacheDirectory();
 
         // 設定ファイルを読み込み
         $this->config = Common::readConfig($this->getPath());
@@ -85,7 +116,7 @@ class View
     // テンプレートの実ファイルパスを取得
     public function getPath()
     {
-        return str_replace(DIRECTORY_SEPARATOR, '/', realpath($this->filename));
+        return Common::normalizeRealPath($this->filename);
     }
 
     private function resolveCompiledPath()
@@ -101,15 +132,17 @@ class View
             return $compiledPath;
         }
 
-        // Blocsのコンパイラを実行
-        $blocsCompiler = new Compiler\BlocsCompiler;
-        $compiledContents = $blocsCompiler->compile($path);
+        // Blocsのコンパイラを実行し、書き出せたら設定ファイルを最新化する
+        Common::compileTemplate($path, function (string $compiledContents) use ($compiledPath) {
+            // 書きかけのファイルを他のリクエストが読み込まないよう、一時ファイルに書いてから置き換える
+            $temporaryPath = $compiledPath.'.'.bin2hex(random_bytes(6)).'.tmp';
+            if (file_put_contents($temporaryPath, $compiledContents) === false || ! rename($temporaryPath, $compiledPath)) {
+                is_file($temporaryPath) && unlink($temporaryPath);
 
-        // 設定ファイルを作成してキャッシュ情報を保持
-        $blocsConfig = $blocsCompiler->getConfig();
-        Common::writeConfig($path, $blocsConfig);
-
-        file_put_contents($compiledPath, $compiledContents) && chmod($compiledPath, 0644);
+                throw Common::cacheWriteException();
+            }
+            chmod($compiledPath, 0644);
+        });
 
         return $compiledPath;
     }

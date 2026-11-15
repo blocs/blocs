@@ -9,11 +9,12 @@ trait FormTrait
     private function compileTagForm($htmlBuff, &$htmlArray, $attrList, &$compiledTag)
     {
         $tagName = $htmlBuff['tag'];
-        $quotesList = $htmlBuff['quotes'];
         $type = isset($attrList['type']) ? strtolower($attrList['type']) : '';
 
-        if ($tagName === 'input' && isset($attrList['name']) && strlen($attrList['name'])) {
-            $formName = Common::checkFormName($attrList['name']);
+        // 変数名として使えるフォーム名（使えなければ false）
+        $formName = self::hasFormName($attrList) ? Common::checkFormName($attrList['name']) : false;
+
+        if ($tagName === 'input') {
             if ($formName !== false) {
                 $attrList['name'] = $formName;
                 if (! empty($this->labelArray)) {
@@ -44,15 +45,12 @@ trait FormTrait
             // 名前のないselectで前のselect名が残らないように、開始タグで必ず入れ替える
             $this->selectName = '';
 
-            if (isset($attrList['name']) && strlen($attrList['name'])) {
-                $formName = Common::checkFormName($attrList['name']);
-                if ($formName !== false) {
-                    $attrList['name'] = $formName;
-                    $this->selectName = $attrList['name'];
+            if ($formName !== false) {
+                $attrList['name'] = $formName;
+                $this->selectName = $formName;
 
-                    if (isset($attrList['multiple'])) {
-                        $this->ensureDummyFormField($attrList['name'], $compiledTag);
-                    }
+                if (isset($attrList['multiple'])) {
+                    $this->ensureDummyFormField($formName, $compiledTag);
                 }
             }
         } elseif ($tagName === 'option' && strlen($this->selectName) && isset($attrList['value'])) {
@@ -74,17 +72,12 @@ trait FormTrait
             return;
         }
 
-        if ($tagName === 'textarea' && isset($attrList['name']) && strlen($attrList['name'])) {
-            $formName = Common::checkFormName($attrList['name']);
-            if ($formName !== false) {
-                $attrList['name'] = $formName;
+        if ($tagName === 'textarea' && $formName !== false) {
+            $attrList['name'] = $formName;
 
-                $tagCounter = [];
-                Form::value($compiledTag, $attrList, $tagName, $tagCounter, $htmlArray);
-                if (! empty($tagCounter)) {
-                    $this->registerTagCounter($tagCounter);
-                }
-            }
+            $tagCounter = [];
+            Form::value($compiledTag, $attrList, $tagName, $tagCounter, $htmlArray);
+            $this->registerTagCounter($tagCounter);
         }
 
         // formのid属性をループ構造に合わせた形式へ整形する
@@ -97,8 +90,11 @@ trait FormTrait
             }
         }
 
-        if (($tagName === 'input' || $tagName === 'select' || $tagName === 'textarea') && isset($attrList['name']) && strlen($attrList['name'])) {
+        if (($tagName === 'input' || $tagName === 'select' || $tagName === 'textarea') && self::hasFormName($attrList)) {
             $formFieldName = $attrList['name'];
+
+            // old() から展開してよい変数名として記録する（ループ内はループの配列名）
+            $this->rememberFormName($this->outermostArrayFormName() ?? Common::checkFormName($formFieldName));
 
             if ($arrayForm = $this->buildArrayFormName()) {
                 $compiledTag = Common::mergeAttribute($compiledTag, 'name', $arrayForm.'['.$formFieldName.']', $attrList);
@@ -116,7 +112,7 @@ trait FormTrait
             // HTML5のフォームバリデーションに対応する
             $html5AttrList = $attrList;
             $html5AttrList['name'] = $formFieldName;
-            self::addHtml5Validation($this->validate, $html5AttrList);
+            $this->addHtml5Validation($html5AttrList);
         }
     }
 
@@ -169,6 +165,30 @@ trait FormTrait
         return $formName;
     }
 
+    private static function hasFormName($attrList): bool
+    {
+        return isset($attrList['name']) && strlen($attrList['name']);
+    }
+
+    /**
+     * フォーム部品を囲んでいる一番外側のループの配列名（ループの外なら null）
+     */
+    private function outermostArrayFormName(): ?string
+    {
+        if (! empty($this->arrayFormName)) {
+            // data-formでフォーム名を固定している場合は、その先頭の名前
+            return preg_split('/[.\[]/', (string) $this->arrayFormName)[0];
+        }
+
+        foreach (array_reverse($this->tagCounter) as $buff) {
+            if (isset($buff['array_form']) && strncmp($buff['array_form'], 'option_', 7)) {
+                return $buff['array_form'];
+            }
+        }
+
+        return null;
+    }
+
     private function ensureDummyFormField($attrName, &$rawString)
     {
         if ($dummyForm = $this->buildArrayFormName()) {
@@ -183,9 +203,9 @@ trait FormTrait
             return;
         }
 
-        $dummyBuff = "<?php if(!isset(\$dummyArray{$dummyMsg})): ?>\n";
+        $dummyBuff = "<?php if(!isset(\$__blocsDummy{$dummyMsg})): ?>\n";
         $dummyBuff .= "<input type='hidden' name='{$dummyForm}' value='' />";
-        $dummyBuff .= "<?php \$dummyArray{$dummyMsg} = true; ?>\n";
+        $dummyBuff .= "<?php \$__blocsDummy{$dummyMsg} = true; ?>\n";
         $dummyBuff .= BLOCS_ENDIF_SCRIPT;
 
         $rawString = $dummyBuff.$rawString;
@@ -193,42 +213,37 @@ trait FormTrait
     }
 
     // HTML5属性からバリデーションルールを組み立てる
-    private function addHtml5Validation(&$dataValidate, $attrList)
+    private function addHtml5Validation($attrList)
     {
-        $normalized = [];
-        foreach ($attrList as $key => $value) {
-            $normalized[strtolower((string) $key)] = $value;
-        }
-        if (isset($normalized['type'])) {
-            $normalized['type'] = strtolower((string) $normalized['type']);
-        }
+        $normalized = array_change_key_case($attrList, CASE_LOWER);
+        $type = strtolower((string) ($normalized['type'] ?? ''));
 
-        $normalized['name'] = $this->buildArrayFormName(3).($normalized['name'] ?? $attrList['name']);
+        // required が無い項目は、未入力を許可する
+        $nullable = isset($normalized['required']) ? [] : ['nullable'];
 
-        if (isset($normalized['required'])) {
-            $dataValidate[$normalized['name']][] = 'required';
-            $required = true;
-        }
+        $ruleList = isset($normalized['required']) ? ['required'] : [];
 
         if (isset($normalized['minlength']) || isset($normalized['maxlength'])) {
-            isset($required) || $dataValidate[$normalized['name']][] = 'nullable';
-            $dataValidate[$normalized['name']][] = 'string';
+            array_push($ruleList, ...$nullable, ...['string']);
 
-            isset($normalized['minlength']) && $dataValidate[$normalized['name']][] = 'min:'.$normalized['minlength'];
-            isset($normalized['maxlength']) && $dataValidate[$normalized['name']][] = 'max:'.$normalized['maxlength'];
+            isset($normalized['minlength']) && $ruleList[] = 'min:'.$normalized['minlength'];
+            isset($normalized['maxlength']) && $ruleList[] = 'max:'.$normalized['maxlength'];
         }
 
-        if (isset($normalized['type']) && $normalized['type'] === 'number') {
-            isset($required) || $dataValidate[$normalized['name']][] = 'nullable';
-            $dataValidate[$normalized['name']][] = self::acceptsIntegerOnly($normalized['step'] ?? null) ? 'integer' : 'numeric';
+        if ($type === 'number') {
+            array_push($ruleList, ...$nullable, ...[self::acceptsIntegerOnly($normalized['step'] ?? null) ? 'integer' : 'numeric']);
 
-            isset($normalized['min']) && $dataValidate[$normalized['name']][] = 'min:'.$normalized['min'];
-            isset($normalized['max']) && $dataValidate[$normalized['name']][] = 'max:'.$normalized['max'];
+            isset($normalized['min']) && $ruleList[] = 'min:'.$normalized['min'];
+            isset($normalized['max']) && $ruleList[] = 'max:'.$normalized['max'];
         }
 
         if (isset($normalized['pattern'])) {
-            isset($required) || $dataValidate[$normalized['name']][] = 'nullable';
-            $dataValidate[$normalized['name']][] = 'regex:'.self::buildHtml5RegexRule($normalized['pattern']);
+            array_push($ruleList, ...$nullable, ...['regex:'.self::buildHtml5RegexRule($normalized['pattern'])]);
+        }
+
+        if ($ruleList) {
+            $validateName = $this->buildArrayFormName(3).$normalized['name'];
+            $this->validate[$validateName] = array_merge($this->validate[$validateName] ?? [], $ruleList);
         }
     }
 
