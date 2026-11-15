@@ -8,6 +8,9 @@ class Validate
 
     private static $config;
 
+    // メッセージコードは「:」区切りのため、:attribute を直接は渡せない
+    private const ATTRIBUTE_TOKEN = '{attribute}';
+
     public static function flush(): void
     {
         self::$path = null;
@@ -39,13 +42,47 @@ class Validate
         $validateMessage = [];
         foreach ($configMessage as $formName => $messageList) {
             foreach ($messageList as $dataValidate => $message) {
-                $validateMessage[$formName.'.'.$dataValidate] = Lang::get($message);
+                $validateMessage[$formName.'.'.$dataValidate] = self::resolveMessage($message, $formName);
             }
         }
 
         $configValidate = self::resolveRuleInstances($configValidate, $validateMessage);
 
         return [$configValidate, $validateMessage];
+    }
+
+    /**
+     * メッセージコードを文言に変換する。
+     *
+     * ラベルが登録されているフォームでは、メッセージコードの引数に書かれたフォーム名を
+     * :attribute に置き換え、Laravel のバリデータにラベルへ差し替えさせる。
+     * 例: validate:required:email → 「:attribute 欄は必須です。」→「ユーザーID 欄は必須です。」
+     */
+    private static function resolveMessage(string $message, string $formName): string
+    {
+        if (! self::shouldUseAttributePlaceholder($formName)) {
+            return Lang::get($message);
+        }
+
+        $messageChunks = explode(':', $message);
+        foreach ($messageChunks as $index => $messageChunk) {
+            // 先頭2つはメッセージコード本体なので、引数だけを対象にする
+            if ($index >= 2 && $messageChunk === $formName) {
+                $messageChunks[$index] = self::ATTRIBUTE_TOKEN;
+            }
+        }
+
+        return str_replace(self::ATTRIBUTE_TOKEN, ':attribute', Lang::get(implode(':', $messageChunks)));
+    }
+
+    private static function shouldUseAttributePlaceholder(string $formName): bool
+    {
+        // Laravel のバリデータを使わない環境では :attribute が置き換わらない
+        if (defined('BLOCS_NO_LARAVEL')) {
+            return false;
+        }
+
+        return isset(self::$config['label'][self::$path][$formName]);
     }
 
     public static function rules($templateName)
