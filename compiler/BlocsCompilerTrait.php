@@ -68,6 +68,12 @@ trait BlocsCompilerTrait
     // コンパイル済みテンプレート
     private $compiledTemplate;
 
+    // テンプレートに含まれるフォーム名（old() から展開してよい変数名）
+    private array $formNameList;
+
+    // コンパイル中のテンプレートファイル（バッファのレンダリングでは null）
+    private ?string $templatePath = null;
+
     public function init()
     {
         $this->include = [];
@@ -106,6 +112,19 @@ trait BlocsCompilerTrait
         $this->selectName = '';
 
         $this->compiledTemplate = '';
+
+        $this->formNameList = [];
+        $this->templatePath = null;
+    }
+
+    /**
+     * old() から展開してよい変数名として、フォーム名を記録する
+     */
+    private function rememberFormName($formName): void
+    {
+        if (is_string($formName) && preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $formName)) {
+            $this->formNameList[$formName] = true;
+        }
     }
 
     private function getPartProcessingState()
@@ -137,34 +156,41 @@ trait BlocsCompilerTrait
         }
         $this->autoincludeClass = array_merge(array_unique($this->autoincludeClass));
 
-        $targetFileList = scandir($autoincludeDir);
-        foreach ($targetFileList as $targetFile) {
-            if (substr($targetFile, 0, 1) == '.') {
-                continue;
-            }
-            $targetFile = $autoincludeDir.'/'.$targetFile;
-            if (! is_file($targetFile)) {
+        foreach (scandir($autoincludeDir) as $targetFile) {
+            if (str_starts_with($targetFile, '.') || ! is_file($autoincludeDir.'/'.$targetFile)) {
                 continue;
             }
 
             $autoinclude = pathinfo($targetFile, PATHINFO_FILENAME);
 
-            if (! in_array($autoinclude, $this->autoincludeClass)) {
-                // クラスから呼び出されていないのでauto includeしない
-                continue;
+            // クラスから呼び出されていて、まだincludeしていないテンプレートだけをauto includeする
+            if (in_array($autoinclude, $this->autoincludeClass) && ! isset($this->autoincluded[$autoinclude])) {
+                $htmlArray[] = self::buildAutoincludeComment($autoincludeDir, $autoinclude);
             }
-
-            if (isset($this->autoincluded[$autoinclude])) {
-                // すでにinclude済みのためスキップする
-                continue;
-            }
-
-            $htmlArray[] = '<!-- '.BLOCS_DATA_INCLUDE."='".str_replace(BLOCS_ROOT_DIR, '', $autoincludeDir).'/'.$autoinclude.".html' -->";
         }
-
     }
 
-    private function resolveAutoincludeDirectory()
+    // auto includeのテンプレートを読み込むコメント記法を組み立てる
+    private static function buildAutoincludeComment($autoincludeDir, $autoinclude)
+    {
+        return '<!-- '.BLOCS_DATA_INCLUDE."='".str_replace(BLOCS_ROOT_DIR, '', $autoincludeDir).'/'.$autoinclude.".html' -->";
+    }
+
+    // auto includeディレクトリにあるテンプレートか
+    private static function isAutoincludeTemplate($realpath): bool
+    {
+        $autoincludeDir = self::resolveAutoincludeDirectory();
+
+        return $autoincludeDir !== false && str_starts_with($realpath, rtrim($autoincludeDir, '/').'/');
+    }
+
+    // テンプレートの基準ディレクトリを切り替えるコメント記法を組み立てる
+    private static function buildChdirComment($directory)
+    {
+        return '<!-- '.BLOCS_DATA_CHDIR.'="'.$directory.'" -->';
+    }
+
+    private static function resolveAutoincludeDirectory()
     {
         if (! empty($GLOBALS['BLOCS_AUTOINCLUDE_DIR'])) {
             $autoincludeDir = $GLOBALS['BLOCS_AUTOINCLUDE_DIR'];
@@ -184,16 +210,24 @@ trait BlocsCompilerTrait
     }
 
     // テンプレート実行前の初期処理を組み立てる
-    private static function buildInitialScript()
+    private function buildInitialScript()
     {
+        // 表示中のテンプレートを覚えておき、選択肢のラベル変換に使う
+        $templatePath = var_export($this->templatePath, true);
+
+        // old() はリクエスト由来の値なので、テンプレートにあるフォーム名だけを変数として展開する
+        $formNameList = var_export($this->formNameList, true);
+
         return <<< END_of_HTML
 <?php
+    \$__blocsPath = {$templatePath};
+
     \$_appendOption = \\Blocs\\Option::append();
     extract(\$_appendOption, EXTR_PREFIX_ALL, 'option');
 
     if (! defined('BLOCS_NO_LARAVEL')) {
         \$_oldValue = old();
-        !empty(\$_oldValue) && is_array(\$_oldValue) && extract(\$_oldValue, EXTR_SKIP);
+        !empty(\$_oldValue) && is_array(\$_oldValue) && extract(array_intersect_key(\$_oldValue, {$formNameList}), EXTR_SKIP);
 
         \$_userData = \Auth::user();
 

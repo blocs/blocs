@@ -42,7 +42,11 @@ class Val
             unset($attrList[BLOCS_DATA_CONVERT]);
         } elseif (! $usesAssignment && (! isset($attrList[BLOCS_DATA_CONVERT]) || (strncmp($attrList[BLOCS_DATA_CONVERT], 'raw_', 4) && strpos($attrList[BLOCS_DATA_CONVERT], '::raw_') === false))) {
             $outputBuffer .= '\Blocs\Common::convertDefault(';
-            $postConvertSuffix = self::resolveMenuNameSuffix($attrList[BLOCS_DATA_VAL]).')';
+            $menuNameSuffix = self::resolveMenuNameSuffix($attrList[BLOCS_DATA_VAL]);
+            strlen($menuNameSuffix) || $menuNameSuffix = ', null';
+
+            // 属性値では改行を <br /> にしない。選択肢は表示中のテンプレートのものを使う
+            $postConvertSuffix = $menuNameSuffix.', '.($hasDataAttribute ? 'false' : 'true').', ($__blocsPath ?? null))';
         }
 
         if (isset($attrList[BLOCS_DATA_CONVERT])) {
@@ -72,36 +76,23 @@ class Val
             $outputBuffer .= BLOCS_ENDIF_SCRIPT;
         }
 
-        if ($hasDataAttribute) {
-            // data-attributeが設定されている場合の出力専用処理
-            $dataAttribute[] = [
-                'name' => $attrList[BLOCS_DATA_ATTRIBUTE],
-                'value' => $outputBuffer,
-            ];
-
-            return '';
-        }
-
-        // data-attributeが設定されていない場合のタグ計数処理
-        if ($tagName) {
-            return self::updateTagCounterState($outputBuffer, $attrList, $tagName, $tagCounter, $htmlArray);
-        }
-
-        return $outputBuffer;
+        return self::deliverOutput($outputBuffer, $attrList, $dataAttribute, $tagName, $tagCounter, $htmlArray);
     }
 
     // data-notice属性に対応するPHPスクリプトを生成する
-    public static function notice($attrList, $quotesList, &$dataAttribute, $tagName = '', &$tagCounter = null, &$htmlArray = null)
+    public static function notice($attrList, &$dataAttribute, $tagName = '', &$tagCounter = null, &$htmlArray = null)
     {
-        $noticeList = explode(':', $attrList[BLOCS_DATA_NOTICE]);
+        // 先頭2つ（カテゴリ:コード）と引数を分けて渡す
+        // 引数を「:」で連結し直すと、値に「:」を含む変数（時刻やURL）が別の引数に分かれてしまう
+        $messageCodeList = [];
+        $messageArgList = [];
+        foreach (explode(':', $attrList[BLOCS_DATA_NOTICE]) as $index => $notice) {
+            $expression = Common::checkValueName($notice) ? $notice : var_export($notice, true);
 
-        $noticeArgList = [];
-        foreach ($noticeList as $notice) {
-            if (Common::checkValueName($notice)) {
-                $noticeArgList[] = $notice;
+            if ($index < 2) {
+                $messageCodeList[] = $expression;
             } else {
-                $notice = str_replace("'", "\\'", $notice);
-                $noticeArgList[] = "'{$notice}'";
+                $messageArgList[] = $expression;
             }
         }
 
@@ -121,32 +112,64 @@ class Val
             $outputBuffer .= "<?php {$attrList[BLOCS_DATA_ASSIGN]} = ";
         }
 
-        $outputBuffer .= '\Blocs\Lang::get('.implode(" . ':' . ", $noticeArgList).')';
+        $outputBuffer .= '\Blocs\Lang::get('.implode(" . ':' . ", $messageCodeList);
+        empty($messageArgList) || $outputBuffer .= ', ['.implode(', ', $messageArgList).']';
+        $outputBuffer .= ')';
 
         if (! $usesAssignment) {
             if (! (isset($attrList[BLOCS_DATA_CONVERT]) && $attrList[BLOCS_DATA_CONVERT] === 'raw')) {
-                $outputBuffer .= ')';
+                // 属性値では改行を <br /> にしない
+                $outputBuffer .= isset($attrList[BLOCS_DATA_ATTRIBUTE]) ? ', null, false)' : ')';
             }
             $outputBuffer .= "); ?>\n";
         } else {
             $outputBuffer .= "; ?>\n";
         }
 
-        // data-attributeが設定されている場合の出力専用処理
+        return self::deliverOutput($outputBuffer, $attrList, $dataAttribute, $tagName, $tagCounter, $htmlArray);
+    }
+
+    /**
+     * 生成したスクリプトの出力先を決める
+     *
+     * - data-attribute があれば、属性値としてタグに反映させる（$dataAttribute に積む）
+     * - タグ記法なら、タグの中身と置き換える（$tagCounter と $htmlArray で指示する）
+     * - コメント記法なら、その場に出力するスクリプトを返す
+     */
+    private static function deliverOutput($outputBuffer, $attrList, &$dataAttribute, $tagName, &$tagCounter, &$htmlArray)
+    {
         if (isset($attrList[BLOCS_DATA_ATTRIBUTE])) {
             $dataAttribute[] = [
                 'name' => $attrList[BLOCS_DATA_ATTRIBUTE],
                 'value' => $outputBuffer,
             ];
-            $outputBuffer = '';
+
+            return '';
         }
 
-        // data-attributeが設定されていない場合のタグ計数処理
-        if ($tagName) {
-            $outputBuffer = self::updateTagCounterState($outputBuffer, $attrList, $tagName, $tagCounter, $htmlArray);
+        if (! $tagName) {
+            return $outputBuffer;
         }
 
-        return $outputBuffer;
+        $conditionalBuffer = Common::stripEndif($outputBuffer);
+        if ($conditionalBuffer === null) {
+            // 常に値を出力するので、タグの中身は捨てる
+            $tagCounter = [
+                'tag' => $tagName,
+                'before' => $outputBuffer,
+                'type' => 'ignore',
+            ];
+        } else {
+            // 値がなければタグの中身を出力する
+            array_unshift($htmlArray, $conditionalBuffer."<?php else: ?>\n");
+
+            $tagCounter = [
+                'tag' => $tagName,
+                'before' => BLOCS_ENDIF_SCRIPT,
+            ];
+        }
+
+        return '';
     }
 
     private static function appendFixedValueSegment($attrList, $quotesList, $outputBuffer, $attrName)
@@ -192,26 +215,5 @@ class Val
         } else {
             return ', \''.substr($lastSegment, 0, -1).'\'';
         }
-    }
-
-    private static function updateTagCounterState($outputBuffer, $attrList, $tagName, &$tagCounter, &$htmlArray)
-    {
-        if (substr($outputBuffer, -16) !== BLOCS_ENDIF_SCRIPT) {
-            $tagCounter = [
-                'tag' => $tagName,
-                'before' => $outputBuffer,
-                'type' => 'ignore',
-            ];
-        } else {
-            // 次回のタグ処理の先頭に入れる
-            array_unshift($htmlArray, substr($outputBuffer, 0, -16)."<?php else: ?>\n");
-
-            $tagCounter = [
-                'tag' => $tagName,
-                'before' => BLOCS_ENDIF_SCRIPT,
-            ];
-        }
-
-        return '';
     }
 }

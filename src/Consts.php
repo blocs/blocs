@@ -6,8 +6,8 @@ if (! defined('BLOCS_CACHE_DIR')) {
     define('BLOCS_CACHE_DIR', $compiledDirectory);
 }
 
-$isWritableCacheDirectory = realpath(BLOCS_CACHE_DIR) && is_writable(BLOCS_CACHE_DIR);
-$isWritableCacheDirectory || throw new RuntimeException('B001: Can not write cache file into directory');
+// キャッシュディレクトリの確認は、実際に書き込むとき（\Blocs\Common::ensureCacheDirectory()）に行う
+// ここで例外にすると、ビューを使わないコマンドやリクエストまで止まってしまう
 
 // テンプレートのルートディレクトリを設定
 if (! defined('BLOCS_ROOT_DIR')) {
@@ -62,7 +62,11 @@ define('BLOCS_DATA_LANG', 'data-lang');
 define('BLOCS_DATA_REPEAT', 'data-repeat');
 define('BLOCS_DATA_ENDREPEAT', 'data-endrepeat');
 
-define('BLOCS_TAG_NAME_REGREX', '[a-zA-Z\_\:\!\$][a-zA-Z0-9\_\:\-\.]*');
-define('BLOCS_ATTR_NAME_REGREX', '[a-zA-Z0-9\_\:\!\-\/][a-zA-Z0-9\_\-\.\*]*');
+define('BLOCS_TAG_NAME_REGEX', '[a-zA-Z\_\:\!\$][a-zA-Z0-9\_\:\-\.]*');
+define('BLOCS_ATTR_NAME_REGEX', '[a-zA-Z0-9\_\:\!\-\/][a-zA-Z0-9\_\-\.\*]*');
+
+// 綴り誤りの旧名（互換のために残す）
+define('BLOCS_TAG_NAME_REGREX', BLOCS_TAG_NAME_REGEX);
+define('BLOCS_ATTR_NAME_REGREX', BLOCS_ATTR_NAME_REGEX);
 
 define('BLOCS_CLASS_UPLOAD', 'ai-upload');

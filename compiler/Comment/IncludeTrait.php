@@ -10,9 +10,8 @@ trait IncludeTrait
     private function compileCommentInclude($attrList, &$htmlBuff, &$htmlArray, $quotesList)
     {
         // auto includeを解決してタグを埋め込む
-        $autoincludeDir = self::resolveAutoincludeDirectory();
         if ($attrList[BLOCS_DATA_INCLUDE] == 'auto') {
-            if ($autoincludeDir === false) {
+            if (self::resolveAutoincludeDirectory() === false) {
                 if (isset($attrList[BLOCS_DATA_EXIST])) {
                     return;
                 }
@@ -48,7 +47,7 @@ trait IncludeTrait
         $resultArray[] = '<!-- '.BLOCS_DATA_CHDIR.'="'.getcwd().'" '.BLOCS_DATA_ASSIGN.' -->';
 
         // conditionで挟み込む
-        $condition = Condition::condition('', $attrList, $quotesList);
+        $condition = Condition::condition('', $attrList, $quotesList, $this->partInclude);
         if (! empty($condition)) {
             array_unshift($resultArray, $condition);
             $resultArray[] = BLOCS_ENDIF_SCRIPT;
@@ -95,13 +94,10 @@ trait IncludeTrait
         }
         $this->include[] = $realpath;
 
-        $autoincludeDir = self::resolveAutoincludeDirectory();
         $autoinclude = pathinfo($realpath, PATHINFO_FILENAME);
-        if ($autoincludeDir !== false && ! strncmp($realpath, $autoincludeDir, strlen($autoincludeDir))) {
-            if (isset($this->autoincluded[$autoinclude])) {
-                // auto includeは一度だけincludeする
-                return [];
-            }
+        if (self::isAutoincludeTemplate($realpath) && isset($this->autoincluded[$autoinclude])) {
+            // auto includeは一度だけincludeする
+            return [];
         }
         $this->autoincluded[$autoinclude] = true;
 
@@ -137,7 +133,7 @@ trait IncludeTrait
         }
 
         return [
-            '<!-- '.BLOCS_DATA_INCLUDE."='".str_replace(BLOCS_ROOT_DIR, '', $autoincludeDir).'/'.$autoinclude.".html' -->",
+            self::buildAutoincludeComment($autoincludeDir, $autoinclude),
             $htmlBuff,
         ];
     }
@@ -146,7 +142,7 @@ trait IncludeTrait
     private function parseTemplate($writeBuff, $realpath, $autoinclude = true)
     {
         // ブロック識別のため元ファイルのパスを設定するタグを追加する
-        $chdirBuff = '<!-- '.BLOCS_DATA_CHDIR.'="'.dirname($realpath).'" -->';
+        $chdirBuff = self::buildChdirComment(dirname($realpath));
         $htmlArray = Parser::parse($writeBuff);
         array_unshift($htmlArray, $chdirBuff);
 
@@ -169,8 +165,7 @@ trait IncludeTrait
         }
 
         // auto includeテンプレートの範囲をマークする
-        $autoincludeDir = self::resolveAutoincludeDirectory();
-        if ($autoincludeDir !== false && ! strncmp($realpath, $autoincludeDir, strlen($autoincludeDir))) {
+        if (self::isAutoincludeTemplate($realpath)) {
             array_unshift($resultArray, '{{AUTOINCLUDE_START_FROM}}');
             $resultArray[] = '{{AUTOINCLUDE_END_TO}}';
         }

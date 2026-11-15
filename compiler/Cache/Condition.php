@@ -4,42 +4,36 @@ namespace Blocs\Compiler\Cache;
 
 class Condition
 {
-    private static $partInclude = [];
-
-    public static function partInclude($partInclude)
+    // 条件を指定するデータ属性があるか
+    public static function has($attrList): bool
     {
-        self::$partInclude = $partInclude;
+        return isset($attrList[BLOCS_DATA_EXIST]) || isset($attrList[BLOCS_DATA_NONE]) || isset($attrList[BLOCS_DATA_IF]) || isset($attrList[BLOCS_DATA_UNLESS]);
     }
 
-    // data-existなどの条件スクリプトを生成する
-    public static function condition($compiledTag, $attrList, $quotesList, $tagName = '', &$tagCounter = null, &$htmlArray = null)
+    /**
+     * data-existなどの条件スクリプトを生成する
+     *
+     * @param  array  $partInclude  読み込み済みのブロック（data-exist="ブロック名" の判定に使う）
+     * @param  string  $tagName  タグ記法の場合のタグ名。閉じタグで条件を閉じるカウンターを $tagCounter に返す
+     */
+    public static function condition($compiledTag, $attrList, $quotesList, array $partInclude = [], $tagName = '', &$tagCounter = null)
     {
-        $conditionScript = self::generateConditionScript($attrList, $quotesList);
-
-        if ($conditionScript !== '') {
-            $compiledTag = $conditionScript.$compiledTag;
-        }
+        $compiledTag = self::generateConditionScript($attrList, $quotesList, $partInclude).$compiledTag;
 
         if ($tagName) {
-            // タグ記法を使用する場合
-            if (substr($compiledTag, -2) === '/>') {
-                // 閉じタグを持たないタグの場合
-                array_unshift($htmlArray, BLOCS_ENDIF_SCRIPT);
-            } else {
-                $tagCounter = [
-                    'tag' => $tagName,
-                    'after' => BLOCS_ENDIF_SCRIPT,
-                ];
-            }
+            $tagCounter = [
+                'tag' => $tagName,
+                'after' => BLOCS_ENDIF_SCRIPT,
+            ];
         }
 
         return $compiledTag;
     }
 
-    private static function generateConditionScript($attrList, $quotesList)
+    private static function generateConditionScript($attrList, $quotesList, array $partInclude)
     {
         if (isset($attrList[BLOCS_DATA_EXIST])) {
-            return self::generateDataExistScript($attrList, $quotesList);
+            return self::generateDataExistScript($attrList, $quotesList, $partInclude);
         }
 
         if (isset($attrList[BLOCS_DATA_NONE])) {
@@ -63,11 +57,11 @@ class Condition
         return '';
     }
 
-    private static function generateDataExistScript($attrList, $quotesList)
+    private static function generateDataExistScript($attrList, $quotesList, array $partInclude)
     {
         if (isset($quotesList[BLOCS_DATA_EXIST])) {
             // data-includeのチェックを行う
-            return empty(self::$partInclude[$attrList[BLOCS_DATA_EXIST]])
+            return empty($partInclude[$attrList[BLOCS_DATA_EXIST]])
                 ? "<?php if(false): ?>\n"
                 : "<?php if(true): ?>\n";
         }

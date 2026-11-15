@@ -9,52 +9,49 @@ class Filter
     // 入力された全角英字・数字・スペースを半角へ統一
     public static function single($str)
     {
-        return self::convertKanaByOption($str, 'ras');
+        return mb_convert_kana($str, 'ras');
     }
 
     // 半角の英数字・スペース・カタカナ・濁点付き文字を全角へ統一
     public static function multi($str)
     {
-        return self::convertKanaByOption($str, 'ASKV');
+        return mb_convert_kana($str, 'ASKV');
     }
 
     // 半角・全角カタカナを全角ひらがなに変換
     public static function hiragana($str)
     {
-        return self::convertKanaByOption($str, 'HVc');
+        return mb_convert_kana($str, 'HVc');
     }
 
     // 半角カタカナと全角ひらがなを全角カタカナに変換
     public static function katakana($str)
     {
-        return self::convertKanaByOption($str, 'KVC');
+        return mb_convert_kana($str, 'KVC');
     }
 
     // 全角カタカナ・全角ひらがなを半角カタカナに変換
     public static function halfKatakana($str)
     {
-        return self::convertKanaByOption($str, 'kh');
+        return mb_convert_kana($str, 'kh');
     }
 
     // 半角カタカナを全角カタカナに変換
     public static function antiHalfKatakana($str)
     {
-        return self::convertKanaByOption($str, 'KV');
+        return mb_convert_kana($str, 'KV');
     }
 
     // 電話番号を半角へ統一し、ハイフン区切りへ変換
     public static function phone($str)
     {
-        $normalized = self::convertKanaByOption($str, 'ras');
-        $normalized = self::normalizeHyphenVariants($normalized);
-
-        return $normalized;
+        return self::normalizeHyphenVariants(mb_convert_kana($str, 'ras'));
     }
 
     // 郵便番号を半角へ統一し、ハイフン区切りへ変換
     public static function postal($str)
     {
-        $normalized = self::convertKanaByOption($str, 'ras');
+        $normalized = mb_convert_kana($str, 'ras');
         $normalized = self::normalizeHyphenVariants($normalized);
         if (preg_match('/^[0-9]{7}$/', $normalized)) {
             $normalized = substr($normalized, 0, 3).'-'.substr($normalized, 3);
@@ -66,7 +63,7 @@ class Filter
     // 日付を半角に統一し、datepicker形式へ整形
     public static function datepicker($str)
     {
-        $normalized = self::convertKanaByOption($str, 'ras');
+        $normalized = mb_convert_kana($str, 'ras');
         $normalized = str_replace('/', '-', $normalized);
         if (preg_match('/^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}$/', $normalized) && strlen($normalized) != 10) {
             $dateParts = explode('-', $normalized);
@@ -76,11 +73,6 @@ class Filter
         }
 
         return $normalized;
-    }
-
-    private static function convertKanaByOption($str, $option)
-    {
-        return mb_convert_kana($str, $option);
     }
 
     private static function normalizeHyphenVariants($str)

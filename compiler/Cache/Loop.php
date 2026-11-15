@@ -45,11 +45,11 @@ END_of_HTML;
         isset(\$loopIndex) && \$index_{$singularName} = \$loopIndex;
         \$loopIndex = \$loopIndex{$tagCounterNum};
 
-        \$parentItemList = [];
-        foreach(array_keys(\$loop_{$singularName}) as \$parentItem){
-            isset(\$\$parentItem) && \$parentItemList[] = \$parentItem;
+        \$__blocsParentKeys = [];
+        foreach(array_keys(\$loop_{$singularName}) as \$__blocsParentKey){
+            isset(\$\$__blocsParentKey) && \$__blocsParentKeys[] = \$__blocsParentKey;
         }
-        \$parent[] = compact(\$parentItemList);
+        \$__blocsParent[] = compact(\$__blocsParentKeys);
         extract(\$loop_{$singularName});
     endif;
 ?>
@@ -70,10 +70,10 @@ END_of_HTML;
     if(isset(\$loop_{$singularName})):
         isset(\$index_{$singularName}) && \$loopIndex = \$index_{$singularName};
 
-        foreach(array_keys(\$loop_{$singularName}) as \$workKey){
-            unset(\$\$workKey);
+        foreach(array_keys(\$loop_{$singularName}) as \$__blocsWorkKey){
+            unset(\$\$__blocsWorkKey);
         };
-        extract(array_pop(\$parent));
+        extract(array_pop(\$__blocsParent));
         unset(\$loop_{$singularName});
     endif;
 ?>
@@ -86,7 +86,7 @@ END_of_HTML;
     // テーブルフォームのためにloopIndexを付与する
     private static function buildLoopOpening($attrList, $tagCounterNum, $singularName)
     {
-        if (! defined('BLOCS_NO_LARAVEL') && ! defined('BLOCS_BLADE_OFF') && ! BlocsCompiler::isBladeOff()) {
+        if (self::usesBlade()) {
             // Laravelが利用可能な場合の処理
             return <<< END_of_HTML
     @foreach({$attrList[BLOCS_DATA_LOOP]} as \$loopIndex{$tagCounterNum} => \${$singularName})
@@ -111,7 +111,7 @@ END_of_HTML;
 
     private static function buildLoopClosing()
     {
-        if (! defined('BLOCS_NO_LARAVEL') && ! defined('BLOCS_BLADE_OFF') && ! BlocsCompiler::isBladeOff()) {
+        if (self::usesBlade()) {
             // Laravelが利用可能な場合の終了処理
             return <<< 'END_of_HTML'
     @endforeach
@@ -126,6 +126,12 @@ END_of_HTML;
 ?>
 
 END_of_HTML;
+    }
+
+    // ループを Blade の @foreach で出力するか（Laravel を使わない場合や render() 中は PHP の foreach）
+    private static function usesBlade(): bool
+    {
+        return ! defined('BLOCS_NO_LARAVEL') && ! defined('BLOCS_BLADE_OFF') && ! BlocsCompiler::isBladeOff();
     }
 
     // ループ処理で使用する単数形の名前を導出する

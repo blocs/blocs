@@ -2,22 +2,7 @@
 
 namespace Blocs\Compiler;
 
-class BlocsConfig
-{
-    public $include;
-
-    public $filter;
-
-    public $option;
-
-    public $validate;
-
-    public $message;
-
-    public $upload;
-
-    public $label;
-}
+use Blocs\Common;
 
 class BlocsCompiler
 {
@@ -27,11 +12,22 @@ class BlocsCompiler
 
     private static int $bladeOffDepth = 0;
 
+    /**
+     * render() のコンパイル結果。選択肢のラベルなど、同じバッファを繰り返し描画するときに使い回す
+     *
+     * @var array<string, string>
+     */
+    private static array $renderCache = [];
+
+    private const RENDER_CACHE_MAX = 200;
+
     // テンプレートファイルをコンパイルする
     public function compile($templatePath)
     {
         $this->init();
         $this->include = [str_replace(DIRECTORY_SEPARATOR, '/', $templatePath)];
+
+        $this->templatePath = Common::normalizeRealPath($templatePath) ?: null;
 
         // render() 中でもキャッシュ用コンパイルは Blade を有効にする
         $previousDepth = self::$bladeOffDepth;
@@ -57,7 +53,15 @@ class BlocsCompiler
         $baseObLevel = ob_get_level();
 
         try {
-            $this->compileTemplate($writeBuff, __FILE__);
+            $cacheKey = md5((string) $writeBuff).':'.getcwd();
+            if (isset(self::$renderCache[$cacheKey])) {
+                $this->compiledTemplate = self::$renderCache[$cacheKey];
+            } else {
+                $this->compileTemplate($writeBuff, __FILE__);
+
+                count(self::$renderCache) >= self::RENDER_CACHE_MAX && self::$renderCache = [];
+                self::$renderCache[$cacheKey] = $this->compiledTemplate;
+            }
 
             $writeBuff = self::evaluateCompiledTemplate($val, $this->compiledTemplate);
         } finally {
@@ -103,6 +107,7 @@ class BlocsCompiler
     public static function flush(): void
     {
         self::$bladeOffDepth = 0;
+        self::$renderCache = [];
     }
 
     // テンプレートの設定を取得する
@@ -149,7 +154,7 @@ class BlocsCompiler
     {
         $this->partInclude[$realpath] = $this->parseTemplate($writeBuff, $realpath, false);
         $htmlArray = $this->partInclude[$realpath];
-        $htmlArray[] = '<!-- '.BLOCS_DATA_CHDIR.'="'.getcwd().'" -->';
+        $htmlArray[] = self::buildChdirComment(getcwd());
 
         while ($htmlArray) {
             $htmlBuff = array_shift($htmlArray);
@@ -234,7 +239,7 @@ class BlocsCompiler
         }
 
         // 初期化用スクリプトを冒頭に追加する
-        $initScript = self::buildInitialScript();
+        $initScript = $this->buildInitialScript();
         $this->compiledTemplate = $initScript.$this->compiledTemplate;
 
         // PHPタグの間の改行を調整する

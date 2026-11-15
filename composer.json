@@ -15,6 +15,15 @@
             "role": "Lead Developer"
         }
     ],
+    "require": {
+        "php": ">=8.3"
+    },
+    "require-dev": {
+        "phpunit\/phpunit": "^11.0 || ^12.0"
+    },
+    "suggest": {
+        "laravel\/framework": "Laravel のビューとして使う場合に必要 (>=10)"
+    },
     "extra": {
         "laravel": {
             "providers": [
@@ -26,7 +35,11 @@
         "psr-4": {
             "Blocs\\": "src\/",
             "Blocs\\Compiler\\": "compiler\/",
-            "Blocs\\Data\\": "data\/",
+            "Blocs\\Data\\": "data\/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
             "Blocs\\Tests\\": "tests\/"
         }
     }
