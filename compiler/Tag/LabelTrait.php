@@ -40,9 +40,8 @@ trait LabelTrait
                     $this->label[$this->labelArray['id']] = $this->labelArray['label'];
                 }
                 $this->labelArray = [];
-            } elseif ($tagName === 'input') {
-                // ラベル内に含めない
-            } else {
+            } elseif ($tagName !== 'input') {
+                // inputタグはラベルに含めない
                 $this->labelArray['label'] .= $compiledTag;
             }
         }

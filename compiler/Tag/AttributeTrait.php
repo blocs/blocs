@@ -17,35 +17,24 @@ trait AttributeTrait
         if (isset($attrList[BLOCS_DATA_VAL])) {
             $tagCounter = [];
             Val::val($attrList, $quotesList, $this->dataAttribute, $tagName, $tagCounter, $htmlArray);
-            if (! empty($tagCounter)) {
-                $this->registerTagCounter($tagCounter);
-            }
+            empty($tagCounter) || $this->registerTagCounter($tagCounter);
         }
 
         if (isset($attrList[BLOCS_DATA_NOTICE])) {
             $tagCounter = [];
-            Val::notice($attrList, $quotesList, $this->dataAttribute, $tagName, $tagCounter, $htmlArray);
-            if (! empty($tagCounter)) {
-                $this->registerTagCounter($tagCounter);
-            }
+            Val::notice($attrList, $this->dataAttribute, $tagName, $tagCounter, $htmlArray);
+            empty($tagCounter) || $this->registerTagCounter($tagCounter);
         }
 
-        if (isset($attrList[BLOCS_DATA_EXIST]) || isset($attrList[BLOCS_DATA_NONE]) || isset($attrList[BLOCS_DATA_IF]) || isset($attrList[BLOCS_DATA_UNLESS])) {
+        if (Condition::has($attrList)) {
             $tagCounter = [];
-            Condition::partInclude($this->partInclude);
-            $compiledTag = Condition::condition($compiledTag, $attrList, $quotesList, $tagName, $tagCounter, $htmlArray);
-            if (! empty($tagCounter)) {
-                $this->registerTagCounter($tagCounter);
-            }
+            $compiledTag = Condition::condition($compiledTag, $attrList, $quotesList, $this->partInclude, $tagName, $tagCounter);
+            $this->registerTagCounter($tagCounter);
         }
 
         if (isset($attrList[BLOCS_DATA_LOOP])) {
             // ループ内でフォーム名を差し替える必要があるかどうかを確認する
-            if (isset($attrList[BLOCS_DATA_FORM])) {
-                $this->arrayFormName = $attrList[BLOCS_DATA_FORM];
-            } else {
-                $this->arrayFormName = '';
-            }
+            $this->arrayFormName = $attrList[BLOCS_DATA_FORM] ?? '';
 
             if (! Common::checkValueName($attrList[BLOCS_DATA_LOOP])) {
                 throw new \RuntimeException('B002: Invalid condition "'.BLOCS_DATA_LOOP.'" ('.$attrList[BLOCS_DATA_LOOP].')');
@@ -61,20 +50,28 @@ trait AttributeTrait
         }
 
         if (isset($attrList[BLOCS_DATA_FILTER]) && isset($attrList['name']) && strlen($attrList['name'])) {
+            // name="tags[]" はリクエストでは tags になる
+            $filterName = Common::checkFormName($attrList['name']);
+            $filterName === false && $filterName = $attrList['name'];
+
             foreach (explode('|', $attrList[BLOCS_DATA_FILTER]) as $filterToken) {
-                if (! isset($this->filter[$attrList['name']])) {
-                    $this->filter[$attrList['name']] = '';
-                }
-                $this->filter[$attrList['name']] .= $this->buildFilterStatement($filterToken);
+                $this->filter[$filterName][] = $this->buildFilter($filterToken);
             }
         }
     }
 
-    private function buildFilterStatement($filter)
+    /**
+     * フィルターを「関数名と引数」として保持する（PHPコードとしては保存しない）
+     *
+     * @return array{func: string, args: list<mixed>}
+     */
+    private function buildFilter($filter): array
     {
-        [$filterClass, $filterFunc, $filterArg] = Common::checkFunc($filter);
-        $filterFunc = Common::findFilterFunc($filterClass, $filterFunc);
+        [$filterClass, $filterFunc, $filterArgs] = Common::checkFuncValues($filter);
 
-        return "\$value = {$filterFunc}(\$value{$filterArg});\n";
+        return [
+            'func' => ltrim(Common::findFilterFunc($filterClass, $filterFunc), '\\'),
+            'args' => $filterArgs,
+        ];
     }
 }

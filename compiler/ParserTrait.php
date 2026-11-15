@@ -136,7 +136,7 @@ trait ParserTrait
     // 属性名トークンかをチェック
     private static function isAttributeNameToken($attrName)
     {
-        if (preg_match('/^'.BLOCS_ATTR_NAME_REGREX.'$/s', $attrName)) {
+        if (preg_match('/^'.BLOCS_ATTR_NAME_REGEX.'$/s', $attrName)) {
             return true;
         }
 

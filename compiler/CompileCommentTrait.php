@@ -20,7 +20,6 @@ trait CompileCommentTrait
             return;
         }
 
-        $rawString = $includeBuff['raw'];
         $attrList = $includeBuff['attribute'];
         $quotesList = $includeBuff['quotes'];
 
@@ -100,12 +99,12 @@ trait CompileCommentTrait
             $htmlBuff = Val::val($attrList, $quotesList, $this->dataAttribute);
         }
         if (isset($attrList[BLOCS_DATA_NOTICE])) {
-            $htmlBuff = Val::notice($attrList, $quotesList, $this->dataAttribute);
+            $htmlBuff = Val::notice($attrList, $this->dataAttribute);
         }
 
         // data-attributeだけが設定されている時の処理
         if (isset($attrList[BLOCS_DATA_ATTRIBUTE]) && ! isset($attrList[BLOCS_DATA_VAL])) {
-            $condition = Condition::condition($attrList[BLOCS_DATA_ATTRIBUTE], $attrList, $quotesList);
+            $condition = Condition::condition($attrList[BLOCS_DATA_ATTRIBUTE], $attrList, $quotesList, $this->partInclude);
             unset($attrList[BLOCS_DATA_EXIST], $attrList[BLOCS_DATA_NONE], $attrList[BLOCS_DATA_IF], $attrList[BLOCS_DATA_UNLESS]);
 
             if ($condition === $attrList[BLOCS_DATA_ATTRIBUTE]) {
@@ -122,6 +121,8 @@ trait CompileCommentTrait
         }
 
         if (isset($attrList[BLOCS_DATA_VALIDATE]) && isset($attrList[BLOCS_DATA_FORM])) {
+            $this->rememberFormName(explode('.', $attrList[BLOCS_DATA_FORM])[0]);
+
             foreach (explode('|', $attrList[BLOCS_DATA_VALIDATE]) as $validate) {
                 self::isUniqueValidationRule($this->validate, $attrList[BLOCS_DATA_FORM], $validate) && $this->validate[$attrList[BLOCS_DATA_FORM]][] = $validate;
 
@@ -135,7 +136,7 @@ trait CompileCommentTrait
             return;
         }
 
-        if (isset($attrList[BLOCS_DATA_EXIST]) || isset($attrList[BLOCS_DATA_NONE]) || isset($attrList[BLOCS_DATA_IF]) || isset($attrList[BLOCS_DATA_UNLESS])) {
+        if (Condition::has($attrList)) {
             if (isset($attrList[BLOCS_DATA_VAL]) || isset($attrList[BLOCS_DATA_NOTICE])) {
                 if (isset($attrList[BLOCS_DATA_ATTRIBUTE])) {
                     $rawString = $this->dataAttribute[count($this->dataAttribute) - 1]['value'];
@@ -146,8 +147,7 @@ trait CompileCommentTrait
                 $rawString = '';
             }
 
-            Condition::partInclude($this->partInclude);
-            $htmlBuff = Condition::condition($rawString, $attrList, $quotesList);
+            $htmlBuff = Condition::condition($rawString, $attrList, $quotesList, $this->partInclude);
 
             if (isset($attrList[BLOCS_DATA_VAL]) || isset($attrList[BLOCS_DATA_NOTICE])) {
                 $htmlBuff .= BLOCS_ENDIF_SCRIPT;
@@ -163,13 +163,8 @@ trait CompileCommentTrait
 
         if (isset($attrList[BLOCS_DATA_LOOP])) {
             // loop内のform名を置換するかどうか
-            if (isset($attrList[BLOCS_DATA_FORM])) {
-                $this->arrayFormName = $attrList[BLOCS_DATA_FORM];
-            } else {
-                $this->arrayFormName = '';
-            }
+            $this->arrayFormName = $attrList[BLOCS_DATA_FORM] ?? '';
 
-            $rawString = '';
             $htmlBuff = Loop::loop($attrList, count($this->tagCounter));
             $this->endloop[] = $attrList;
 
@@ -184,17 +179,12 @@ trait CompileCommentTrait
             $htmlBuff = Loop::endloop(array_pop($this->endloop));
 
             // 先頭へ積むようになったので、最初に見つかった内側のループを閉じる
-            $target = null;
             foreach ($this->tagCounter as $num => $buff) {
-                if (! isset($buff['array_form']) || $buff['tag'] !== BLOCS_DATA_LOOP) {
-                    continue;
+                if (isset($buff['array_form']) && $buff['tag'] === BLOCS_DATA_LOOP) {
+                    array_splice($this->tagCounter, $num, 1);
+
+                    break;
                 }
-                $target = $num;
-                break;
-            }
-            if (isset($target)) {
-                unset($this->tagCounter[$target]);
-                $this->tagCounter = array_merge($this->tagCounter);
             }
         }
     }
@@ -235,8 +225,7 @@ trait CompileCommentTrait
         // 引数を継承するために属性値を保持する
         $assigned && $this->assignedValue[] = $assignedValue;
 
-        Condition::partInclude($this->partInclude);
-        if (! (isset($attrList[BLOCS_DATA_NONE]) && ! strlen($attrList[BLOCS_DATA_NONE])) && $condition = Condition::condition('', $attrList, $quotesList)) {
+        if (! (isset($attrList[BLOCS_DATA_NONE]) && ! strlen($attrList[BLOCS_DATA_NONE])) && $condition = Condition::condition('', $attrList, $quotesList, $this->partInclude)) {
             // 値をセットする条件を追加する
             $htmlBuff = $condition.$htmlBuff.BLOCS_ENDIF_SCRIPT;
         }
